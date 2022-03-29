@@ -1,0 +1,12 @@
+node_modules
+dist
+.vscode
+tmp
+.scripts
+core/core
+core/store
+core/rebase
+core/kv
+common/network/swarm
+core/store/encrypt
+archive

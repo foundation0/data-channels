@@ -19,7 +19,7 @@ $ npm run setup
 
 ## Run tests
 
-*For faster performance, running your own Backbone Network is recommended*:
+*For faster performance, running local Backbone Network is recommended*:
 ```bash
 # on terminal 1
 $ npm run bootstrap-network

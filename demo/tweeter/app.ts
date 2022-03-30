@@ -82,15 +82,8 @@ export async function main(conf?: any) {
   app.post('/auth', async (req, res) => {
     console.log('REQ: auth', req.body)
     const id = await createId(sha256(req.body.seed))
-    // open/create profile Core
-    // send back profile and pubkey
-    // const signature = await sign({ id, data: req.body.packet })
-    // req.body.packet.signature = signature
-    // req.body.packet.public_key = id.publicKey
-    // if(req.body.username === profile.username)
     const { profile } = await openProfileCore({ pubkey: id.publicKey, connect: true })
     res.json(profile)
-    // else res.status(403).end()
   })
   app.post('/sign', async (req, res) => {
     console.log('REQ: sign', req.body)

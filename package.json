@@ -24,6 +24,7 @@
     "async": "^3.2.1",
     "b4a": "^1.1.2",
     "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
     "cross-env": "^7.0.3",
     "ethers": "^5.4.6",
     "eventemitter2": "^6.4.4",

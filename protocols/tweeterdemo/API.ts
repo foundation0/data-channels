@@ -1,4 +1,3 @@
-import { decodeCoreData } from '../../common'
 import { sha256 } from '../../common/crypto'
 import { Post, Like, Retweet, Reply } from './interfaces'
 

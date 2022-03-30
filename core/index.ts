@@ -200,25 +200,26 @@ class CoreClass {
 
     log(`initialized Core ${this.writer_key} / ${this.index_key}`)
 
-    const core = this.store.get(Buffer.from(this.writer_key, 'hex'))
+    // Automated key exchange extension
+    const shatopic = sha256(`backbone://${this.address}`)
+    const core = this.store.get(Buffer.from(shatopic, 'hex'))
     
     const addWritersExt = core.registerExtension('polycore', {
       encoding: 'json',
       onmessage: async (msg) => {
-        // const batch = this.rebase.memberBatch()
+        console.log('msg', msg)
         msg.writers.forEach((key) => {
           emit({
             ch: 'network',
             msg: `${this.writer_key.slice(0, 8)} got key ${key} from peer`,
           })
           this.addWriter({ key })
-          // batch.addInput(this.store.get(Buffer.from(key, 'base64')))
         })
-        // await batch.commit()
       },
     })
 
     core.on('peer-add', (peer) => {
+      console.log(this.rebase.inputs)
       addWritersExt.send(
         {
           writers: this.rebase.inputs.map((core) => core.key.toString('hex')),
@@ -229,9 +230,7 @@ class CoreClass {
         ch: 'network',
         msg: `${this.writer_key.slice(0, 8)} Added peer`,
       })
-      //this.emit('peer-add', peer)
     })
-    // }
 
     this.writer = writer
     this.index = index

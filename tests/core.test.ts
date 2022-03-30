@@ -48,7 +48,7 @@ describe('Core', () => {
       storage_prefix: 'test',
       storage: 'ram'
     })
-    const keys1 = await cores['core1'].getKeys()
+    
     await cores['core1'].connect(true)
     await cores['core1'].post({ text: 'hello', user: 'foobar' })
     await sleep(100)
@@ -62,8 +62,8 @@ describe('Core', () => {
       private: false,
       protocol: 'chat',
     }
-    config2.writers = keys1.writers
-    config2.indexes = keys1.indexes
+    // config2.writers = keys1.writers
+    // config2.indexes = keys1.indexes
     cores['core2'] = await Core(config2)
     
     // connect and verify replication
@@ -74,22 +74,19 @@ describe('Core', () => {
     expect(posts).to.be.lengthOf(1)
     expect(posts[0].data).to.eql('hello')
 
-    // add second core as a writer to first one
-    const core2_writer_key = await cores['core2'].getWriterKey()
-    await cores['core1'].addWriter({ key: core2_writer_key })
-
     // make a post on second one and verify
     await cores['core2'].post({ text: 'world', user: 'foobar' })
     await sleep(100)
     const posts2 = await cores['core2'].all()
     expect(posts2).to.be.lengthOf(2)
     expect(posts2[0].data).to.eql('world')
-
+    
     const posts3 = await cores['core1'].all()
     expect(posts3).to.be.lengthOf(2)
     expect(posts3[0].data).to.eql('world')
-
+    
     // remove second core as a writer, make a post on second
+    const core2_writer_key = await cores['core2'].getWriterKey()
     await cores['core1'].removeWriter({ key: core2_writer_key })
     await cores['core2'].post({ text: '!!', user: 'foobar' })
     await sleep(100)

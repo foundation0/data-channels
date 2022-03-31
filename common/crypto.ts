@@ -1,4 +1,3 @@
-import { createHash, randomBytes } from 'crypto'
 import { ethers } from 'ethers'
 import sodium from 'sodium-universal'
 import * as secp256k1 from 'noble-secp256k1'
@@ -6,14 +5,23 @@ import { decodeCoreData, encodeCoreData, getRandomInt, JSONparse } from '.'
 import { Id } from './interfaces'
 import { LedgerSigner } from "@ethersproject/hardware-wallets"
 import b4a from 'b4a'
+import SHA256 from 'sha256'
+
+export function randomBytes(bytes) {
+  let buf = Buffer.alloc(bytes)
+  sodium.randombytes_buf(buf)
+  return buf
+}
 
 export function numericHash(seed?: Buffer) {
-  let s = seed ? seed.toString('hex') : createHash('sha256').update(randomBytes(32)).digest('hex')
+  let s = seed ? seed.toString('hex') : sha256(randomBytes(32).toString('hex'))
   return (BigInt('0x' + s) % (10n ** BigInt(10))).toString()
 }
 
 export function sha256(input: string) {
-  return createHash('sha256').update(input.toString()).digest('hex')
+  const hash = SHA256(input)
+  return hash
+  // return createHash('sha256').update(input.toString()).digest('hex')
 }
 
 export function randomStr(len: number = 32) {
@@ -69,7 +77,8 @@ export async function createId(seed: string) {
 }
 
 export async function sign(params: { id: Id, data: any }) {
-  return await secp256k1.sign(sha256(JSON.stringify(params.data)), params.id.privateKey.replace('0x', ''))
+  const signature = await secp256k1.sign(sha256(JSON.stringify(params.data)), params.id.privateKey.replace('0x', ''))
+  return String(signature)
 }
 
 function _initLedger(path: string){

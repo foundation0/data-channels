@@ -113,7 +113,7 @@ describe('Core', () => {
     })
     const keys1 = await cores['core_encrypted'].getKeys()
     await cores['core_encrypted'].connect(true)
-    await cores['core_encrypted'].post('hello')
+    await cores['core_encrypted'].post({ text: 'world', user: 'foobar' })
 
     // create second core
     let config_wrong_pass: CoreConfig = {

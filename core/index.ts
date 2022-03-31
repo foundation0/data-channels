@@ -207,7 +207,6 @@ class CoreClass {
     const addWritersExt = core.registerExtension('polycore', {
       encoding: 'json',
       onmessage: async (msg) => {
-        console.log('msg', msg)
         msg.writers.forEach((key) => {
           emit({
             ch: 'network',
@@ -219,7 +218,6 @@ class CoreClass {
     })
 
     core.on('peer-add', (peer) => {
-      console.log(this.rebase.inputs)
       addWritersExt.send(
         {
           writers: this.rebase.inputs.map((core) => core.key.toString('hex')),

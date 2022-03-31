@@ -52,8 +52,8 @@ async function openProfileCore(opts: {
 }
 
 export async function main(conf?: any) {
-  const [writers, indexes] = process.argv[2]
-    ? [[process.argv[2].split('/')[0]], [process.argv[2].split('/')[1]]]
+  const [writers, indexes] = process.argv[3]
+    ? [[process.argv[3].split('/')[0]], [process.argv[3].split('/')[1]]]
     : [[], []]
 
   const config: CoreConfig = {
@@ -69,7 +69,7 @@ export async function main(conf?: any) {
   }
   const core = await Core(config)
   await core.connect()
-  console.log(`LOG=1 ts-node demo/tweeter/B.ts ${core.getWriterKey()}/${core.getIndexKey()} 900`)
+  console.log(`LOG=1 ts-node demo/tweeter/B.ts 9001`) //${core.getWriterKey()}/${core.getIndexKey()} 900`)
 
   Object.keys(core).forEach((method) => {
     app.post(`/${method}`, async (req, res) => {
@@ -105,5 +105,5 @@ export async function main(conf?: any) {
     })
     res.json(profile)
   })
-  app.listen(process.argv[3] || 9000)
+  app.listen(process.argv[2] || 9000)
 }

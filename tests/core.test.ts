@@ -48,7 +48,7 @@ describe('Core', () => {
       storage_prefix: 'test',
       storage: 'ram'
     })
-    
+
     await cores['core1'].connect(true)
     await cores['core1'].post({ text: 'hello', user: 'foobar' })
     await sleep(100)
@@ -62,6 +62,7 @@ describe('Core', () => {
       private: false,
       protocol: 'chat',
     }
+    const keys1 = await cores['core1'].getKeys()
     // config2.writers = keys1.writers
     // config2.indexes = keys1.indexes
     cores['core2'] = await Core(config2)

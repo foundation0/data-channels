@@ -1,5 +1,5 @@
-import Store from './store/index'
-import Rebase from './rebase'
+import Store from './data-manager'
+import Rebase from './data-viewer'
 import KV from './kv'
 import platform from 'platform-detect'
 import RAM from 'random-access-memory'
@@ -87,26 +87,12 @@ class CoreClass {
     this.address = this.config.address
 
     // init index
-    this.rebase = new Rebase([writer], { outputs: index })
-
-    // add remote writers
-    for (const key of this.config.writers || []) {
-      if (key !== this.writer_key) {
-        await this.addWriter({ key })
-      }
-    }
-
-    // add remote indexes
-    for (const key of this.config.indexes || []) {
-      if (key !== this.index_key) {
-        await this.addIndex({ key })
-      }
-    }
-
-    await this.rebase.ready()
-
-    // init index generator
-    this.rebased_index = this.rebase.linearize({
+    this.rebase = new Rebase({
+      localInput: writer,
+      inputs: [writer],
+      outputs: [],
+      localOutput: index,
+      autostart: true,
       unwrap: true,
       async apply(batch) {
         const index = self.kv.batch({ update: false })
@@ -190,6 +176,25 @@ class CoreClass {
       },
     })
 
+    // add remote writers
+    for (const key of this.config.writers || []) {
+      if (key !== this.writer_key) {
+        await this.addWriter({ key })
+      }
+    }
+
+    // add remote indexes
+    for (const key of this.config.indexes || []) {
+      if (key !== this.index_key) {
+        await this.addIndex({ key })
+      }
+    }
+
+    await this.rebase.ready()
+
+    // init index generator
+    this.rebased_index = this.rebase.view
+
     // init kv
     this.kv = new KV(this.rebased_index, {
       extension: false,
@@ -201,9 +206,10 @@ class CoreClass {
 
     // Automated key exchange extension
     const shatopic = sha256(`backbone://${this.address}`)
-    const core = this.store.get(Buffer.from(shatopic, 'hex'))
+    const root = this.store.get(Buffer.from(shatopic, 'hex'))
+    await root.ready()
     
-    const addWritersExt = core.registerExtension('polycore', {
+    const addWritersExt = root.registerExtension('polycore', {
       encoding: 'json',
       onmessage: async (msg) => {
         msg.writers.forEach((key) => {
@@ -216,7 +222,7 @@ class CoreClass {
       },
     })
 
-    core.on('peer-add', (peer) => {
+    root.on('peer-add', (peer) => {
       addWritersExt.send(
         {
           writers: this.rebase.inputs.map((core) => core.key.toString('hex')),
@@ -227,7 +233,8 @@ class CoreClass {
         ch: 'network',
         msg: `${this.writer_key.slice(0, 8)} Added peer`,
       })
-    })
+    }) 
+    
 
     this.writer = writer
     this.index = index
@@ -279,7 +286,7 @@ class CoreClass {
               .slice(0, 8)}`,
           })
         }
- 
+
         const r = self.store.replicate(socket, { live: true })
         // console.log('r', r)
         r.on('error', (err) => {
@@ -298,6 +305,7 @@ class CoreClass {
       return swarm
     }
     this.swarm = await connectToSwarm()
+    this.rebased_index.update()
 
     // for faster restarts
     process.once('SIGINT', () => {
@@ -316,7 +324,7 @@ class CoreClass {
   async getKeys(this: CoreClass) {
     return {
       writers: [...this.rebase.inputs.map((i) => i.key.toString('hex'))],
-      indexes: [...this.rebase.defaultOutputs.map((i) => i.key.toString('hex'))],
+      indexes: [...this.rebase.outputs.map((i) => i.key.toString('hex')), this.rebase.localOutput.key.toString('hex')],
     }
   }
 
@@ -352,7 +360,7 @@ class CoreClass {
     const { key } = opts
     if (key === (await this.index_key)) return null
     const k = Buffer.from(key, 'hex')
-    this.rebase.addDefaultOutput(
+    this.rebase.addOutput(
       this.store.get({
         key: k,
         publicKey: k,
@@ -365,15 +373,15 @@ class CoreClass {
   async removeIndex(this: CoreClass, key: string) {
     if (key === (await this.index_key)) return null
     const k = Buffer.from(key, 'hex')
-    this.rebase.removeDefaultOutput(
+    this.rebase.removeOutput(
       this.store.get({ key: k, publicKey: k, encryptionKey: this.encryption_key })
     )
     emit({ ch: 'network', msg: `removed index ${key} from ${this.connection_id || 'n/a'}` })
   }
 }
 
-async function Core(params: { config: CoreConfig, app: { API: Function, Protocol: Function } }) {
-  const { config } = params 
+async function Core(params: { config: CoreConfig; app: { API: Function; Protocol: Function } }) {
+  const { config } = params
   // const protocol = typeof config.protocol === 'string' ? Protocol[config.protocol] : config.protocol
   const C = new CoreClass(config, params.app.Protocol)
   await C.init()

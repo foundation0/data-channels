@@ -75,7 +75,7 @@ class KeyVaultClass {
         reminder: params.reminder || '',
         user,
       })
-      await this.UserCore.set({ key: 'user!keyvault', data: encrypted_auth_wrapper })
+      await this.UserCore.set({ key: 'user!keyvault', value: encrypted_auth_wrapper })
       this.status = 'active'
       const keyvault = await this.openKeyVault({ password: params.password })
       return keyvault
@@ -155,7 +155,7 @@ class KeyVaultClass {
       reminder: this.reminder,
       user: encrypted_user_wrapper,
     })
-    await this.UserCore.set( { key: 'user!keyvault', data: encrypted_auth_wrapper })
+    await this.UserCore.set( { key: 'user!keyvault', value: encrypted_auth_wrapper })
   }
 
   async signAction(params: { password: string; action: string; path?: string; pin?: string }) {
@@ -202,7 +202,7 @@ class KeyVaultClass {
       address: params.address,
       encryption_key: params.encryption_key,
     }
-    await this.UserCore.set({ key: `path!${params.path}`, data: path_data })
+    await this.UserCore.set({ key: `path!${params.path}`, value: path_data })
   }
 
   async getPath(path: string) {

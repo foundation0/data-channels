@@ -15,17 +15,17 @@ const config_kv: CoreConfig = {
   storage_prefix: 'test',
 }
 
-describe('Protocols', () => {
+describe('Apps', () => {
   beforeEach(cleanup)
   afterEach(cleanup)
 
   it('should have working key/value protocol', async () => {
     const core = await Core({ config: config_kv, app: Apps['keyvalue'] })
 
-    await core.set({ key: 'key', data: 'value' })
+    await core.set({ key: 'key', value: 'value' })
     expect(await core.get('key')).to.eq('value')
 
-    await core.set({ key: 'key2', data: 'value2' })
+    await core.set({ key: 'key2', value: 'value2' })
     expect(await core.get('key')).to.eq('value')
     expect(await core.get('key2')).to.eq('value2')
 

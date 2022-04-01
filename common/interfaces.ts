@@ -19,8 +19,8 @@ export interface BackboneConfig {
 export interface CoreConfig extends BackboneConfig {
   address: string
   encryption_key?: string | boolean
-  writers: string[]
-  indexes: string[]
+  writers?: string[]
+  indexes?: string[]
   private: boolean
   network?: string[]
   storage_prefix: string

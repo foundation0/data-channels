@@ -8,5 +8,6 @@ core/store
 core/rebase
 core/kv
 common/network/swarm
+common/network/dht
 core/store/encrypt
 archive

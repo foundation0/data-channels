@@ -31,12 +31,16 @@ describe('Core', () => {
         storage_prefix: 'test',
         storage: 'ram',
       },
-      app: Apps['chat'],
+      app: Apps['keyvalue'],
     })
     const keys = await core.getKeys()
     expect(keys).to.include.all.keys(['writers', 'indexes'])
     expect(keys.writers[0]).to.be.lengthOf(64)
     expect(keys.indexes[0]).to.be.lengthOf(64)
+
+    await core.set({ key: 'foo', value: 'bar'})
+    const foo = await core.get('foo')
+    expect(foo).to.eq('bar')
   }).timeout(10000)
 
   step('should create and replicate two cores', async () => {
@@ -45,8 +49,6 @@ describe('Core', () => {
       config: {
         address: 'replica-test',
         encryption_key: default_config.keys.index,
-        writers: [],
-        indexes: [],
         private: false,
         storage_prefix: 'test',
         storage: 'ram',
@@ -62,17 +64,16 @@ describe('Core', () => {
       address: 'replica-test',
       storage_prefix: '2',
       encryption_key: default_config.keys.index,
-      writers: [],
-      indexes: [],
       private: false,
+      storage: 'ram',
     }
     const keys1 = await cores['core1'].getKeys()
-    // config2.writers = keys1.writers
-    // config2.indexes = keys1.indexes
+    //config2.writers = keys1.writers
+    //config2.indexes = keys1.indexes
     cores['core2'] = await Core({ config: config2, app: Apps['chat'] })
 
     // connect and verify replication
-    await cores['core2'].connect()
+    await cores['core2'].connect(true)
     await sleep(500)
     let posts = await cores['core2'].all()
 
@@ -109,8 +110,6 @@ describe('Core', () => {
       config: {
         address: 'enc-test',
         encryption_key: default_config.keys.index,
-        writers: [],
-        indexes: [],
         private: false,
         storage_prefix: 'test',
       },
@@ -137,8 +136,6 @@ describe('Core', () => {
         address: 'enc-test',
         storage_prefix: '2',
         encryption_key: 'd34db34t',
-        writers: [],
-        indexes: [],
         private: false,
       },
       app: Apps['chat'],
@@ -155,8 +152,6 @@ describe('Core', () => {
       config: {
         address: 'private-test',
         encryption_key: default_config.keys.index,
-        writers: [],
-        indexes: [],
         private: true,
         storage_prefix: 'test',
       },

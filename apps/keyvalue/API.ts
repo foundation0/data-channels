@@ -16,11 +16,11 @@ export default async function API(Core, Protocol) {
         key,
       })
     },
-    async set(params: { key: string; data: string }) {
+    async set(params: { key: string; value: string }) {
       await Protocol({
         type: 'set',
         key: params.key,
-        value: params.data
+        value: params.value
       })
     },
   }

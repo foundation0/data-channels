@@ -22,6 +22,7 @@ import {
 } from '../common/interfaces'
 import Core from '../core'
 import default_config from '../bbconfig'
+import Apps from '../apps'
 
 class KeyVaultClass {
   status: 'active' | 'access denied' | 'initializing'
@@ -56,10 +57,9 @@ class KeyVaultClass {
       writers: [],
       indexes: [],
       private: true,
-      protocol: 'keyvalue',
       storage_prefix: hash({ type: 'sha256', data: this.username }),
     }
-    this.UserCore = await Core({ ...core_config, ...core_config_override })
+    this.UserCore = await Core({ config: {...core_config, ...core_config_override }, app: Apps['keyvalue'], })
     const encrypted_auth_wrapper: EncryptedObject = await this.UserCore.get('user!keyvault')
 
     if (!params?.new && !encrypted_auth_wrapper) {

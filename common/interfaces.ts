@@ -22,7 +22,6 @@ export interface CoreConfig extends BackboneConfig {
   writers: string[]
   indexes: string[]
   private: boolean
-  protocol: string | { API: Function, Protocol: Function }
   network?: string[]
   storage_prefix: string
   storage?: 'ram' | 'rai' | 'raf'

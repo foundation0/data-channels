@@ -6,7 +6,6 @@ import RAM from 'random-access-memory'
 import RAI from 'random-access-idb'
 import { CoreConfig } from '../common/interfaces'
 import { decodeCoreData, emit, encodeCoreData, error, getHomedir, JSONparse, log } from '../common'
-import Protocol from '../protocols'
 import { generateNoiseKeypair, sha256 } from '../common/crypto'
 import { homedir } from 'os'
 import default_config from '../bbconfig'
@@ -373,9 +372,10 @@ class CoreClass {
   }
 }
 
-async function Core(config: CoreConfig) {
-  const protocol = typeof config.protocol === 'string' ? Protocol[config.protocol] : config.protocol
-  const C = new CoreClass(config, protocol.Protocol)
+async function Core(params: { config: CoreConfig, app: { API: Function, Protocol: Function } }) {
+  const { config } = params 
+  // const protocol = typeof config.protocol === 'string' ? Protocol[config.protocol] : config.protocol
+  const C = new CoreClass(config, params.app.Protocol)
   await C.init()
   const API: any = {
     connect: async (use_unique_swarm) => C.connect(use_unique_swarm),
@@ -390,7 +390,7 @@ async function Core(config: CoreConfig) {
     getConnectionId: () => C.connection_id,
   }
 
-  const protocolAPI = await protocol.API(
+  const protocolAPI = await params.app.API(
     {
       get: async (key: string) => {
         const data = await C.kv.get(key)

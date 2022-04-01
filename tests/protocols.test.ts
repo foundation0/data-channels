@@ -3,6 +3,7 @@ import Core from '../core'
 import { CoreConfig } from '../common/interfaces'
 import { cleanup } from './helper'
 import default_config from '../bbconfig'
+import Apps from '../apps'
 
 const config_kv: CoreConfig = {
   address: 'protocol-kv',
@@ -11,7 +12,6 @@ const config_kv: CoreConfig = {
   indexes: [],
   private: true,
   storage: 'ram',
-  protocol: 'keyvalue',
   storage_prefix: 'test',
 }
 
@@ -20,7 +20,7 @@ describe('Protocols', () => {
   afterEach(cleanup)
 
   it('should have working key/value protocol', async () => {
-    const core = await Core(config_kv)
+    const core = await Core({ config: config_kv, app: Apps['keyvalue'] })
 
     await core.set({ key: 'key', data: 'value' })
     expect(await core.get('key')).to.eq('value')

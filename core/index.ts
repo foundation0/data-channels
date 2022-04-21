@@ -1,17 +1,23 @@
-import Store from './data-manager'
-import Rebase from './data-viewer'
-import KV from './kv'
+import Store from '@backbonedao/data-manager'
+import Rebase from '@backbonedao/data-viewer'
+import DataDB from '@backbonedao/data-db'
+import Swarm from '@backbonedao/network-node'
+// import Store from '../../backbone-data-manager'
+// import Rebase from '../../backbone-data-viewer'
+// import DataDB from '../../backbone-data-db'
+// import Swarm from '../../backbone-network-node'
 import platform from 'platform-detect'
 import RAM from 'random-access-memory'
 import RAI from 'random-access-idb'
+// import RAW from 'random-access-web'
+// import RACF from 'random-access-chrome-file'
 import { CoreConfig } from '../common/interfaces'
-import { decodeCoreData, emit, encodeCoreData, error, getHomedir, JSONparse, log } from '../common'
+import { buf2hex, decodeCoreData, emit, encodeCoreData, error, getHomedir, log } from '../common'
 import { generateNoiseKeypair, sha256 } from '../common/crypto'
 import { homedir } from 'os'
 import default_config from '../bbconfig'
-import { updateNetwork, getSwarm } from '../network'
-import Swarm from '../common/network/swarm'
 import _ from 'lodash'
+import b4a from 'b4a'
 
 export function getStorage(bb_config: CoreConfig) {
   if (!bb_config) throw new Error('GETSTORAGE REQUIRES CORECONFIG')
@@ -29,7 +35,7 @@ export function getStorage(bb_config: CoreConfig) {
       ? `${homedir()}/.backbone-test/${prefix}${pathname}`
       : `${getHomedir()}/${prefix}${pathname}`
   } else {
-    log('Browser runtime detected, using indexed db for storage')
+    log('Browser runtime detected, using RAI for storage')
     storage = RAI
   }
   const storage_id: string = bb_config?.storage_prefix
@@ -53,14 +59,17 @@ class CoreClass {
   writer_key: string
   index_key: string
   connection_id: string
-  encryption_key: Buffer
+  encryption_key: b4a
   writer: any
   index: any
   swarm_refresh_timer: any
 
   constructor(config: CoreConfig, protocol: any) {
     this.config = {
-      network: default_config.network.bootstrap_servers,
+      network: {
+        bootstrap: default_config.network.bootstrap_servers,
+        relay: default_config.network.bootstrap_servers_ws,
+      },
       ...config,
     }
     const { storage, storage_id } = getStorage(config)
@@ -75,15 +84,16 @@ class CoreClass {
     // init cores
     let encryptionKey
     if (this.config?.encryption_key !== false && typeof this.config.encryption_key === 'string') {
-      encryptionKey = Buffer.from(this.config.encryption_key, 'hex')
+      encryptionKey = b4a.from(this.config.encryption_key, 'hex')
       this.encryption_key = encryptionKey
     } else encryptionKey = null
     const writer = this.store.get({ name: 'writer', encryptionKey })
     const index = this.store.get({ name: 'index', encryptionKey })
     await writer.ready()
     await index.ready()
-    this.writer_key = writer.key.toString('hex')
-    this.index_key = index.key.toString('hex')
+
+    this.writer_key = buf2hex(writer.key)
+    this.index_key = buf2hex(index.key)
     this.address = this.config.address
 
     // init index
@@ -98,78 +108,83 @@ class CoreClass {
         const index = self.kv.batch({ update: false })
         for (const { value } of batch) {
           const op = decodeCoreData(value)
-          await self.protocol(
-            op,
-            {
-              put: async (params: { key: string; value: any }) => {
-                if (typeof params === 'string' || !params?.key || !params?.value)
-                  throw new Error('INVALID PARAMS')
-                const encoded_data = encodeCoreData(params.value)
-                await index.put(params.key, encoded_data)
-                const value = await index.get(params.key)
-                if (value?.value.toString() === encoded_data.toString()) return
-                console.log('FAIL', params.key, value, encoded_data)
-                throw new Error('PUT FAILED')
-              },
-              del: async (key: string) => {
-                return index.del(key)
-              },
-              get: async (key: string) => {
-                const data = await index.get(key)
-                if (!data) return null
-                return decodeCoreData(data.value)
-              },
-              query: async function (params: {
-                gte: string
-                lte: string
-                gt: string
-                lt: string
-                limit?: number
-                stream?: boolean
-                reverse?: boolean
-              }) {
-                if (!params?.limit) params.limit = 100
-                const stream = index.createReadStream(params)
-                if (params?.stream) return stream
-                return new Promise((resolve, reject) => {
-                  const bundle: string[] = []
-                  stream.on('data', (data) => {
-                    bundle.push(decodeCoreData(data.value))
+          try {
+            await self.protocol(
+              op,
+              {
+                put: async (params: { key: string; value: any }) => {
+                  if (typeof params === 'string' || !params?.key || !params?.value)
+                    throw new Error('INVALID PARAMS')
+                  const encoded_data = encodeCoreData(params.value)
+                  await index.put(params.key, encoded_data)
+                  const value = await index.get(params.key)
+                  if (value?.value.toString() === encoded_data.toString()) return
+                  console.log('FAIL', params.key, value, encoded_data)
+                  throw new Error('PUT FAILED')
+                },
+                del: async (key: string) => {
+                  return index.del(key)
+                },
+                get: async (key: string) => {
+                  const data = await index.get(key)
+                  if (!data) return null
+                  return decodeCoreData(data.value)
+                },
+                query: async function (params: {
+                  gte: string
+                  lte: string
+                  gt: string
+                  lt: string
+                  limit?: number
+                  stream?: boolean
+                  reverse?: boolean
+                }) {
+                  if (!params?.limit) params.limit = 100
+                  const stream = index.createReadStream(params)
+                  if (params?.stream) return stream
+                  return new Promise((resolve, reject) => {
+                    const bundle: string[] = []
+                    stream.on('data', (data) => {
+                      bundle.push(decodeCoreData(data.value))
+                    })
+                    stream.on('end', () => {
+                      resolve(bundle)
+                    })
                   })
-                  stream.on('end', () => {
-                    resolve(bundle)
-                  })
-                })
+                },
               },
-            },
-            {
-              get: async (key: string) => {
-                const data = await self.kv.get(key)
-                if (!data) return null
-                return decodeCoreData(data.value)
-              },
-              query: async function (params: {
-                gte: string
-                lte: string
-                limit?: number
-                stream?: boolean
-                reverse?: boolean
-              }) {
-                if (!params?.limit) params.limit = 100
-                const stream = self.kv.createReadStream(params)
-                if (params?.stream) return stream
-                return new Promise((resolve, reject) => {
-                  const bundle: string[] = []
-                  stream.on('data', (data) => {
-                    bundle.push(decodeCoreData(data.value))
+              {
+                get: async (key: string) => {
+                  const data = await self.kv.get(key)
+                  if (!data) return null
+                  return decodeCoreData(data.value)
+                },
+                query: async function (params: {
+                  gte: string
+                  lte: string
+                  limit?: number
+                  stream?: boolean
+                  reverse?: boolean
+                }) {
+                  if (!params?.limit) params.limit = 100
+                  const stream = self.kv.createReadStream(params)
+                  if (params?.stream) return stream
+                  return new Promise((resolve, reject) => {
+                    const bundle: string[] = []
+                    stream.on('data', (data) => {
+                      bundle.push(decodeCoreData(data.value))
+                    })
+                    stream.on('end', () => {
+                      resolve(bundle)
+                    })
                   })
-                  stream.on('end', () => {
-                    resolve(bundle)
-                  })
-                })
-              },
-            }
-          )
+                },
+              }
+            ) 
+          } catch (error) {
+            throw error
+          }
+          
         }
 
         await index.flush()
@@ -196,7 +211,7 @@ class CoreClass {
     this.rebased_index = this.rebase.view
 
     // init kv
-    this.kv = new KV(this.rebased_index, {
+    this.kv = new DataDB(this.rebased_index, {
       extension: false,
       keyEncoding: 'utf-8',
       valueEncoding: 'binary',
@@ -206,9 +221,10 @@ class CoreClass {
 
     // Automated key exchange extension
     const shatopic = sha256(`backbone://${this.address}`)
-    const root = this.store.get(Buffer.from(shatopic, 'hex'))
-    await root.ready()
     
+    /* const root = this.store.get(b4a.from(shatopic, 'hex'))
+    await root.ready()
+
     const addWritersExt = root.registerExtension('polycore', {
       encoding: 'json',
       onmessage: async (msg) => {
@@ -225,7 +241,7 @@ class CoreClass {
     root.on('peer-add', (peer) => {
       addWritersExt.send(
         {
-          writers: this.rebase.inputs.map((core) => core.key.toString('hex')),
+          writers: this.rebase.inputs.map((core) => buf2hex(core.key)),
         },
         peer
       )
@@ -233,61 +249,64 @@ class CoreClass {
         ch: 'network',
         msg: `${this.writer_key.slice(0, 8)} Added peer`,
       })
-    }) 
-    
+    }) */
 
     this.writer = writer
     this.index = index
 
     // After we are done, update network
-    this.config.network = await updateNetwork()
-  }
+    // this.config.network = await updateNetwork()
 
+  }
   async connect(this: CoreClass, use_unique_swarm?: boolean) {
     if (!this.config?.network) throw new Error('CONNECT NEEDS NETWORK CONFIG')
     if (this.config.private) throw new Error('ACCESS DENIED - PRIVATE CORE')
 
     const network_config: {
       bootstrap?: string[]
+      relay?: string
       firewall?: Function
-      keyPair?: { publicKey: Buffer; secretKey: Buffer }
-    } =
-      this.config.network && this.config.network.length > 0
-        ? { bootstrap: this.config.network }
-        : {}
+      keyPair?: { publicKey: b4a; secretKey: b4a }
+      dht?: Function
+    } = this.config.network
+
+    emit({
+      ch: 'network',
+      msg: `Connect with conf: ${JSON.stringify(network_config)}`,
+    })
 
     // add firewall
     if (this.config.firewall) network_config.firewall = this.config.firewall
 
     // add keypair for noise
-    if (this.config.noiseKeypair)
-      network_config.keyPair = generateNoiseKeypair(sha256(this.config.noiseKeypair))
+    // if (this.config.noiseKeypair)
+    //  network_config.keyPair = generateNoiseKeypair(sha256(this.config.noiseKeypair))
 
     let self = this
     async function connectToSwarm() {
       // const swarm = use_unique_swarm ? new Swarm(network_config) : await getSwarm(network_config) //
       // const swarm = await getSwarm(network_config) //new Swarm(network_config)
-      const swarm = new Swarm(network_config)
+      const swarm = Swarm(network_config)
       const shatopic = sha256(`backbone://${self.address}`)
-      const topic = Buffer.from(shatopic, 'hex')
+      const topic = b4a.from(shatopic, 'hex')
 
       swarm.on('connection', async (socket, peer) => {
-        if (swarm.keyPair.publicKey.toString('hex') !== peer.publicKey.toString('hex')) {
+        /* if (buf2hex(swarm.keyPair.publicKey) !== buf2hex(peer.publicKey)) {
           emit({
             ch: 'network',
-            msg: `cid: ${swarm.keyPair.publicKey
-              .toString('hex')
-              .slice(0, 8)} | addr: ${self.address.slice(0, 8)} | topic: ${topic
-              .toString('hex')
-              .slice(0, 8)}, peers: ${swarm.peers.size}, conns: ${
+            msg: `cid: ${buf2hex(swarm.keyPair.publicKey).slice(0, 8)} | addr: ${self.address.slice(
+              0,
+              8
+            )} | topic: ${buf2hex(topic).slice(0, 8)}, peers: ${swarm.peers.size}, conns: ${
               swarm.connections.size
-            }, prioritized: ${peer.prioritized} - new connection from ${peer.publicKey
-              .toString('hex')
-              .slice(0, 8)}`,
+            }, prioritized: ${peer.prioritized} - new connection from ${buf2hex(
+              peer.publicKey
+            ).slice(0, 8)}`,
           })
-        }
-
-        const r = self.store.replicate(socket, { live: true })
+        } */
+        console.log('Connection', peer)
+        const r = socket.pipe(self.store.replicate(localStorage.getItem('initiator') ? true : false)).pipe(socket)
+        // const r = self.store.replicate(socket, { live: true })
         // console.log('r', r)
         r.on('error', (err) => {
           if (err.message !== 'UTP_ETIMEOUT' || err.message !== 'Duplicate connection')
@@ -298,9 +317,11 @@ class CoreClass {
         ch: 'network',
         msg: `Connecting to ${shatopic} (backbone://${
           self.address
-        }) with connection id ${swarm.keyPair.publicKey.toString('hex')}...`,
+        }) with connection id ...`, //${buf2hex(swarm.keyPair.publicKey)}
       })
-      swarm.join(topic)
+      // @ts-ignore
+      swarm.join(Buffer.isBuffer(topic) ? topic : Buffer.from(topic, 'hex'))
+      // @ts-ignore
       await swarm.flush()
       return swarm
     }
@@ -312,7 +333,7 @@ class CoreClass {
       this.swarm.destroy()
     })
 
-    this.connection_id = this.swarm.keyPair.publicKey.toString('hex')
+    this.connection_id = buf2hex(this.swarm.webrtc.id)
     return this.swarm
   }
 
@@ -323,8 +344,11 @@ class CoreClass {
 
   async getKeys(this: CoreClass) {
     return {
-      writers: [...this.rebase.inputs.map((i) => i.key.toString('hex'))],
-      indexes: [...this.rebase.outputs.map((i) => i.key.toString('hex')), this.rebase.localOutput.key.toString('hex')],
+      writers: [...this.rebase.inputs.map((i) => buf2hex(i.key))],
+      indexes: [
+        ...this.rebase.outputs.map((i) => buf2hex(i.key)),
+        buf2hex(this.rebase.localOutput.key),
+      ],
     }
   }
 
@@ -335,7 +359,7 @@ class CoreClass {
       emit({ ch: 'network', msg: `duplicated writer key ${key}` })
       return null
     }
-    const k = Buffer.from(key, 'hex')
+    const k = b4a.from(key, 'hex')
     this.rebase.addInput(
       this.store.get({
         key: k,
@@ -349,7 +373,7 @@ class CoreClass {
   async removeWriter(this: CoreClass, opts: { key: string }) {
     const { key } = opts
     if (key === (await this.index_key)) return null
-    const k = Buffer.from(key, 'hex')
+    const k = b4a.from(key, 'hex')
     this.rebase.removeInput(
       this.store.get({ key: k, publicKey: k, encryptionKey: this.encryption_key })
     )
@@ -359,7 +383,7 @@ class CoreClass {
   async addIndex(this: CoreClass, opts: { key: string }) {
     const { key } = opts
     if (key === (await this.index_key)) return null
-    const k = Buffer.from(key, 'hex')
+    const k = b4a.from(key, 'hex')
     this.rebase.addOutput(
       this.store.get({
         key: k,
@@ -372,7 +396,7 @@ class CoreClass {
 
   async removeIndex(this: CoreClass, key: string) {
     if (key === (await this.index_key)) return null
-    const k = Buffer.from(key, 'hex')
+    const k = b4a.from(key, 'hex')
     this.rebase.removeOutput(
       this.store.get({ key: k, publicKey: k, encryptionKey: this.encryption_key })
     )

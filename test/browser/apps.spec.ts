@@ -1,9 +1,9 @@
-import { expect } from 'chai'
-import Core from '../core'
-import { CoreConfig } from '../common/interfaces'
-import { cleanup } from './helper'
-import default_config from '../bbconfig'
-import Apps from '../apps'
+import { test, expect } from "@playwright/test"
+import Core from '../../core'
+import { CoreConfig } from '../../common/interfaces'
+import { cleanup } from '../helper'
+import default_config from '../../bbconfig'
+import Apps from '../../apps'
 
 const config_kv: CoreConfig = {
   address: 'protocol-kv',

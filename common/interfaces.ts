@@ -22,7 +22,10 @@ export interface CoreConfig extends BackboneConfig {
   writers?: string[]
   indexes?: string[]
   private: boolean
-  network?: string[]
+  network?: {
+    bootstrap?: string[]
+    relay?: string
+  }
   storage_prefix: string
   storage?: 'ram' | 'rai' | 'raf'
   firewall?: Function
@@ -38,7 +41,7 @@ export interface AccessConfig extends BackboneConfig {
 
 export interface Id {
   publicKey: string
-  privateKey: string
+  secretKey: string
   fingerprint?: string
   parentFingerprint?: string
   address: string
@@ -72,21 +75,6 @@ export interface Path {
   encryption_key: string
 }
 
-export type IndexPayment = {
-  pow?: {
-    work: string
-    threshold?: string
-    blockHash?: string
-    challenge?: string
-  }
-  tx?: {
-    id: string
-    chain: number
-    value: number
-    // tbd
-  }
-}
-
 export interface Token {
   type: 'ERC20' | 'ERC721'
   address: string
@@ -95,35 +83,3 @@ export interface Token {
 export interface Wallet {
   type: 'EO' | 'contract'
 }
-
-export interface IndexPayload {
-  owner: string
-  signature?: string
-  address: string // wallet address
-  token?: Token
-  meta: {
-    metaverse_id: number
-    position: number
-    nonce?: number
-  }
-  object: {
-    [key: string]: string | object
-  }
-  _data?: WriteRequestMetaData
-}
-
-export type WriteRequestMetaData = {
-  payment: IndexPayment
-  __: {
-    queuer?: {
-      public_key: string
-      signature: string
-    }
-    writer?: {
-      public_key: string
-      signature: string
-    }
-  }
-}
-
-export type WriteRequestPayload = IndexPayload & WriteRequestMetaData

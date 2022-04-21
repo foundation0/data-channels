@@ -1,4 +1,4 @@
-import { expect } from 'chai'
+import { test, expect } from "@playwright/test"
 import { UserConfig } from '../common/interfaces'
 import KeyVault from '../user/keyvault'
 import User from '../user'

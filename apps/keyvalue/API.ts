@@ -17,6 +17,7 @@ export default async function API(Core, Protocol) {
       })
     },
     async set(params: { key: string; value: string }) {
+      console.log('p', params)
       await Protocol({
         type: 'set',
         key: params.key,

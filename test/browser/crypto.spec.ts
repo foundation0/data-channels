@@ -1,4 +1,4 @@
-import { expect } from 'chai'
+import { test, expect } from "@playwright/test"
 import { encrypt, decrypt, securePassword, verifyPassword } from '../common/crypto'
 
 describe('Crypto', () => {

@@ -119,12 +119,10 @@ if (options.kill) {
     child('kill', ['-9', status.env.PID], process.env)
     console.log('Bootstrap nodes shutdown...')
   } // else console.log('Process not active');
-  return
 }
 
 if (options.status) {
   console.log(status)
-  return
 }
 
 if (options.ports.length & (options.ports.length < 2)) {

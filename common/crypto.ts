@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import sodium from 'sodium-universal'
+import sodium from 'sodium-javascript'
 import * as secp256k1 from '@noble/secp256k1'
 import { buf2hex, decodeCoreData, encodeCoreData, getRandomInt, JSONparse } from '.'
 import { Id } from './interfaces'

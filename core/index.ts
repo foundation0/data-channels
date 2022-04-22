@@ -305,7 +305,7 @@ class CoreClass {
           })
         } */
         console.log('Connection', peer)
-        const r = socket.pipe(self.store.replicate(localStorage.getItem('initiator') ? true : false)).pipe(socket)
+        const r = socket.pipe(self.store.replicate(peer.client)).pipe(socket)
         // const r = self.store.replicate(socket, { live: true })
         // console.log('r', r)
         r.on('error', (err) => {

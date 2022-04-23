@@ -8,7 +8,6 @@ import {
   randomStr,
   sha256,
   sign,
-  signLedger,
 } from '../common/crypto'
 import {
   BackboneConfig,
@@ -115,10 +114,10 @@ class KeyVaultClass {
       signer_type: params.signer_type,
       seed: randomStr(32),
     }
-    if (params.signer_type === 'ledger') {
-      keyvault.verify_nonce = randomStr(32)
-      keyvault.verify_signature = await signLedger({ data: keyvault.verify_nonce })
-    }
+    // if (params.signer_type === 'ledger') {
+    //   keyvault.verify_nonce = randomStr(32)
+    //   keyvault.verify_signature = await signLedger({ data: keyvault.verify_nonce })
+    // }
     const encrypted_user_wrapper: EncryptedObject = encrypt({
       key: params.password,
       data: keyvault,
@@ -167,10 +166,10 @@ class KeyVaultClass {
       let id: Id = await createId(keyvault.seed)
       action_signature = await sign({ id, data: params.action })
     }
-    if (keyvault.signer_type === 'ledger') {
-      // use ledger to sign
-      action_signature = await signLedger({ data: params.action, path: params?.path || '' })
-    }
+    // if (keyvault.signer_type === 'ledger') {
+    //   // use ledger to sign
+    //   action_signature = await signLedger({ data: params.action, path: params?.path || '' })
+    // }
     return action_signature
   }
 

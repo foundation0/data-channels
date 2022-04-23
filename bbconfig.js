@@ -1,12 +1,10 @@
-process.setMaxListeners(1000)
+// process.setMaxListeners(1000)
 
 module.exports = {
   user: {
     home_dir: '~',
   },
-  addresses: {
-    
-  },
+  addresses: {},
   keys: {
     index: '6261636b626f6e653a2f2f696e646578',
   },
@@ -18,12 +16,17 @@ module.exports = {
   network: {
     bootstrap_servers: process.env.BOOTSTRAP
       ? ['127.0.0.1:60000', '127.0.0.1:60001', '127.0.0.1:60002']
-      : // : ['index.backbonedao.com:60000', 'index.backbonedao.com:60001', 'index.backbonedao.com:60002'],
-        [
-          'testnet1.hyperdht.org:49736',
-          'testnet2.hyperdht.org:49736',
-          'testnet3.hyperdht.org:49736',
-        ],
+      : // : ['network.backbonedao.com:60000', 'network.backbonedao.com:60001', 'network.backbonedao.com:60002'],
+        // [
+        //   'testnet1.hyperdht.org:49736',
+        //   'testnet2.hyperdht.org:49736',
+        //   'testnet3.hyperdht.org:49736',
+        // ],
+        ['wss://node1.network.backbonedao.com:1337'],
+    bootstrap_servers_ws: process.env.BOOTSTRAP
+      ? 'ws://127.0.0.1:50000'
+      : 'wss://network.backbonedao.com:50000',
+
     swarm_refresh_frequency: 15 * 60 * 1000, // 15 mins
   },
 }

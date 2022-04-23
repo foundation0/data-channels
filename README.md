@@ -14,33 +14,21 @@ Backbone Core is an unstoppable, infinitely scalable dapp container for self-sov
 
 **Install dependencies**
 ```bash
-$ npm run setup
+$ npx pnpm i
 ```
 
-## Run tests
+## Development
 
-*For faster performance, running local Backbone Network is recommended*:
+**Start live-reload server (development):**
 ```bash
-# on terminal 1
-$ npm run bootstrap-network
+npm run build:browser:watch
+# open http://localhost:9966 in your browser
 ```
 
-**Run tests (with bootstrap-network)**:
+## Building
+
+**Build browser package (production):**
 ```bash
-# on terminal 2
-$ npm run bootstrap-test
-# CTRL+C to exit
+npm run build:browser
+# builds /dist/core.min.js
 ```
-
-**Run tests (with live Backbone Network)**:
-```bash
-# on terminal 2
-$ npm run test
-# CTRL+C to exit
-```
-
-**Run test with extensive logging**:
-```bash
-$ LOG=1 npm run test
-```
-

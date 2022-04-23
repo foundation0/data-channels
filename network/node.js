@@ -1,4 +1,4 @@
-const DHT = require('../common/network/dht')
+const DHT = require('dht')
 const async = require('async')
 
 const host = '127.0.0.1'

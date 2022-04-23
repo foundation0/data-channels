@@ -1,11 +1,12 @@
 import { ethers } from 'ethers'
-import sodium from 'sodium-universal'
-import * as secp256k1 from 'noble-secp256k1'
-import { decodeCoreData, encodeCoreData, getRandomInt, JSONparse } from '.'
+import sodium from 'sodium-javascript'
+import * as secp256k1 from '@noble/secp256k1'
+import { buf2hex, decodeCoreData, encodeCoreData, getRandomInt, JSONparse } from '.'
 import { Id } from './interfaces'
-import { LedgerSigner } from "@ethersproject/hardware-wallets"
 import b4a from 'b4a'
+const Buffer = b4a
 import SHA256 from 'sha256'
+import crypto from '@backbonedao/crypto'
 
 export function randomBytes(bytes) {
   let buf = Buffer.alloc(bytes)
@@ -14,18 +15,17 @@ export function randomBytes(bytes) {
 }
 
 export function numericHash(seed?: Buffer) {
-  let s = seed ? seed.toString('hex') : sha256(randomBytes(32).toString('hex'))
+  let s = seed ? buf2hex(seed) : sha256(buf2hex(randomBytes(32)))
   return (BigInt('0x' + s) % (10n ** BigInt(10))).toString()
 }
 
 export function sha256(input: string) {
   const hash = SHA256(input)
   return hash
-  // return createHash('sha256').update(input.toString()).digest('hex')
 }
 
 export function randomStr(len: number = 32) {
-  return randomBytes(32).toString('hex').slice(0, 32)
+  return buf2hex(randomBytes(32)).slice(0, 32)
 }
 
 export function encrypt(params: { key: string, data: string | Buffer | object }) {
@@ -39,7 +39,7 @@ export function encrypt(params: { key: string, data: string | Buffer | object })
   const cipher = Buffer.alloc(d.length + sodium.crypto_secretbox_MACBYTES)
 
   sodium.crypto_secretbox_easy(cipher, d, nonce, secret)
-  return { cipher, nonce: nonce.toString('hex') }
+  return { cipher, nonce: buf2hex(nonce) }
 }
 
 export function decrypt(params: { key: string, cipher: Buffer, nonce: string }) {
@@ -63,7 +63,7 @@ export function securePassword(input: string) {
   const opslimit = sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE
   const memlimit = sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE
   sodium.crypto_pwhash_str(output, passwd, opslimit, memlimit)
-  return output.toString('hex')
+  return buf2hex(output)
 }
 
 export function verifyPassword(params: { hash: string, password: string }) {
@@ -71,29 +71,21 @@ export function verifyPassword(params: { hash: string, password: string }) {
 }
 
 export async function createId(seed: string) {
-  let id: Id = ethers.utils.HDNode.fromSeed(Buffer.from(seed))
-  const uncompressed_publicKey = secp256k1.getPublicKey(id.privateKey.replace('0x', ''))
-  return { ...id, publicKey: uncompressed_publicKey }
+  // let id: Id = ethers.utils.HDNode.fromSeed(Buffer.from(seed))
+  // const uncompressed_publicKey = secp256k1.getPublicKey(id.privateKey.replace('0x', ''))
+  // return { ...id, publicKey: await secp256k1.utils.bytesToHex(uncompressed_publicKey) }
+  return crypto.keyPair(seed)
 }
 
 export async function sign(params: { id: Id, data: any }) {
-  const signature = await secp256k1.sign(sha256(JSON.stringify(params.data)), params.id.privateKey.replace('0x', ''))
-  return String(signature)
-}
-
-function _initLedger(path: string){
-  const provider = new ethers.providers.JsonRpcProvider();
-  const signer = new LedgerSigner(provider, "hid", path || undefined)
-  return signer
-}
-
-export async function signLedger(params: { data: any, path?: string }) {
-  const signer = _initLedger(params?.path || '')
-  return await signer.signMessage(JSON.stringify(params.data))
+  // const signature = await secp256k1.sign(sha256(JSON.stringify(params.data)), params.id.privateKey.replace('0x', ''))
+  // return secp256k1.utils.bytesToHex(signature)
+  return crypto.sign(params.data, params.id.secretKey)
 }
 
 export function verifySignature(params: { public_key: string, data: any, signature: string }) {
-  return secp256k1.verify(params.signature, sha256(JSON.stringify(params.data)), params.public_key)
+  // return secp256k1.verify(params.signature, sha256(JSON.stringify(params.data)), params.public_key)
+  return crypto.verify(params.data, params.signature, params.public_key)
 }
 
 export async function generatePathAddress(params: { signer_type: 'native' | 'ledger', path?: string, seed?: string, level1?: number, level2?: number }) {
@@ -108,21 +100,18 @@ export async function generatePathAddress(params: { signer_type: 'native' | 'led
     const derived_wallet = master.derivePath(path)
     address = derived_wallet.address
   } else if(params?.signer_type === 'ledger') {
-    const signer = _initLedger(path)
-    address = await signer.getAddress()
+    throw new Error('NOT_AVAILABLE')
+    // const signer = _initLedger(path)
+    // address = await signer.getAddress()
   } else throw new Error('UNKNOWN SIGNER TYPE')
   return { address, level1, level2, path }
 }
 
 export function generateNoiseKeypair(seed: string) {
-  const publicKey = b4a.allocUnsafe(sodium.crypto_sign_PUBLICKEYBYTES)
-  const secretKey = b4a.allocUnsafe(sodium.crypto_sign_SECRETKEYBYTES)
+  return crypto.keyPair(seed)
+}
 
-  if (seed) sodium.crypto_sign_seed_keypair(publicKey, secretKey, Buffer.from(seed, 'hex'))
-  else sodium.crypto_sign_keypair(publicKey, secretKey)
-
-  return {
-    publicKey,
-    secretKey
-  }
+export function generateAddress(seed: string) {
+  const keyPair = crypto.keyPair(seed)
+  return keyPair.publicKey
 }

@@ -20,9 +20,6 @@ export function error(message: string, ...data: any) {
 }
 
 export function buf2hex(buffer) { // buffer is an ArrayBuffer
-  // return [...new Uint8Array(buffer)]
-  //     .map(x => x.toString(16).padStart(2, '0'))
-  //     .join('');
   return Buffer.toString(buffer, 'hex')
 }
 
@@ -37,32 +34,10 @@ export function subscribe(params: { ch: string; cb: any }) {
 }
 
 export function encodeCoreData(data: string | Buffer | object | number) {
-  /* let d: Buffer
-  const test = Buffer.from(Buffer.from('3|')).toString()
-  if (Buffer.isBuffer(data)) d = Buffer.concat([Buffer.from('1|'), data])
-  else if (typeof data === 'string') d = Buffer.concat([Buffer.from('2|'), Buffer.from(data)])
-  else if (typeof data === 'object')
-    d = Buffer.concat([Buffer.from('3|'), Buffer.from(JSON.stringify(data))])
-  else if (typeof data === 'number')
-    d = Buffer.concat([Buffer.from('4|'), Buffer.from(Buffer.from(data).toString())])
-  else throw new Error('UNKNOWN DATA FORMAT')
-  return d */
   return pack(data)
 }
 
 export function decodeCoreData(data: Buffer) {
-  /* if (!Buffer.isBuffer(data)) throw new Error('NOT BUFFER')
-  let decoded_data: any
-  const type = data.slice(0, 2)
-  const str_type = Buffer.from(type).toString()
-  if (str_type === Buffer.from('1|').toString()) decoded_data = data.slice(2)
-  if (str_type === Buffer.from('2|').toString())
-    decoded_data = Buffer.from(data.slice(2)).toString()
-  if (str_type === Buffer.from('3|').toString())
-    decoded_data = JSONparse(Buffer.from(data.slice(2)).toString())
-  if (str_type === Buffer.from('4|').toString())
-    decoded_data = parseFloat(Buffer.from(data.slice(2)).toString())
-  return decoded_data */
   return unpack(data)
 }
 

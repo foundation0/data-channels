@@ -19,18 +19,11 @@ $ npx pnpm i
 
 ## Development
 
-**Build browser package (development):**
+**Start live-reload server (development):**
 ```bash
-npm run build:browser-dev
-# builds /dist/core.js
+npm run build:browser:watch
+# open http://localhost:9966 in your browser
 ```
-
-**Start HTTP server at port 8888:**
-```bash
-npm run http-server
-# open http://localhost:8888/test/test.html
-```
-
 
 ## Building
 

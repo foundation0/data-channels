@@ -4,7 +4,6 @@ import { user } from '../bbconfig'
 import ttl from 'ttl'
 import { verifySignature } from './crypto'
 import { EventEmitter2 } from 'eventemitter2'
-import { fetchPeersFromContract } from '../network'
 import platform from 'platform-detect'
 import Buffer from 'b4a'
 import { unpack, pack } from 'msgpackr'
@@ -101,7 +100,7 @@ export function createCache(params: { ttlsec?: number; capacity?: number }) {
 
 export async function fetchPeers(type: string) {
   if (process.env.TEST) return []
-  return [...(await fetchPeersFromContract(type))]
+  return []
 }
 
 export function registerMethods(params: { source: object; methods: string[] }) {

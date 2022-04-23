@@ -1,8 +1,6 @@
-//@ts-ignore
 import Core from './core'
-import Apps from './apps'
+import platform from 'platform-detect'
 
-window['Core'] = Core
-window['Apps'] = Apps
-console.log('Backbone initiated')
+if(platform.browser) window['Core'] = Core
 export default Core
+module.exports = Core

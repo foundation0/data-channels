@@ -7,6 +7,7 @@ import { EventEmitter2 } from 'eventemitter2'
 import { fetchPeersFromContract } from '../network'
 import platform from 'platform-detect'
 import Buffer from 'b4a'
+import { unpack, pack } from 'msgpackr'
 
 const EE = new EventEmitter2()
 
@@ -36,7 +37,7 @@ export function subscribe(params: { ch: string; cb: any }) {
 }
 
 export function encodeCoreData(data: string | Buffer | object | number) {
-  let d: Buffer
+  /* let d: Buffer
   const test = Buffer.from(Buffer.from('3|')).toString()
   if (Buffer.isBuffer(data)) d = Buffer.concat([Buffer.from('1|'), data])
   else if (typeof data === 'string') d = Buffer.concat([Buffer.from('2|'), Buffer.from(data)])
@@ -45,11 +46,12 @@ export function encodeCoreData(data: string | Buffer | object | number) {
   else if (typeof data === 'number')
     d = Buffer.concat([Buffer.from('4|'), Buffer.from(Buffer.from(data).toString())])
   else throw new Error('UNKNOWN DATA FORMAT')
-  return d
+  return d */
+  return pack(data)
 }
 
 export function decodeCoreData(data: Buffer) {
-  if (!Buffer.isBuffer(data)) throw new Error('NOT BUFFER')
+  /* if (!Buffer.isBuffer(data)) throw new Error('NOT BUFFER')
   let decoded_data: any
   const type = data.slice(0, 2)
   const str_type = Buffer.from(type).toString()
@@ -60,7 +62,8 @@ export function decodeCoreData(data: Buffer) {
     decoded_data = JSONparse(Buffer.from(data.slice(2)).toString())
   if (str_type === Buffer.from('4|').toString())
     decoded_data = parseFloat(Buffer.from(data.slice(2)).toString())
-  return decoded_data
+  return decoded_data */
+  return unpack(data)
 }
 
 export function JSONparse(stringify) {

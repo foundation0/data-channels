@@ -20,12 +20,12 @@
     "bootstrap:network": "node network/node.js 60000 60001 60002",
     "bootstrap:test": "cross-env TEST=1 BOOTSTRAP=1 mocha --require ts-node/register ./tests/**/*.test.ts",
     "build:browser:dev": "mkdir -p dist && browserify --debug index.ts -p [ tsify ] > dist/core.js",
+    "build:browser:watch": "mkdir -p dist && budo index.ts --dir test/www --live -- -p [ tsify ] -o dist/core.js",
     "build:browser": "mkdir -p dist && browserify index.ts -p [ tsify ] | uglifyjs --compress --mangle > dist/core.min.js",
     "test:browser": "playwright test test/browser/*.spec.ts",
     "debug": "playwright test --timeout=0 test/browser/*.ts",
     "clean": "tsc --build tsconfig.build.json --clean",
-    "clean-data": "rimraf ~/.backbone",
-    "http-server": "python3 -m http.server 8888"
+    "clean-data": "rimraf ~/.backbone"
   },
   "dependencies": {
     "@backbonedao/crypto": "github:backbonedao/crypto",
@@ -43,6 +43,7 @@
     "isomorphic-ws": "^4.0.1",
     "lexicographic-integer": "^1.1.0",
     "lodash": "^4.17.21",
+    "msgpackr": "^1.5.6",
     "node": "^16.13.0",
     "platform-detect": "^3.0.1",
     "random-access-idb": "^1.2.2",
@@ -63,6 +64,7 @@
     "@typescript-eslint/eslint-plugin": "^5.1.0",
     "@typescript-eslint/parser": "^5.1.0",
     "browserify": "^17.0.0",
+    "budo": "^11.7.0",
     "chai": "^4.3.4",
     "crypto-browserify": "^3.12.0",
     "dht": "github:backbonedao/dht",
@@ -80,6 +82,7 @@
     "ts-node": "^10.3.1",
     "tsify": "^5.0.4",
     "typescript": "^3.9.10",
-    "uglify-js": "^3.15.4"
+    "uglify-js": "^3.15.4",
+    "watchify": "^4.0.0"
   }
 }

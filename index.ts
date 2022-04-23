@@ -1,6 +1,4 @@
-// import { Buffer } from 'buffer/'
 //@ts-ignore
-// window['Buffer'] = Buffer
 import Core from './core'
 import Apps from './apps'
 

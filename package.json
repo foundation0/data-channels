@@ -4,7 +4,7 @@
   "author": "backbone://dao",
   "license": "AGPL-3.0-or-later",
   "version": "0.1.0",
-  "main": "index.ts",
+  "main": "dist/node/index.js",
   "engines": {
     "node": "<17.0.0"
   },
@@ -16,7 +16,6 @@
     "tsRepo": true
   },
   "scripts": {
-    "setup": "sh scripts/setup.sh",
     "bootstrap:network": "node network/node.js 60000 60001 60002",
     "bootstrap:test": "cross-env TEST=1 BOOTSTRAP=1 mocha --require ts-node/register ./tests/**/*.test.ts",
     "build": "rimraf dist && tsc && npm run build:browser",
@@ -25,7 +24,6 @@
     "build:browser": "mkdir -p dist && browserify index.ts -p [ tsify ] > dist/core.js && uglifyjs dist/core.js --compress --mangle > dist/core.min.js",
     "test:browser": "playwright test test/browser/*.spec.ts",
     "debug": "playwright test --timeout=0 test/browser/*.ts",
-    "clean": "tsc --build tsconfig.build.json --clean",
     "clean-data": "rimraf ~/.backbone"
   },
   "dependencies": {

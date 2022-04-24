@@ -8,7 +8,6 @@ export default async function Protocol(op: Operation, Core: any, Data: any) {
   if (typeof op !== 'object' || !op?.type) throw new Error('UNKNOWN OP')
   switch (op.type) {
     case 'set': {
-      console.log(op)
       await Core.put({ key: op.key, value: op.value })
       break
     }

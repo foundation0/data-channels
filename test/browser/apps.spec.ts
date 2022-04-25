@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test"
+import { test, expect } from '@playwright/test'
 import Core from '../../core'
 import { CoreConfig } from '../../common/interfaces'
 import { cleanup } from '../helper'
@@ -15,22 +15,20 @@ const config_kv: CoreConfig = {
   storage_prefix: 'test',
 }
 
-describe('Apps', () => {
-  beforeEach(cleanup)
-  afterEach(cleanup)
+test.beforeEach(cleanup)
+test.afterEach(cleanup)
 
-  it('should have working key/value protocol', async () => {
-    const core = await Core({ config: config_kv, app: Apps['keyvalue'] })
+test('Apps', async () => {
+  const core = await Core({ config: config_kv, app: Apps['keyvalue'] })
 
-    await core.set({ key: 'key', value: 'value' })
-    expect(await core.get('key')).to.eq('value')
+  await core.set({ key: 'key', value: 'value' })
+  expect(await core.get('key')).toEqual('value')
 
-    await core.set({ key: 'key2', value: 'value2' })
-    expect(await core.get('key')).to.eq('value')
-    expect(await core.get('key2')).to.eq('value2')
+  await core.set({ key: 'key2', value: 'value2' })
+  expect(await core.get('key')).toEqual('value')
+  expect(await core.get('key2')).toEqual('value2')
 
-    await core.del('key')
-    expect(await core.get('key')).to.be.null
-    expect(await core.get('key2')).to.eq('value2')
-  })
+  await core.del('key')
+  expect(await core.get('key')).toBeFalsy()
+  expect(await core.get('key2')).toEqual('value2')
 })

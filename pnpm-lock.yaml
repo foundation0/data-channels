@@ -25,6 +25,7 @@ specifiers:
   browserify: ^17.0.0
   budo: ^11.7.0
   chai: ^4.3.4
+  comlink: ^4.3.1
   cross-env: ^7.0.3
   crypto-browserify: ^3.12.0
   dht: github:backbonedao/dht
@@ -71,6 +72,7 @@ dependencies:
   '@noble/secp256k1': 1.5.5
   async: 3.2.3
   b4a: 1.5.0
+  comlink: 4.3.1
   cross-env: 7.0.3
   ethers: 5.6.4
   eventemitter2: 6.4.5
@@ -2880,6 +2882,10 @@ packages:
     dependencies:
       delayed-stream: 1.0.0
     dev: true
+
+  /comlink/4.3.1:
+    resolution: {integrity: sha512-+YbhUdNrpBZggBAHWcgQMLPLH1KDF3wJpeqrCKieWQ8RL7atmgsgTQko1XEBK6PsecfopWNntopJ+ByYG1lRaA==}
+    dev: false
 
   /commander/8.3.0:
     resolution: {integrity: sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww==}

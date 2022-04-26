@@ -30,8 +30,8 @@ test.describe('Core', () => {
     })
     const keys = await core.getKeys()
     expect(Object.keys(keys)).toEqual(['writers', 'indexes'])
-    expect(keys.writers[0]).toHaveLength(130)
-    expect(keys.indexes[0]).toHaveLength(130)
+    expect(keys.writers[0]).toHaveLength(66)
+    expect(keys.indexes[0]).toHaveLength(66)
     await core.set({ key: 'foo', value: 'bar'})
     const foo = await core.get('foo')
     expect(foo).toEqual('bar')
@@ -41,34 +41,34 @@ test.describe('Core', () => {
     // create first core
     cores['core1'] = await Core({
       config: {
-        address: 'replica-test',
+        address: 'replica-test2',
         encryption_key: default_config.keys.index,
         private: false,
         storage_prefix: 'test',
         storage: 'ram',
       },
-      app: Apps['chat'],
+      app: Apps['keyvalue'],
     })
 
     await cores['core1'].connect(true)
-    await cores['core1'].post({ text: 'hello', user: 'foobar' })
+    await cores['core1'].set({ key: 'hello', value: 'foobar' })
     await sleep(100)
     // create second core
     let config2: CoreConfig = {
-      address: 'replica-test',
+      address: 'replica-test2',
       storage_prefix: '2',
       encryption_key: default_config.keys.index,
       private: false,
       storage: 'ram',
     }
-    const keys1 = await cores['core1'].getKeys()
+    // const keys1 = await cores['core1'].getKeys()
     //config2.writers = keys1.writers
     //config2.indexes = keys1.indexes
     cores['core2'] = await Core({ config: config2, app: Apps['chat'] })
 
     // connect and verify replication
     await cores['core2'].connect(true)
-    await sleep(500)
+    await sleep(5000)
     let posts = await cores['core2'].all()
 
     expect(posts).toHaveLength(1)

@@ -3,7 +3,7 @@ import Rebase from '@backbonedao/data-viewer'
 import DataDB from '@backbonedao/data-db'
 import Swarm from '@backbonedao/network-node'
 // import Store from '../../backbone-data-manager'
-// import Rebase from '../../backbone-data-viewer'
+// import Rebase from '../../data-viewer'
 // import DataDB from '../../backbone-data-db'
 // import Swarm from '../../backbone-network-node'
 import platform from 'platform-detect'
@@ -18,6 +18,7 @@ import { homedir } from 'os'
 import default_config from '../bbconfig'
 import _ from 'lodash'
 import b4a from 'b4a'
+import { createHash, keyPair } from '@backbonedao/crypto'
 
 export function getStorage(bb_config: CoreConfig) {
   if (!bb_config) throw new Error('GETSTORAGE REQUIRES CORECONFIG')
@@ -220,9 +221,9 @@ class CoreClass {
     log(`initialized Core ${this.writer_key} / ${this.index_key}`)
 
     // Automated key exchange extension
-    const shatopic = sha256(`backbone://${this.address}`)
-    
-    /* const root = this.store.get(b4a.from(shatopic, 'hex'))
+    const shatopic = createHash(`backbone://${this.address}`)
+    const kp = keyPair(shatopic)
+    const root = this.store.get(b4a.from(kp.publicKey, 'hex'))
     await root.ready()
 
     const addWritersExt = root.registerExtension('polycore', {
@@ -249,7 +250,7 @@ class CoreClass {
         ch: 'network',
         msg: `${this.writer_key.slice(0, 8)} Added peer`,
       })
-    }) */
+    })
 
     this.writer = writer
     this.index = index
@@ -322,7 +323,7 @@ class CoreClass {
       // @ts-ignore
       swarm.join(Buffer.isBuffer(topic) ? topic : Buffer.from(topic, 'hex'))
       // @ts-ignore
-      await swarm.flush()
+      await swarm.flush(()=>{})
       return swarm
     }
     this.swarm = await connectToSwarm()

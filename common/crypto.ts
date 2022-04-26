@@ -56,7 +56,7 @@ export function verifySignature(params: { public_key: string, data: any, signatu
   return crypto.verify(params.data, params.signature, params.public_key)
 }
 
-export async function generatePathAddress(params: { signer_type: 'native' | 'ledger', path?: string, seed?: string, level1?: number, level2?: number }) {
+export async function generatePathAddress(params: { signer_type: 'native' | 'ledger' | 'walletconnect', path?: string, seed?: string, level1?: number, level2?: number }) {
   const max_path = 2140000000
   const level1 = params?.level1 || getRandomInt(0, max_path)
   const level2 = params?.level2 || getRandomInt(0, max_path)

@@ -111,7 +111,7 @@ class KeyVaultClass {
     return encrypted_auth_wrapper
   }
 
-  async createKeyVaultWrapper(params: { password: string; signer_type: 'native' | 'ledger' }) {
+  async createKeyVaultWrapper(params: { password: string; signer_type: 'native' | 'ledger' | 'walletconnect' }) {
     const keyvault: KeyVault = {
       signer_type: params.signer_type,
       seed: randomStr(32),

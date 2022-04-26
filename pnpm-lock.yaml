@@ -17,7 +17,7 @@ specifiers:
   '@types/chai': ^4.3.1
   '@types/jest': ^27.4.1
   '@types/mocha': ^9.1.1
-  '@types/node': ^16.11.29
+  '@types/node': ^16.11.30
   '@typescript-eslint/eslint-plugin': ^5.21.0
   '@typescript-eslint/parser': ^5.21.0
   async: ^3.2.3
@@ -52,7 +52,7 @@ specifiers:
   sodium-javascript: ^0.8.0
   stream-browserify: ^3.0.0
   ts-jest: ^27.1.4
-  ts-loader: ^9.2.8
+  ts-loader: ^9.2.9
   ts-node: ^10.7.0
   tsify: ^5.0.4
   ttl: ^1.3.1
@@ -66,7 +66,7 @@ dependencies:
   '@backbonedao/crypto': github.com/backbonedao/crypto/7e024f8755b45c83c87bed1cd6c15902c15c5cd3
   '@backbonedao/data-db': github.com/backbonedao/data-db/7065bcca0c5258f5c43ae84ea154a4636ab2cb5e
   '@backbonedao/data-manager': github.com/backbonedao/data-manager/6b842629e579dab08fd369ac60944946ec03e9ff
-  '@backbonedao/data-viewer': github.com/backbonedao/data-viewer/e16825eab59f28558eced79be0788f2281f7d2f8
+  '@backbonedao/data-viewer': github.com/backbonedao/data-viewer/88a82eed0e3c2f417717eb957ec4606092c5e625
   '@backbonedao/network-node': github.com/backbonedao/network-node/8d0734b045fdd92f01992ecc1486e80c16fc8c4c
   '@jest/globals': 27.5.1
   '@noble/secp256k1': 1.5.5
@@ -96,7 +96,7 @@ devDependencies:
   '@types/chai': 4.3.1
   '@types/jest': 27.4.1
   '@types/mocha': 9.1.1
-  '@types/node': 16.11.29
+  '@types/node': 16.11.30
   '@typescript-eslint/eslint-plugin': 5.21.0_f3c5dd5e344dcf52745eb6a5069fa757
   '@typescript-eslint/parser': 5.21.0_eslint@8.14.0+typescript@3.9.10
   browserify: 17.0.0
@@ -114,8 +114,8 @@ devDependencies:
   process: 0.11.10
   stream-browserify: 3.0.0
   ts-jest: 27.1.4_72c20c0484d5484adf88212cca9ea3b7
-  ts-loader: 9.2.8_typescript@3.9.10
-  ts-node: 10.7.0_f7c4b98b76c0d54d29b6b8d6d87acef8
+  ts-loader: 9.2.9_typescript@3.9.10
+  ts-node: 10.7.0_76a645e4ad50a6747383f2f6393d1d57
   tsify: 5.0.4_a866e42c8feb32667f3cceeb23836bf5
   typescript: 3.9.10
   uglify-js: 3.15.4
@@ -1234,7 +1234,7 @@ packages:
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     dependencies:
       '@jest/types': 27.5.1
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       chalk: 4.1.2
       jest-message-util: 27.5.1
       jest-util: 27.5.1
@@ -1255,7 +1255,7 @@ packages:
       '@jest/test-result': 27.5.1
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       emittery: 0.8.1
@@ -1292,7 +1292,7 @@ packages:
     dependencies:
       '@jest/fake-timers': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       jest-mock: 27.5.1
 
   /@jest/fake-timers/27.5.1:
@@ -1301,7 +1301,7 @@ packages:
     dependencies:
       '@jest/types': 27.5.1
       '@sinonjs/fake-timers': 8.1.0
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       jest-message-util: 27.5.1
       jest-mock: 27.5.1
       jest-util: 27.5.1
@@ -1328,7 +1328,7 @@ packages:
       '@jest/test-result': 27.5.1
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       chalk: 4.1.2
       collect-v8-coverage: 1.0.1
       exit: 0.1.2
@@ -1412,7 +1412,7 @@ packages:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.4
       '@types/istanbul-reports': 3.0.1
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       '@types/yargs': 16.0.4
       chalk: 4.1.2
 
@@ -1654,7 +1654,7 @@ packages:
       '@babel/types': 7.17.0
       '@types/babel__generator': 7.6.4
       '@types/babel__template': 7.4.1
-      '@types/babel__traverse': 7.17.0
+      '@types/babel__traverse': 7.17.1
     dev: true
 
   /@types/babel__generator/7.6.4:
@@ -1670,8 +1670,8 @@ packages:
       '@babel/types': 7.17.0
     dev: true
 
-  /@types/babel__traverse/7.17.0:
-    resolution: {integrity: sha512-r8aveDbd+rzGP+ykSdF3oPuTVRWRfbBiHl0rVDM2yNEmSMXfkObQLV46b4RnCv3Lra51OlfnZhkkFaDl2MIRaA==}
+  /@types/babel__traverse/7.17.1:
+    resolution: {integrity: sha512-kVzjari1s2YVi77D3w1yuvohV2idweYXMCDzqBiVNN63TcDWrIlTVOYpqVrvbbyOE/IyzBoTKF0fdnLPEORFxA==}
     dependencies:
       '@babel/types': 7.17.0
     dev: true
@@ -1683,7 +1683,7 @@ packages:
   /@types/graceful-fs/4.1.5:
     resolution: {integrity: sha512-anKkLmZZ+xm4p8JWBf4hElkM4XR+EZeA2M9BAkkTldmcyDY4mbdIJnRghDJH3Ov5ooY7/UAoENtmdMSkaAd7Cw==}
     dependencies:
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
     dev: true
 
   /@types/istanbul-lib-coverage/2.0.4:
@@ -1714,8 +1714,8 @@ packages:
     resolution: {integrity: sha512-Z61JK7DKDtdKTWwLeElSEBcWGRLY8g95ic5FoQqI9CMx0ns/Ghep3B4DfcEimiKMvtamNVULVNKEsiwV3aQmXw==}
     dev: true
 
-  /@types/node/16.11.29:
-    resolution: {integrity: sha512-9dDdonLyPJQJ/kdOlDxAah+bTI+u2ccF3k62FErhquDuggoCX6piWez7j7o6yNE+rP2IRcZVQ6Tw4N0P38+rWA==}
+  /@types/node/16.11.30:
+    resolution: {integrity: sha512-cw8NVA2xHXysO4dmSxePZybEoMWhnrimf5+b1vOh5SV7QB8ZnGm2yTvGllXuwwMQNYpYwGB4HCrVJkZD3o9Oew==}
 
   /@types/prettier/2.6.0:
     resolution: {integrity: sha512-G/AdOadiZhnJp0jXCaBQU449W2h716OW/EoXeYkCytxKL06X1WCXB4DZpp8TpZ8eyIJVS1cw4lrlkkSYU21cDw==}
@@ -1736,7 +1736,7 @@ packages:
     resolution: {integrity: sha512-Cn6WYCm0tXv8p6k+A8PvbDG763EDpBoTzHdA+Q/MF6H3sapGjCm9NzoaJncJS9tUKSuCoDs9XHxYYsQDgxR6kw==}
     requiresBuild: true
     dependencies:
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
     dev: true
     optional: true
 
@@ -2166,7 +2166,7 @@ packages:
       '@babel/template': 7.16.7
       '@babel/types': 7.17.0
       '@types/babel__core': 7.1.19
-      '@types/babel__traverse': 7.17.0
+      '@types/babel__traverse': 7.17.1
     dev: true
 
   /babel-preset-current-node-syntax/1.0.1_@babel+core@7.17.9:
@@ -2469,7 +2469,7 @@ packages:
       timers-browserify: 1.4.2
       tty-browserify: 0.0.1
       url: 0.11.0
-      util: 0.10.3
+      util: 0.10.4
       vm-browserify: 1.1.2
       xtend: 4.0.2
     dev: true
@@ -3497,7 +3497,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@electron/get': 1.14.1
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       extract-zip: 1.7.0
     transitivePeerDependencies:
       - supports-color
@@ -4729,6 +4729,10 @@ packages:
     resolution: {integrity: sha1-sX0I0ya0Qj5Wjv9xn5GwscvfafE=}
     dev: true
 
+  /inherits/2.0.3:
+    resolution: {integrity: sha1-Yzwsg+PaQqUC9SRmAiSA9CCCYd4=}
+    dev: true
+
   /inherits/2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
 
@@ -5186,7 +5190,7 @@ packages:
       '@jest/environment': 27.5.1
       '@jest/test-result': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       chalk: 4.1.2
       co: 4.6.0
       dedent: 0.7.0
@@ -5269,7 +5273,7 @@ packages:
       pretty-format: 27.5.1
       slash: 3.0.0
       strip-json-comments: 3.1.1
-      ts-node: 10.7.0_f7c4b98b76c0d54d29b6b8d6d87acef8
+      ts-node: 10.7.0_76a645e4ad50a6747383f2f6393d1d57
     transitivePeerDependencies:
       - bufferutil
       - canvas
@@ -5311,7 +5315,7 @@ packages:
       '@jest/environment': 27.5.1
       '@jest/fake-timers': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       jest-mock: 27.5.1
       jest-util: 27.5.1
       jsdom: 16.7.0
@@ -5329,7 +5333,7 @@ packages:
       '@jest/environment': 27.5.1
       '@jest/fake-timers': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       jest-mock: 27.5.1
       jest-util: 27.5.1
     dev: true
@@ -5344,7 +5348,7 @@ packages:
     dependencies:
       '@jest/types': 27.5.1
       '@types/graceful-fs': 4.1.5
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       anymatch: 3.1.2
       fb-watchman: 2.0.1
       graceful-fs: 4.2.10
@@ -5366,7 +5370,7 @@ packages:
       '@jest/source-map': 27.5.1
       '@jest/test-result': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       chalk: 4.1.2
       co: 4.6.0
       expect: 27.5.1
@@ -5429,7 +5433,7 @@ packages:
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     dependencies:
       '@jest/types': 27.5.1
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
 
   /jest-pnp-resolver/1.2.2_jest-resolve@27.5.1:
     resolution: {integrity: sha512-olV41bKSMm8BdnuMsewT4jqlZ8+3TCARAXjZGT9jcoSnrfUnRCqnMoF9XEeoWjbzObpqF9dRhHQj0Xb9QdF6/w==}
@@ -5484,7 +5488,7 @@ packages:
       '@jest/test-result': 27.5.1
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       chalk: 4.1.2
       emittery: 0.8.1
       graceful-fs: 4.2.10
@@ -5541,7 +5545,7 @@ packages:
     resolution: {integrity: sha512-jZCyo6iIxO1aqUxpuBlwTDMkzOAJS4a3eYz3YzgxxVQFwLeSA7Jfq5cbqCY+JLvTDrWirgusI/0KwxKMgrdf7w==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     dependencies:
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       graceful-fs: 4.2.10
     dev: true
 
@@ -5556,7 +5560,7 @@ packages:
       '@babel/types': 7.17.0
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/babel__traverse': 7.17.0
+      '@types/babel__traverse': 7.17.1
       '@types/prettier': 2.6.0
       babel-preset-current-node-syntax: 1.0.1_@babel+core@7.17.9
       chalk: 4.1.2
@@ -5580,7 +5584,7 @@ packages:
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     dependencies:
       '@jest/types': 27.5.1
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       chalk: 4.1.2
       ci-info: 3.3.0
       graceful-fs: 4.2.10
@@ -5604,7 +5608,7 @@ packages:
     dependencies:
       '@jest/test-result': 27.5.1
       '@jest/types': 27.5.1
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       jest-util: 27.5.1
@@ -5615,7 +5619,7 @@ packages:
     resolution: {integrity: sha512-7vuh85V5cdDofPyxn58nrPjBktZo0u9x1g8WtjQol+jZDaE+fhN+cIvTj11GndBnMnyfrUOG1sZQxCdjKh+DKg==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       merge-stream: 2.0.0
       supports-color: 8.1.1
     dev: true
@@ -8418,8 +8422,8 @@ packages:
       yargs-parser: 20.2.9
     dev: true
 
-  /ts-loader/9.2.8_typescript@3.9.10:
-    resolution: {integrity: sha512-gxSak7IHUuRtwKf3FIPSW1VpZcqF9+MBrHOvBp9cjHh+525SjtCIJKVGjRKIAfxBwDGDGCFF00rTfzB1quxdSw==}
+  /ts-loader/9.2.9_typescript@3.9.10:
+    resolution: {integrity: sha512-b0+vUY2/enb0qYtDQuNlDnJ9900NTiPiJcDJ6sY7ax1CCCwXfYIqPOMm/BwW7jsF1km+Oz8W9s31HLuD+FLIMg==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       typescript: '*'
@@ -8432,7 +8436,7 @@ packages:
       typescript: 3.9.10
     dev: true
 
-  /ts-node/10.7.0_f7c4b98b76c0d54d29b6b8d6d87acef8:
+  /ts-node/10.7.0_76a645e4ad50a6747383f2f6393d1d57:
     resolution: {integrity: sha512-TbIGS4xgJoX2i3do417KSaep1uRAW/Lu+WAL2doDHC0D6ummjirVOXU5/7aiZotbQ5p1Zp9tP7U6cYhA0O7M8A==}
     hasBin: true
     peerDependencies:
@@ -8451,7 +8455,7 @@ packages:
       '@tsconfig/node12': 1.0.9
       '@tsconfig/node14': 1.0.1
       '@tsconfig/node16': 1.0.2
-      '@types/node': 16.11.29
+      '@types/node': 16.11.30
       acorn: 8.7.1
       acorn-walk: 8.2.0
       arg: 4.1.3
@@ -8684,6 +8688,12 @@ packages:
     resolution: {integrity: sha1-evsa/lCAUkZInj23/g7TeTNqwPk=}
     dependencies:
       inherits: 2.0.1
+    dev: true
+
+  /util/0.10.4:
+    resolution: {integrity: sha512-0Pm9hTQ3se5ll1XihRic3FDIku70C+iHUdT/W926rSgHV5QgXsYbKZN8MSC3tJtSkhuROzvsQjAaFENRXr+19A==}
+    dependencies:
+      inherits: 2.0.3
     dev: true
 
   /util/0.12.4:
@@ -9120,8 +9130,8 @@ packages:
       - utf-8-validate
     dev: false
 
-  github.com/backbonedao/data-viewer/e16825eab59f28558eced79be0788f2281f7d2f8:
-    resolution: {tarball: https://codeload.github.com/backbonedao/data-viewer/tar.gz/e16825eab59f28558eced79be0788f2281f7d2f8}
+  github.com/backbonedao/data-viewer/88a82eed0e3c2f417717eb957ec4606092c5e625:
+    resolution: {tarball: https://codeload.github.com/backbonedao/data-viewer/tar.gz/88a82eed0e3c2f417717eb957ec4606092c5e625}
     name: '@backbonedao/data-viewer'
     version: 1.0.0-alpha.8
     requiresBuild: true

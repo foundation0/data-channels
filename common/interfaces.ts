@@ -62,7 +62,7 @@ export interface AuthWrapper {
 
 export interface KeyVault {
   pin?: string
-  signer_type: 'native' | 'ledger'
+  signer_type: 'native' | 'ledger' | 'walletconnect'
   seed?: string // used with native signer
   verify_nonce?: string // used with ledger
   verify_signature?: string // used with ledger

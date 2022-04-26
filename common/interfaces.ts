@@ -3,11 +3,9 @@ import { Mnemonic } from 'ethers/lib/utils'
 export interface UserConfig {
   username: string
   password: string
-  signer_type: 'native' | 'ledger'
+  signer_type: 'native' | 'ledger' | 'walletconnect'
   new?: boolean
   reminder?: string
-  pin?: string
-  rewards_address?: string
 }
 
 export interface BackboneConfig {

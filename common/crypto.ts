@@ -6,12 +6,6 @@ import b4a from 'b4a'
 const Buffer = b4a
 import crypto from '@backbonedao/crypto'
 
-// export function randomBytes(bytes) {
-//   let buf = Buffer.alloc(bytes)
-//   sodium.randombytes_buf(buf)
-//   return buf
-// }
-
 export const randomBytes = crypto.randomBytes 
 
 export function numericHash(seed?: Buffer) {
@@ -40,25 +34,15 @@ export function encrypt(params: { key: string, data: string | Buffer | object })
 }
 
 export function decrypt(params: { key: string, cipher: Buffer, nonce: string }) {
-  //console.log(params.cipher.length, sodium.crypto_secretbox_MACBYTES)
   const decrypted_data = Buffer.alloc(params.cipher.length - sodium.crypto_secretbox_MACBYTES)
   const secret = Buffer.from(sha256(params.key), 'hex').slice(0, 32)
   sodium.crypto_secretbox_open_easy(decrypted_data, params.cipher, Buffer.from(params.nonce, 'hex'), secret)
   return decodeCoreData(decrypted_data)
 }
 
-export function securePassword(input: string) {
-  const output = Buffer.alloc(sodium.crypto_pwhash_STRBYTES)
-  const passwd = Buffer.from(input)
-  const opslimit = sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE
-  const memlimit = sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE
-  sodium.crypto_pwhash_str(output, passwd, opslimit, memlimit)
-  return crypto.buf2hex(output)
-}
+export const securePassword = crypto.securePassword
 
-export function verifyPassword(params: { hash: string, password: string }) {
-  return sodium.crypto_pwhash_str_verify(Buffer.from(params?.hash, 'hex'), Buffer.from(params?.password))
-}
+export const verifyPassword = crypto.verifyPassword
 
 export async function createId(seed: string) {
   return crypto.keyPair(seed)

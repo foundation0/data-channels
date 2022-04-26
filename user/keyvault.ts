@@ -1,3 +1,5 @@
+// THIS IS COMPLETELY OUTDATED AND UNUSED RIGHT NOW
+
 import bbconfig from '../bbconfig'
 import { registerMethods, hash } from '../common'
 import {

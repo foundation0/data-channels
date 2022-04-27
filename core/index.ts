@@ -37,7 +37,7 @@ export function getStorage(bb_config: CoreConfig) {
       : `${getHomedir()}/${prefix}${pathname}`
   } else {
     log('Browser runtime detected, using RAI for storage')
-    storage = RAI
+    storage = RAI()
   }
   const storage_id: string = bb_config?.storage_prefix
     ? bb_config.address + bb_config.storage_prefix

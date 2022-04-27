@@ -33,6 +33,7 @@
     "@backbonedao/data-viewer": "github:backbonedao/data-viewer",
     "@backbonedao/network-node": "github:backbonedao/network-node",
     "@jest/globals": "^27.5.1",
+    "@milahu/patch-package-with-pnpm-support": "^6.4.10",
     "@noble/secp256k1": "^1.5.5",
     "async": "^3.2.3",
     "b4a": "^1.5.0",

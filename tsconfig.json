@@ -19,13 +19,7 @@
     "typeRoots": ["./node_modules/@types"],
     "types": ["node"]
   },
-  "exclude": [
-    "**/node_modules",
-    "archive",
-    "test",
-    "dist",
-    "demo"
-  ],
+  "exclude": ["**/node_modules", "archive", "test", "dist", "demo"],
   "ts-node": {
     "files": true
   }

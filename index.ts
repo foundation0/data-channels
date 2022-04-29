@@ -1,6 +1,12 @@
+import User from './user'
 import Core from './core'
 import platform from 'platform-detect'
 
-if(platform.browser) window['Core'] = Core
-export default Core
-module.exports = Core
+const Backbone = {
+  User,
+  Core,
+}
+
+if (platform.browser) window['bb'] = Backbone
+export default Backbone
+module.exports = Backbone

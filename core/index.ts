@@ -69,7 +69,15 @@ class CoreClass {
     this.config = {
       network: {
         bootstrap: default_config.network.bootstrap_servers,
-        relay: default_config.network.bootstrap_servers_ws,
+        // simplePeer: {
+        //   config: {
+        //     iceServers: [
+        //       {
+        //         urls: default_config.network.stunturn_servers,
+        //       },
+        //     ],
+        //   },
+        // },
       },
       ...config,
     }
@@ -181,11 +189,10 @@ class CoreClass {
                   })
                 },
               }
-            ) 
+            )
           } catch (error) {
             throw error
           }
-          
         }
 
         await index.flush()
@@ -254,10 +261,6 @@ class CoreClass {
 
     this.writer = writer
     this.index = index
-
-    // After we are done, update network
-    // this.config.network = await updateNetwork()
-
   }
   async connect(this: CoreClass, use_unique_swarm?: boolean) {
     if (!this.config?.network) throw new Error('CONNECT NEEDS NETWORK CONFIG')
@@ -265,7 +268,7 @@ class CoreClass {
 
     const network_config: {
       bootstrap?: string[]
-      relay?: string
+      simplePeer?: { config: { iceServers: [{ urls: string[] }] } }
       firewall?: Function
       keyPair?: { publicKey: b4a; secretKey: b4a }
       dht?: Function
@@ -280,8 +283,9 @@ class CoreClass {
     if (this.config.firewall) network_config.firewall = this.config.firewall
 
     // add keypair for noise
-    // if (this.config.noiseKeypair)
-    //  network_config.keyPair = generateNoiseKeypair(sha256(this.config.noiseKeypair))
+    if (this.config.networkId) {
+      network_config.keyPair = this.config.networkId
+    }
 
     let self = this
     async function connectToSwarm() {
@@ -316,14 +320,12 @@ class CoreClass {
       })
       emit({
         ch: 'network',
-        msg: `Connecting to ${shatopic} (backbone://${
-          self.address
-        }) with connection id ...`, //${buf2hex(swarm.keyPair.publicKey)}
+        msg: `Connecting to ${shatopic} (backbone://${self.address}) with connection id ...`, //${buf2hex(swarm.keyPair.publicKey)}
       })
       // @ts-ignore
       swarm.join(Buffer.isBuffer(topic) ? topic : Buffer.from(topic, 'hex'))
       // @ts-ignore
-      await swarm.flush(()=>{})
+      await swarm.flush(() => {})
       return swarm
     }
     this.swarm = await connectToSwarm()

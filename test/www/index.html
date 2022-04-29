@@ -11,17 +11,20 @@
     <script>
       localStorage.setItem('LOG', 1)
       ;(async () => {
-        const config = {
+        const core_cfg = {
           config: {
             address: 'replica-test',
             encryption_key: 'foo',
             private: false,
-            storage: 'rai'
+            storage: 'rai',
           },
-          app: Apps['keyvalue'],
+          app: Backbone.Apps['keyvalue'],
         }
-        window.core = await Core(config)
+        window.core = await Backbone.Core(core_cfg)
         console.log(window.core)
+
+        const user = await Backbone.User()
+        window.user = await user()
       })()
     </script>
   </body>

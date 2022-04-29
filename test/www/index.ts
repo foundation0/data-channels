@@ -1,8 +1,9 @@
 //@ts-ignore
 import Core from '../../core'
 import Apps from '../../apps'
+import User from '../../user'
 
-window['Core'] = Core
-window['Apps'] = Apps
+const Backbone = { Core, User, Apps }
+window['Backbone'] = Backbone
 console.log('Backbone initiated')
-export default Core
+export default Backbone

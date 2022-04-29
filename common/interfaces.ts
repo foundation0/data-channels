@@ -22,12 +22,27 @@ export interface CoreConfig extends BackboneConfig {
   private: boolean
   network?: {
     bootstrap?: string[]
-    relay?: string
+    simplePeer?: {
+      config: {
+        iceServers: [
+          {
+            urls: string[]
+          }
+        ]
+      }
+    }
   }
   storage_prefix: string
   storage?: 'ram' | 'rai' | 'raf'
   firewall?: Function
-  noiseKeypair?: string
+  keypair?: {
+    secretKey: string
+    publicKey: string
+  }
+  networkId?: {
+    secretKey: string
+    publicKey: string
+  }
 }
 
 export interface AccessConfig extends BackboneConfig {

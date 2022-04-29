@@ -5,7 +5,6 @@ async function Protocol(op, Core, Data) {
         throw new Error('UNKNOWN OP');
     switch (op.type) {
         case 'set': {
-            console.log(op);
             await Core.put({ key: op.key, value: op.value });
             break;
         }

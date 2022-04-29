@@ -17,7 +17,6 @@ async function API(Core, Protocol) {
             });
         },
         async set(params) {
-            console.log('p', params);
             await Protocol({
                 type: 'set',
                 key: params.key,

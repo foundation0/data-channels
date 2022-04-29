@@ -6,7 +6,7 @@ import KeyVault from './keyvault'
 import Buffer from 'b4a'
 import { createHash, discoveryKey, buf2hex, encrypt, decrypt, hex2buf } from '@backbonedao/crypto'
 import { HDNode } from 'ethers/lib/utils'
-
+import Auth from '../auth'
 class UserClass {
   private keyvault
   private user_config
@@ -117,7 +117,8 @@ class UserClass {
   }
 }
 
-async function User(user_config: UserConfig, core_config_override?) {
+async function User(user_config?: UserConfig, core_config_override?) {
+  if(!user_config) return Auth
   const U = new UserClass(user_config)
   await U.init(core_config_override)
   const API = registerMethods({

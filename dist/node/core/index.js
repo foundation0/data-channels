@@ -16,6 +16,7 @@ const crypto_1 = require("../common/crypto");
 const os_1 = require("os");
 const bbconfig_1 = __importDefault(require("../bbconfig"));
 const b4a_1 = __importDefault(require("b4a"));
+const crypto_2 = require("@backbonedao/crypto");
 function getStorage(bb_config) {
     if (!bb_config)
         throw new Error('GETSTORAGE REQUIRES CORECONFIG');
@@ -34,7 +35,7 @@ function getStorage(bb_config) {
     }
     else {
         common_1.log('Browser runtime detected, using RAI for storage');
-        storage = random_access_idb_1.default;
+        storage = random_access_idb_1.default();
     }
     const storage_id = bb_config?.storage_prefix
         ? bb_config.address + bb_config.storage_prefix
@@ -48,7 +49,6 @@ class CoreClass {
         this.config = {
             network: {
                 bootstrap: bbconfig_1.default.network.bootstrap_servers,
-                relay: bbconfig_1.default.network.bootstrap_servers_ws,
             },
             ...config,
         };
@@ -173,7 +173,31 @@ class CoreClass {
             valueEncoding: 'binary',
         });
         common_1.log(`initialized Core ${this.writer_key} / ${this.index_key}`);
-        const shatopic = crypto_1.sha256(`backbone://${this.address}`);
+        const shatopic = crypto_2.createHash(`backbone://${this.address}`);
+        const kp = crypto_2.keyPair(shatopic);
+        const root = this.store.get(b4a_1.default.from(kp.publicKey, 'hex'));
+        await root.ready();
+        const addWritersExt = root.registerExtension('polycore', {
+            encoding: 'json',
+            onmessage: async (msg) => {
+                msg.writers.forEach((key) => {
+                    common_1.emit({
+                        ch: 'network',
+                        msg: `${this.writer_key.slice(0, 8)} got key ${key} from peer`,
+                    });
+                    this.addWriter({ key });
+                });
+            },
+        });
+        root.on('peer-add', (peer) => {
+            addWritersExt.send({
+                writers: this.rebase.inputs.map((core) => common_1.buf2hex(core.key)),
+            }, peer);
+            common_1.emit({
+                ch: 'network',
+                msg: `${this.writer_key.slice(0, 8)} Added peer`,
+            });
+        });
         this.writer = writer;
         this.index = index;
     }
@@ -189,6 +213,9 @@ class CoreClass {
         });
         if (this.config.firewall)
             network_config.firewall = this.config.firewall;
+        if (this.config.networkId) {
+            network_config.keyPair = this.config.networkId;
+        }
         let self = this;
         async function connectToSwarm() {
             const swarm = network_node_1.default(network_config);
@@ -207,7 +234,7 @@ class CoreClass {
                 msg: `Connecting to ${shatopic} (backbone://${self.address}) with connection id ...`,
             });
             swarm.join(Buffer.isBuffer(topic) ? topic : Buffer.from(topic, 'hex'));
-            await swarm.flush();
+            await swarm.flush(() => { });
             return swarm;
         }
         this.swarm = await connectToSwarm();

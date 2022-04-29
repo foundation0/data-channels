@@ -12,7 +12,7 @@ specifiers:
   '@backbonedao/data-viewer': github:backbonedao/data-viewer
   '@backbonedao/network-node': github:backbonedao/network-node
   '@jest/globals': ^27.5.1
-  '@milahu/patch-package-with-pnpm-support': ^6.4.10
+  '@milahu/patch-package': ^6.4.11
   '@noble/secp256k1': ^1.5.5
   '@playwright/test': ^1.21.1
   '@types/chai': ^4.3.1
@@ -33,6 +33,7 @@ specifiers:
   eslint: ^8.14.0
   ethers: ^5.6.4
   eventemitter2: ^6.4.5
+  idb-keyval: ^6.1.0
   isomorphic-ws: ^4.0.1
   jest: ^27.5.1
   lexicographic-integer: ^1.1.0
@@ -45,6 +46,7 @@ specifiers:
   path-browserify: ^1.0.1
   platform-detect: ^3.0.1
   playwright: ^1.21.1
+  preact: ^10.7.1
   process: ^0.11.10
   random-access-idb: ^1.2.2
   random-access-memory: ^4.1.0
@@ -53,7 +55,6 @@ specifiers:
   sodium-javascript: ^0.8.0
   stream-browserify: ^3.0.0
   ts-jest: ^27.1.4
-  ts-loader: ^9.2.9
   ts-node: ^10.7.0
   tsify: ^5.0.4
   ttl: ^1.3.1
@@ -70,7 +71,7 @@ dependencies:
   '@backbonedao/data-viewer': github.com/backbonedao/data-viewer/88a82eed0e3c2f417717eb957ec4606092c5e625
   '@backbonedao/network-node': github.com/backbonedao/network-node/8d0734b045fdd92f01992ecc1486e80c16fc8c4c
   '@jest/globals': 27.5.1
-  '@milahu/patch-package-with-pnpm-support': 6.4.10
+  '@milahu/patch-package': 6.4.11
   '@noble/secp256k1': 1.5.5
   async: 3.2.3
   b4a: 1.5.0
@@ -78,12 +79,14 @@ dependencies:
   cross-env: 7.0.3
   ethers: 5.6.4
   eventemitter2: 6.4.5
+  idb-keyval: 6.1.0
   isomorphic-ws: 4.0.1
   lexicographic-integer: 1.1.0
   lodash: 4.17.21
   msgpackr: 1.5.6
   node: 16.14.2
   platform-detect: 3.0.1
+  preact: 10.7.1
   random-access-idb: 1.2.2
   random-access-memory: 4.1.0
   rimraf: 3.0.2
@@ -116,7 +119,6 @@ devDependencies:
   process: 0.11.10
   stream-browserify: 3.0.0
   ts-jest: 27.1.4_72c20c0484d5484adf88212cca9ea3b7
-  ts-loader: 9.2.9_typescript@3.9.10
   ts-node: 10.7.0_76a645e4ad50a6747383f2f6393d1d57
   tsify: 5.0.4_a866e42c8feb32667f3cceeb23836bf5
   typescript: 3.9.10
@@ -1446,10 +1448,9 @@ packages:
     resolution: {integrity: sha512-nkalE/f1RvRGChwBnEIoBfSEYOXnCRdleKuv6+lePbMDrMZXeDQnqak5XDOeBgrPPyPfAdcCu/B5z+v3VhplGg==}
     dev: false
 
-  /@milahu/patch-package-with-pnpm-support/6.4.10:
-    resolution: {integrity: sha512-v39Gi8NffnZsxbg0EPVEKGiHA6LAzhbCHyWjT/J9QCuwUvoMihPBjtUzUA+jLBDQZcwIezzsy/g84l6BJDK4Xw==}
+  /@milahu/patch-package/6.4.11:
+    resolution: {integrity: sha512-5FX4Uy9ffccIhhHa0nkOaKoNYNu9lmi2A6WUST7UjPiAC0FL8AYXA7/XWht0far8hXVLf3QJ+q1CUGqGtMG3zw==}
     engines: {npm: '>5'}
-    deprecated: the package was renamed to @milahu/patch-package
     hasBin: true
     dependencies:
       '@types/dashdash': 1.14.1
@@ -1971,7 +1972,7 @@ packages:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
     engines: {node: '>= 6.0.0'}
     dependencies:
-      debug: 4.3.3
+      debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -3582,14 +3583,6 @@ packages:
     dependencies:
       once: 1.4.0
 
-  /enhanced-resolve/5.9.3:
-    resolution: {integrity: sha512-Bq9VSor+kjvW3f9/MiiR4eE3XYgOl7/rS8lnSxbRbF3kS0B2r+Y9w5krBWxZgDxASVZbdYrn5wT4j/Wb0J9qow==}
-    engines: {node: '>=10.13.0'}
-    dependencies:
-      graceful-fs: 4.2.10
-      tapable: 2.2.1
-    dev: true
-
   /enstore/1.0.1:
     resolution: {integrity: sha1-og/nHq696KOBOgoSQEdfVYVKgas=}
     dependencies:
@@ -4729,6 +4722,12 @@ packages:
     dependencies:
       safer-buffer: 2.1.2
     dev: true
+
+  /idb-keyval/6.1.0:
+    resolution: {integrity: sha512-u/qHZ75rlD3gH+Zah8dAJVJcGW/RfCnfNrFkElC5RpRCnpsCXXhqjVk+6MoVKJ3WhmNbRYdI6IIVP88e+5sxGw==}
+    dependencies:
+      safari-14-idb-fix: 3.0.0
+    dev: false
 
   /ieee754/1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
@@ -6998,6 +6997,10 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
+  /preact/10.7.1:
+    resolution: {integrity: sha512-MufnRFz39aIhs9AMFisonjzTud1PK1bY+jcJLo6m2T9Uh8AqjD77w11eAAawmjUogoGOnipECq7e/1RClIKsxg==}
+    dev: false
+
   /prelude-ls/1.1.2:
     resolution: {integrity: sha1-IZMqVJ9eUv/ZqCf1cOBL5iqX2lQ=}
     engines: {node: '>= 0.8.0'}
@@ -7450,6 +7453,10 @@ packages:
     dependencies:
       queue-microtask: 1.2.3
     dev: true
+
+  /safari-14-idb-fix/3.0.0:
+    resolution: {integrity: sha512-eBNFLob4PMq8JA1dGyFn6G97q3/WzNtFK4RnzT1fnLq+9RyrGknzYiM/9B12MnKAxuj1IXr7UKYtTNtjyKMBog==}
+    dev: false
 
   /safe-buffer/5.1.2:
     resolution: {integrity: sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==}
@@ -8207,11 +8214,6 @@ packages:
       split: 0.1.2
     dev: false
 
-  /tapable/2.2.1:
-    resolution: {integrity: sha512-GNzQvQTOIP6RyTfE2Qxb8ZVlNmw0n88vp1szwWRimP02mnTsx3Wtn5qRdqY9w2XduFNUgvOwhNnQsjwCp+kqaQ==}
-    engines: {node: '>=6'}
-    dev: true
-
   /tape-run/9.0.0:
     resolution: {integrity: sha512-T1LHKDo7K02gN05/e3IBi29/VLSnkgpNfqZI0ysBQUzdO7kH1ov6+YOYHGLDYX6hgQ+Y42RJYiFQuppI+tMcSA==}
     hasBin: true
@@ -8494,20 +8496,6 @@ packages:
       semver: 7.3.7
       typescript: 3.9.10
       yargs-parser: 20.2.9
-    dev: true
-
-  /ts-loader/9.2.9_typescript@3.9.10:
-    resolution: {integrity: sha512-b0+vUY2/enb0qYtDQuNlDnJ9900NTiPiJcDJ6sY7ax1CCCwXfYIqPOMm/BwW7jsF1km+Oz8W9s31HLuD+FLIMg==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      typescript: '*'
-      webpack: ^5.0.0
-    dependencies:
-      chalk: 4.1.2
-      enhanced-resolve: 5.9.3
-      micromatch: 4.0.5
-      semver: 7.3.7
-      typescript: 3.9.10
     dev: true
 
   /ts-node/10.7.0_76a645e4ad50a6747383f2f6393d1d57:

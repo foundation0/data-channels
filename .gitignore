@@ -10,3 +10,4 @@ common/network/swarm
 common/network/dht*
 core/store/encrypt
 archive
+_*

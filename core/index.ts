@@ -1,19 +1,17 @@
 import Store from '@backbonedao/data-manager'
 import Rebase from '@backbonedao/data-viewer'
 import DataDB from '@backbonedao/data-db'
-import Swarm from '@backbonedao/network-node'
+import Network from '@backbonedao/network-node'
 // import Store from '../../backbone-data-manager'
 // import Rebase from '../../data-viewer'
 // import DataDB from '../../backbone-data-db'
-// import Swarm from '../../backbone-network-node'
+// import Swarm from '../../network-node'
 import platform from 'platform-detect'
 import RAM from 'random-access-memory'
 import RAI from 'random-access-idb'
-// import RAW from 'random-access-web'
-// import RACF from 'random-access-chrome-file'
 import { CoreConfig } from '../common/interfaces'
 import { buf2hex, decodeCoreData, emit, encodeCoreData, error, getHomedir, log } from '../common'
-import { generateNoiseKeypair, sha256 } from '../common/crypto'
+import { sha256 } from '../common/crypto'
 import { homedir } from 'os'
 import default_config from '../bbconfig'
 import _ from 'lodash'
@@ -51,7 +49,8 @@ class CoreClass {
   config: CoreConfig
   store: any // needs types
   address: string
-  swarm: any // needs types
+  address_hash: string
+  network: any // needs types
   kv: any // needs types
   drive: any // needs types
   rebase: any // needs types
@@ -63,7 +62,7 @@ class CoreClass {
   encryption_key: b4a
   writer: any
   index: any
-  swarm_refresh_timer: any
+  network_refresh_timer: any
 
   constructor(config: CoreConfig, protocol: any) {
     this.config = {
@@ -104,6 +103,7 @@ class CoreClass {
     this.writer_key = buf2hex(writer.key)
     this.index_key = buf2hex(index.key)
     this.address = this.config.address
+    this.address_hash = createHash(`backbone://${this.config.address}`)
 
     // init index
     this.rebase = new Rebase({
@@ -228,10 +228,12 @@ class CoreClass {
     log(`initialized Core ${this.writer_key} / ${this.index_key}`)
 
     // Automated key exchange extension
-    const shatopic = createHash(`backbone://${this.address}`)
-    const kp = keyPair(shatopic)
+    const kp = keyPair(this.address_hash)
     const root = this.store.get(b4a.from(kp.publicKey, 'hex'))
     await root.ready()
+
+    console.log(`discovery keys:\nwriter: ${writer.discoveryKey}\nindex: ${index.discoveryKey}\nroot: ${root.discoveryKey}`)
+    console.log(`public keys:\nwriter: ${buf2hex(writer.key)}\nindex: ${buf2hex(index.key)}\nroot: ${buf2hex(root.key)}`)
 
     const addWritersExt = root.registerExtension('polycore', {
       encoding: 'json',
@@ -283,33 +285,32 @@ class CoreClass {
     if (this.config.firewall) network_config.firewall = this.config.firewall
 
     // add keypair for noise
-    if (this.config.networkId) {
-      network_config.keyPair = this.config.networkId
+    if (!this.config.network_id) {
+      this.config.network_id = keyPair()
     }
+    network_config.keyPair = this.config.network_id
+
+    console.log(`networkd id:\nhex: ${buf2hex(this.config.network_id?.publicKey)}\nbuf: ${this.config.network_id?.publicKey}`)
 
     let self = this
-    async function connectToSwarm() {
+    async function connectToNetwork() {
       // const swarm = use_unique_swarm ? new Swarm(network_config) : await getSwarm(network_config) //
       // const swarm = await getSwarm(network_config) //new Swarm(network_config)
-      const swarm = Swarm(network_config)
-      const shatopic = sha256(`backbone://${self.address}`)
-      const topic = b4a.from(shatopic, 'hex')
+      const network = Network(network_config)
 
-      swarm.on('connection', async (socket, peer) => {
-        /* if (buf2hex(swarm.keyPair.publicKey) !== buf2hex(peer.publicKey)) {
-          emit({
-            ch: 'network',
-            msg: `cid: ${buf2hex(swarm.keyPair.publicKey).slice(0, 8)} | addr: ${self.address.slice(
-              0,
-              8
-            )} | topic: ${buf2hex(topic).slice(0, 8)}, peers: ${swarm.peers.size}, conns: ${
-              swarm.connections.size
-            }, prioritized: ${peer.prioritized} - new connection from ${buf2hex(
-              peer.publicKey
-            ).slice(0, 8)}`,
-          })
-        } */
-        console.log('Connection', peer)
+      network.on('connection', async (socket, peer) => {
+        emit({
+          ch: 'network',
+          msg: `nid: ${buf2hex(self.config.network_id?.publicKey).slice(
+            0,
+            8
+          )} | address: ${buf2hex(self.address_hash).slice(0, 8)}, peers: ${
+            network.peers.size
+          }, conns: ${network.ws.connections.size} - new connection from ${buf2hex(
+            peer.peer.host
+          ).slice(0, 8)}`,
+        })
+
         const r = socket.pipe(self.store.replicate(peer.client)).pipe(socket)
         // const r = self.store.replicate(socket, { live: true })
         // console.log('r', r)
@@ -320,29 +321,29 @@ class CoreClass {
       })
       emit({
         ch: 'network',
-        msg: `Connecting to ${shatopic} (backbone://${self.address}) with connection id ...`, //${buf2hex(swarm.keyPair.publicKey)}
+        msg: `Connecting to ${buf2hex(self.address_hash)} (backbone://${self.address}) with connection id ...`, //${buf2hex(swarm.keyPair.publicKey)}
       })
       // @ts-ignore
-      swarm.join(Buffer.isBuffer(topic) ? topic : Buffer.from(topic, 'hex'))
+      network.join(Buffer.isBuffer(self.address_hash) ? self.address_hash : Buffer.from(self.address_hash, 'hex'))
       // @ts-ignore
-      await swarm.flush(() => {})
-      return swarm
+      await network.flush(() => {})
+      return network
     }
-    this.swarm = await connectToSwarm()
+    this.network = await connectToNetwork()
     this.rebased_index.update()
 
     // for faster restarts
     process.once('SIGINT', () => {
-      this.swarm.destroy()
+      this.network.destroy()
     })
 
-    this.connection_id = buf2hex(this.swarm.webrtc.id)
-    return this.swarm
+    this.connection_id = buf2hex(this.network.webrtc.id)
+    return this.network
   }
 
   async disconnect(this: CoreClass) {
     // if (this.swarm) this.swarm.destroy()
-    clearInterval(this.swarm_refresh_timer)
+    clearInterval(this.network_refresh_timer)
   }
 
   async getKeys(this: CoreClass) {
@@ -358,10 +359,10 @@ class CoreClass {
   async addWriter(this: CoreClass, opts: { key: string }) {
     const { key } = opts
 
-    if (key === (await this.writer_key)) {
-      emit({ ch: 'network', msg: `duplicated writer key ${key}` })
-      return null
-    }
+    // if (key === (await this.writer_key)) {
+    //   emit({ ch: 'network', msg: `duplicated writer key ${key}` })
+    //   return null
+    // }
     const k = b4a.from(key, 'hex')
     this.rebase.addInput(
       this.store.get({
@@ -375,7 +376,7 @@ class CoreClass {
 
   async removeWriter(this: CoreClass, opts: { key: string }) {
     const { key } = opts
-    if (key === (await this.index_key)) return null
+    // if (key === (await this.index_key)) return null
     const k = b4a.from(key, 'hex')
     this.rebase.removeInput(
       this.store.get({ key: k, publicKey: k, encryptionKey: this.encryption_key })
@@ -423,6 +424,12 @@ async function Core(params: { config: CoreConfig; app: { API: Function; Protocol
     getWriterKey: () => C.writer_key,
     getIndexKey: () => C.index_key,
     getConnectionId: () => C.connection_id,
+    getNetwork: () => C.network,
+    _: {
+      getWriter: () => C.writer,
+      getIndex: () => C.index,
+      getManager: () => C.store
+    } 
   }
 
   const protocolAPI = await params.app.API(

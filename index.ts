@@ -7,6 +7,15 @@ const Backbone = {
   Core,
 }
 
-if (platform.browser) window['bb'] = Backbone
+if (platform.browser) {
+  window['bb'] = Backbone
+  window.onerror = function (errMsg, url, line, column, error) {
+    var result = !column ? '' : '\ncolumn: ' + column
+    result += !error
+    document.write('Error= ' + errMsg + '\nurl= ' + url + '\nline= ' + line + result)
+    var suppressErrorAlert = true
+    return suppressErrorAlert
+  }
+}
 export default Backbone
 module.exports = Backbone

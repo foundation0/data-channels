@@ -39,7 +39,7 @@ export interface CoreConfig extends BackboneConfig {
     secretKey: string
     publicKey: string
   }
-  networkId?: {
+  network_id?: {
     secretKey: string
     publicKey: string
   }

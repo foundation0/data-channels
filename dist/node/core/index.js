@@ -213,16 +213,20 @@ class CoreClass {
         });
         if (this.config.firewall)
             network_config.firewall = this.config.firewall;
-        if (this.config.networkId) {
-            network_config.keyPair = this.config.networkId;
+        if (!this.config.network_id) {
+            this.config.network_id = crypto_2.keyPair();
         }
+        network_config.keyPair = this.config.network_id;
         let self = this;
         async function connectToSwarm() {
             const swarm = network_node_1.default(network_config);
             const shatopic = crypto_1.sha256(`backbone://${self.address}`);
             const topic = b4a_1.default.from(shatopic, 'hex');
             swarm.on('connection', async (socket, peer) => {
-                console.log('Connection', peer);
+                common_1.emit({
+                    ch: 'network',
+                    msg: `cid: ${common_1.buf2hex(self.config.network_id?.publicKey).slice(0, 8)} | addr: ${self.address.slice(0, 8)} | topic: ${common_1.buf2hex(topic).slice(0, 8)}, peers: ${swarm.peers.size}, conns: ${swarm.ws.connections.size} - new connection from ${common_1.buf2hex(peer.peer.host).slice(0, 8)}`,
+                });
                 const r = socket.pipe(self.store.replicate(peer.client)).pipe(socket);
                 r.on('error', (err) => {
                     if (err.message !== 'UTP_ETIMEOUT' || err.message !== 'Duplicate connection')

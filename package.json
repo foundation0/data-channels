@@ -12,9 +12,6 @@
     "fs": false
   },
   "engineStrict": true,
-  "aegir": {
-    "tsRepo": true
-  },
   "scripts": {
     "bootstrap:network": "node network/node.js 60000 60001 60002",
     "bootstrap:test": "cross-env TEST=1 BOOTSTRAP=1 mocha --require ts-node/register ./tests/**/*.test.ts",
@@ -22,10 +19,11 @@
     "build:browser:dev": "mkdir -p dist && browserify --debug index.ts -p [ tsify ] > dist/core.dev.js",
     "build:browser:watch": "mkdir -p dist && budo test/www/index.ts --dir test/www --live -- -p [ tsify ] -o dist/core.js",
     "build:browser": "mkdir -p dist && browserify index.ts -p [ tsify ] > dist/core.js && uglifyjs dist/core.js --compress --mangle > dist/core.min.js",
-    "test:browser": "playwright test test/browser/*.spec.ts",
+    "test:browser": "rimraf test/_compiled && npm run pretest && playwright test -c test/_compiled",
     "debug": "playwright test --timeout=0 test/browser/*.ts",
     "clean-data": "rimraf ~/.backbone",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "pretest": "tsc --incremental -p test/tsconfig.json"
   },
   "dependencies": {
     "@backbonedao/crypto": "github:backbonedao/crypto",
@@ -64,7 +62,7 @@
     "@types/chai": "^4.3.1",
     "@types/jest": "^27.4.1",
     "@types/mocha": "^9.1.1",
-    "@types/node": "^16.11.30",
+    "@types/node": "^16.11.33",
     "@typescript-eslint/eslint-plugin": "^5.21.0",
     "@typescript-eslint/parser": "^5.21.0",
     "browserify": "^17.0.0",

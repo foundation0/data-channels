@@ -11,9 +11,11 @@ async function API(Core, Protocol) {
             const hash = crypto_1.sha256(data.user + data.text);
             await Protocol({
                 type: 'post',
-                hash,
-                data: data.text,
-                user: data.user,
+                data: {
+                    hash,
+                    data: data.text,
+                    user: data.user,
+                }
             });
         }
     };

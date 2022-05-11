@@ -11,6 +11,9 @@
   "browser": {
     "fs": false
   },
+  "browserify": {
+    "transforms": [ [ "babelify"] ]
+  },
   "engineStrict": true,
   "scripts": {
     "bootstrap:network": "node network/node.js 60000 60001 60002",
@@ -18,7 +21,7 @@
     "build": "rimraf dist && tsc && npm run build:browser",
     "build:browser:dev": "mkdir -p dist && browserify --debug index.ts -p [ tsify ] > dist/core.dev.js",
     "build:browser:watch": "mkdir -p dist && budo test/www/index.ts --dir test/www --live -- -p [ tsify ] -o dist/core.js",
-    "build:browser": "mkdir -p dist && browserify index.ts -p [ tsify ] > dist/core.js && uglifyjs dist/core.js --compress --mangle > dist/core.min.js",
+    "build:browser": "mkdir -p dist && tsc && browserify dist/node/index.js > dist/core.js && uglifyjs dist/core.js --compress --mangle > dist/core.min.js",
     "test:browser": "rimraf test/_compiled && npm run pretest && playwright test -c test/_compiled",
     "debug": "playwright test --timeout=0 test/browser/*.ts",
     "clean-data": "rimraf ~/.backbone",
@@ -46,6 +49,7 @@
     "lodash": "^4.17.21",
     "msgpackr": "^1.5.6",
     "node": "^16.14.2",
+    "objectmodel": "^4.3.0",
     "platform-detect": "^3.0.1",
     "preact": "^10.7.1",
     "random-access-idb": "^1.2.2",
@@ -65,6 +69,7 @@
     "@types/node": "^16.11.33",
     "@typescript-eslint/eslint-plugin": "^5.21.0",
     "@typescript-eslint/parser": "^5.21.0",
+    "babelify": "^10.0.0",
     "browserify": "^17.0.0",
     "budo": "^11.7.0",
     "chai": "^4.3.6",
@@ -84,7 +89,8 @@
     "tsify": "^5.0.4",
     "typescript": "^3.9.10",
     "uglify-js": "^3.15.4",
-    "watchify": "^4.0.0"
+    "watchify": "^4.0.0",
+    "ws": "^8.6.0"
   },
   "pnpm": {
     "overrides": {

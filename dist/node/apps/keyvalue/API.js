@@ -13,14 +13,16 @@ async function API(Core, Protocol) {
         async del(key) {
             await Protocol({
                 type: 'del',
-                key,
+                data: { key },
             });
         },
         async set(params) {
             await Protocol({
                 type: 'set',
-                key: params.key,
-                value: params.value
+                data: {
+                    key: params.key,
+                    value: params.value,
+                },
             });
         },
     };

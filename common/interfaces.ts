@@ -32,7 +32,7 @@ export interface CoreConfig extends BackboneConfig {
       }
     }
   }
-  storage_prefix: string
+  storage_prefix?: string
   storage?: 'ram' | 'rai' | 'raf'
   firewall?: Function
   keypair?: {

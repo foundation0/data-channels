@@ -11,12 +11,12 @@ import RAM from 'random-access-memory'
 import RAI from 'random-access-idb'
 import { CoreConfig } from '../common/interfaces'
 import { buf2hex, decodeCoreData, emit, encodeCoreData, error, getHomedir, log } from '../common'
-import { sha256 } from '../common/crypto'
 import { homedir } from 'os'
 import default_config from '../bbconfig'
 import _ from 'lodash'
 import b4a from 'b4a'
 import { createHash, keyPair } from '@backbonedao/crypto'
+import { Operation } from '../models'
 
 export function getStorage(bb_config: CoreConfig) {
   if (!bb_config) throw new Error('GETSTORAGE REQUIRES CORECONFIG')
@@ -116,7 +116,8 @@ class CoreClass {
       async apply(batch) {
         const index = self.kv.batch({ update: false })
         for (const { value } of batch) {
-          const op = decodeCoreData(value)
+          const o = decodeCoreData(value)
+          const op = new Operation(o)
           try {
             await self.protocol(
               op,
@@ -232,8 +233,16 @@ class CoreClass {
     const root = this.store.get(b4a.from(kp.publicKey, 'hex'))
     await root.ready()
 
-    console.log(`discovery keys:\nwriter: ${writer.discoveryKey}\nindex: ${index.discoveryKey}\nroot: ${root.discoveryKey}`)
-    console.log(`public keys:\nwriter: ${buf2hex(writer.key)}\nindex: ${buf2hex(index.key)}\nroot: ${buf2hex(root.key)}`)
+    emit({
+      ch: 'network',
+      msg: `discovery keys:\nwriter: ${writer.discoveryKey}\nindex: ${index.discoveryKey}\nroot: ${root.discoveryKey}`,
+    })
+    emit({
+      ch: 'network',
+      msg: `public keys:\nwriter: ${buf2hex(writer.key)}\nindex: ${buf2hex(
+        index.key
+      )}\nroot: ${buf2hex(root.key)}`,
+    })
 
     const addWritersExt = root.registerExtension('polycore', {
       encoding: 'json',
@@ -290,7 +299,12 @@ class CoreClass {
     }
     network_config.keyPair = this.config.network_id
 
-    console.log(`networkd id:\nhex: ${buf2hex(this.config.network_id?.publicKey)}\nbuf: ${this.config.network_id?.publicKey}`)
+    emit({
+      ch: 'network',
+      msg: `network id:\nhex: ${buf2hex(this.config.network_id?.publicKey)}\nbuf: ${
+        this.config.network_id?.publicKey
+      }`,
+    })
 
     let self = this
     async function connectToNetwork() {
@@ -301,14 +315,11 @@ class CoreClass {
       network.on('connection', async (socket, peer) => {
         emit({
           ch: 'network',
-          msg: `nid: ${buf2hex(self.config.network_id?.publicKey).slice(
-            0,
-            8
-          )} | address: ${buf2hex(self.address_hash).slice(0, 8)}, peers: ${
-            network.peers.size
-          }, conns: ${network.ws.connections.size} - new connection from ${buf2hex(
-            peer.peer.host
-          ).slice(0, 8)}`,
+          msg: `nid: ${buf2hex(self.config.network_id?.publicKey).slice(0, 8)} | address: ${buf2hex(
+            self.address_hash
+          ).slice(0, 8)}, peers: ${network.peers.size}, conns: ${
+            network.ws.connections.size
+          } - new connection from ${buf2hex(peer.peer.host).slice(0, 8)}`,
         })
 
         const r = socket.pipe(self.store.replicate(peer.client)).pipe(socket)
@@ -321,10 +332,16 @@ class CoreClass {
       })
       emit({
         ch: 'network',
-        msg: `Connecting to ${buf2hex(self.address_hash)} (backbone://${self.address}) with connection id ...`, //${buf2hex(swarm.keyPair.publicKey)}
+        msg: `Connecting to ${buf2hex(self.address_hash)} (backbone://${
+          self.address
+        }) with connection id ...`, //${buf2hex(swarm.keyPair.publicKey)}
       })
       // @ts-ignore
-      network.join(Buffer.isBuffer(self.address_hash) ? self.address_hash : Buffer.from(self.address_hash, 'hex'))
+      network.join(
+        Buffer.isBuffer(self.address_hash)
+          ? self.address_hash
+          : Buffer.from(self.address_hash, 'hex')
+      )
       // @ts-ignore
       await network.flush(() => {})
       return network
@@ -428,8 +445,8 @@ async function Core(params: { config: CoreConfig; app: { API: Function; Protocol
     _: {
       getWriter: () => C.writer,
       getIndex: () => C.index,
-      getManager: () => C.store
-    } 
+      getManager: () => C.store,
+    },
   }
 
   const protocolAPI = await params.app.API(
@@ -465,6 +482,7 @@ async function Core(params: { config: CoreConfig; app: { API: Function; Protocol
       },
     },
     async function (op) {
+      const o = new Operation(op)
       const op_buf = encodeCoreData(op)
       await C.rebase.append(op_buf)
       await C.rebased_index.update()

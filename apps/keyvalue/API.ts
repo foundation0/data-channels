@@ -1,5 +1,3 @@
-import { decodeCoreData } from '../../common'
-
 export default async function API(Core, Protocol) {
   return {
     async all(stream?: boolean) {
@@ -13,14 +11,16 @@ export default async function API(Core, Protocol) {
     async del(key: string) {
       await Protocol({
         type: 'del',
-        key,
+        data: { key },
       })
     },
     async set(params: { key: string; value: string }) {
       await Protocol({
         type: 'set',
-        key: params.key,
-        value: params.value
+        data: {
+          key: params.key,
+          value: params.value,
+        },
       })
     },
   }

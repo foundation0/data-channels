@@ -11,9 +11,11 @@ export default async function API(Core, Protocol) {
       const hash = sha256(data.user + data.text)
       await Protocol({
         type: 'post',
-        hash,
-        data: data.text,
-        user: data.user,
+        data: {
+          hash,
+          data: data.text,
+          user: data.user,
+        }
       })
     }
   }

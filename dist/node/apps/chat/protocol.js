@@ -1,23 +1,24 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-async function Protocol(op, Core, Data) {
+async function Protocol(op, Core) {
     if (!op?.type)
         throw new Error('UNKNOWN OP');
     switch (op.type) {
         case 'post': {
-            const hash = op.hash;
-            await Core.put({ key: 'posts!' + hash, value: { hash, votes: 0, data: op.data, user: op.user } });
+            const { hash, data, user } = op.data;
+            await Core.put({ key: 'posts!' + hash, value: { hash, votes: 0, data, user } });
             const p = await Core.get(`posts!${hash}`);
             break;
         }
         case 'vote': {
-            const inc = op.up ? 1 : -1;
-            const p = await Core.get('posts!' + op.hash, { update: false });
+            const { up, hash } = op.data;
+            const inc = up ? 1 : -1;
+            const p = await Core.get('posts!' + hash, { update: false });
             if (!p)
                 break;
             p.value.votes += inc;
-            await Core.del('posts!' + op.hash);
-            await Core.put('posts!' + op.hash, p.value);
+            await Core.del('posts!' + hash);
+            await Core.put('posts!' + hash, p.value);
             break;
         }
         default:

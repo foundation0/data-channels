@@ -12,11 +12,11 @@ const platform_detect_1 = __importDefault(require("platform-detect"));
 const random_access_memory_1 = __importDefault(require("random-access-memory"));
 const random_access_idb_1 = __importDefault(require("random-access-idb"));
 const common_1 = require("../common");
-const crypto_1 = require("../common/crypto");
 const os_1 = require("os");
 const bbconfig_1 = __importDefault(require("../bbconfig"));
 const b4a_1 = __importDefault(require("b4a"));
-const crypto_2 = require("@backbonedao/crypto");
+const crypto_1 = require("@backbonedao/crypto");
+const models_1 = require("../models");
 function getStorage(bb_config) {
     if (!bb_config)
         throw new Error('GETSTORAGE REQUIRES CORECONFIG');
@@ -49,6 +49,15 @@ class CoreClass {
         this.config = {
             network: {
                 bootstrap: bbconfig_1.default.network.bootstrap_servers,
+                simplePeer: {
+                    config: {
+                        iceServers: [
+                            {
+                                urls: bbconfig_1.default.network.stunturn_servers,
+                            },
+                        ],
+                    },
+                },
             },
             ...config,
         };
@@ -74,6 +83,7 @@ class CoreClass {
         this.writer_key = common_1.buf2hex(writer.key);
         this.index_key = common_1.buf2hex(index.key);
         this.address = this.config.address;
+        this.address_hash = crypto_1.createHash(`backbone://${this.config.address}`);
         this.rebase = new data_viewer_1.default({
             localInput: writer,
             inputs: [writer],
@@ -84,7 +94,8 @@ class CoreClass {
             async apply(batch) {
                 const index = self.kv.batch({ update: false });
                 for (const { value } of batch) {
-                    const op = common_1.decodeCoreData(value);
+                    const o = common_1.decodeCoreData(value);
+                    const op = new models_1.Operation(o);
                     try {
                         await self.protocol(op, {
                             put: async (params) => {
@@ -173,10 +184,17 @@ class CoreClass {
             valueEncoding: 'binary',
         });
         common_1.log(`initialized Core ${this.writer_key} / ${this.index_key}`);
-        const shatopic = crypto_2.createHash(`backbone://${this.address}`);
-        const kp = crypto_2.keyPair(shatopic);
+        const kp = crypto_1.keyPair(this.address_hash);
         const root = this.store.get(b4a_1.default.from(kp.publicKey, 'hex'));
         await root.ready();
+        common_1.emit({
+            ch: 'network',
+            msg: `discovery keys:\nwriter: ${writer.discoveryKey}\nindex: ${index.discoveryKey}\nroot: ${root.discoveryKey}`,
+        });
+        common_1.emit({
+            ch: 'network',
+            msg: `public keys:\nwriter: ${common_1.buf2hex(writer.key)}\nindex: ${common_1.buf2hex(index.key)}\nroot: ${common_1.buf2hex(root.key)}`,
+        });
         const addWritersExt = root.registerExtension('polycore', {
             encoding: 'json',
             onmessage: async (msg) => {
@@ -214,18 +232,20 @@ class CoreClass {
         if (this.config.firewall)
             network_config.firewall = this.config.firewall;
         if (!this.config.network_id) {
-            this.config.network_id = crypto_2.keyPair();
+            this.config.network_id = crypto_1.keyPair();
         }
         network_config.keyPair = this.config.network_id;
+        common_1.emit({
+            ch: 'network',
+            msg: `network id:\nhex: ${common_1.buf2hex(this.config.network_id?.publicKey)}\nbuf: ${this.config.network_id?.publicKey}`,
+        });
         let self = this;
-        async function connectToSwarm() {
-            const swarm = network_node_1.default(network_config);
-            const shatopic = crypto_1.sha256(`backbone://${self.address}`);
-            const topic = b4a_1.default.from(shatopic, 'hex');
-            swarm.on('connection', async (socket, peer) => {
+        async function connectToNetwork() {
+            const network = network_node_1.default(network_config);
+            network.on('connection', async (socket, peer) => {
                 common_1.emit({
                     ch: 'network',
-                    msg: `cid: ${common_1.buf2hex(self.config.network_id?.publicKey).slice(0, 8)} | addr: ${self.address.slice(0, 8)} | topic: ${common_1.buf2hex(topic).slice(0, 8)}, peers: ${swarm.peers.size}, conns: ${swarm.ws.connections.size} - new connection from ${common_1.buf2hex(peer.peer.host).slice(0, 8)}`,
+                    msg: `nid: ${common_1.buf2hex(self.config.network_id?.publicKey).slice(0, 8)} | address: ${common_1.buf2hex(self.address_hash).slice(0, 8)}, peers: ${network.peers.size}, conns: ${network.ws.connections.size} - new connection from ${common_1.buf2hex(peer.peer.host).slice(0, 8)}`,
                 });
                 const r = socket.pipe(self.store.replicate(peer.client)).pipe(socket);
                 r.on('error', (err) => {
@@ -235,22 +255,24 @@ class CoreClass {
             });
             common_1.emit({
                 ch: 'network',
-                msg: `Connecting to ${shatopic} (backbone://${self.address}) with connection id ...`,
+                msg: `Connecting to ${common_1.buf2hex(self.address_hash)} (backbone://${self.address}) with connection id ...`,
             });
-            swarm.join(Buffer.isBuffer(topic) ? topic : Buffer.from(topic, 'hex'));
-            await swarm.flush(() => { });
-            return swarm;
+            network.join(Buffer.isBuffer(self.address_hash)
+                ? self.address_hash
+                : Buffer.from(self.address_hash, 'hex'));
+            await network.flush(() => { });
+            return network;
         }
-        this.swarm = await connectToSwarm();
+        this.network = await connectToNetwork();
         this.rebased_index.update();
         process.once('SIGINT', () => {
-            this.swarm.destroy();
+            this.network.destroy();
         });
-        this.connection_id = common_1.buf2hex(this.swarm.webrtc.id);
-        return this.swarm;
+        this.connection_id = common_1.buf2hex(this.network.webrtc.id);
+        return this.network;
     }
     async disconnect() {
-        clearInterval(this.swarm_refresh_timer);
+        clearInterval(this.network_refresh_timer);
     }
     async getKeys() {
         return {
@@ -263,10 +285,6 @@ class CoreClass {
     }
     async addWriter(opts) {
         const { key } = opts;
-        if (key === (await this.writer_key)) {
-            common_1.emit({ ch: 'network', msg: `duplicated writer key ${key}` });
-            return null;
-        }
         const k = b4a_1.default.from(key, 'hex');
         this.rebase.addInput(this.store.get({
             key: k,
@@ -277,8 +295,6 @@ class CoreClass {
     }
     async removeWriter(opts) {
         const { key } = opts;
-        if (key === (await this.index_key))
-            return null;
         const k = b4a_1.default.from(key, 'hex');
         this.rebase.removeInput(this.store.get({ key: k, publicKey: k, encryptionKey: this.encryption_key }));
         common_1.emit({ ch: 'network', msg: `removed writer ${key} from ${this.connection_id || 'n/a'}` });
@@ -318,6 +334,12 @@ async function Core(params) {
         getWriterKey: () => C.writer_key,
         getIndexKey: () => C.index_key,
         getConnectionId: () => C.connection_id,
+        getNetwork: () => C.network,
+        _: {
+            getWriter: () => C.writer,
+            getIndex: () => C.index,
+            getManager: () => C.store,
+        },
     };
     const protocolAPI = await params.app.API({
         get: async (key) => {
@@ -348,6 +370,7 @@ async function Core(params) {
             });
         },
     }, async function (op) {
+        const o = new models_1.Operation(op);
         const op_buf = common_1.encodeCoreData(op);
         await C.rebase.append(op_buf);
         await C.rebased_index.update();

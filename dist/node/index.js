@@ -10,8 +10,16 @@ const Backbone = {
     User: user_1.default,
     Core: core_1.default,
 };
-if (platform_detect_1.default.browser)
+if (platform_detect_1.default.browser) {
     window['bb'] = Backbone;
+    window.onerror = function (errMsg, url, line, column, error) {
+        var result = !column ? '' : '\ncolumn: ' + column;
+        result += !error;
+        document.write('Error= ' + errMsg + '\nurl= ' + url + '\nline= ' + line + result);
+        var suppressErrorAlert = true;
+        return suppressErrorAlert;
+    };
+}
 exports.default = Backbone;
 module.exports = Backbone;
 //# sourceMappingURL=index.js.map

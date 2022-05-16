@@ -18,8 +18,8 @@ export interface CoreConfig extends BackboneConfig {
   address: string
   encryption_key?: string | boolean
   writers?: string[]
-  indexes?: string[]
-  private: boolean
+  trusted_peers?: string[]
+  private?: boolean
   network?: {
     bootstrap?: string[]
     simplePeer?: {
@@ -35,10 +35,7 @@ export interface CoreConfig extends BackboneConfig {
   storage_prefix?: string
   storage?: 'ram' | 'rai' | 'raf'
   firewall?: Function
-  keypair?: {
-    secretKey: string
-    publicKey: string
-  }
+  key?: string,
   network_id?: {
     secretKey: string
     publicKey: string

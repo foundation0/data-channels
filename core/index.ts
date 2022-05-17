@@ -1,144 +1,149 @@
-import Store from '@backbonedao/data-manager'
-import Rebase from '@backbonedao/data-viewer'
+// import Store from '../../data-manager'
+// import Rebase from '../../data-viewer'
+// import DataDB from '../../data-db'
+// import Swarm from '../../network-node'
+import DataManager from '@backbonedao/data-manager'
+import DataViewer from '@backbonedao/data-viewer'
 import DataDB from '@backbonedao/data-db'
 import Network from '@backbonedao/network-node'
-// import Store from '../../backbone-data-manager'
-// import Rebase from '../../data-viewer'
-// import DataDB from '../../backbone-data-db'
-// import Swarm from '../../network-node'
-import platform from 'platform-detect'
-import RAM from 'random-access-memory'
-import RAI from 'random-access-idb'
 import { CoreConfig } from '../common/interfaces'
-import { buf2hex, decodeCoreData, emit, encodeCoreData, error, getHomedir, log } from '../common'
-import { homedir } from 'os'
+import { buf2hex, decodeCoreData, emit, encodeCoreData, error, log } from '../common'
 import default_config from '../bbconfig'
 import _ from 'lodash'
 import b4a from 'b4a'
 import { createHash, keyPair } from '@backbonedao/crypto'
 import { Operation } from '../models'
-
-export function getStorage(bb_config: CoreConfig) {
-  if (!bb_config) throw new Error('GETSTORAGE REQUIRES CORECONFIG')
-  let storage: string | object
-
-  if (bb_config?.storage === 'ram') {
-    log('RAM storage requested, using memory for storage')
-    storage = RAM
-  } else if (bb_config?.env === 'node' || platform?.node) {
-    log('Node runtime detected, using file system for storage')
-    const prefix = bb_config?.storage_prefix ? `${bb_config?.storage_prefix}/` : ''
-    // split the path in chunks of two letters to avoid creating file explorer killing directories
-    const pathname = bb_config.address.match(/.{1,2}/g)?.join('/')
-    storage = process.env.TEST
-      ? `${homedir()}/.backbone-test/${prefix}${pathname}`
-      : `${getHomedir()}/${prefix}${pathname}`
-  } else {
-    log('Browser runtime detected, using RAI for storage')
-    storage = RAI()
-  }
-  const storage_id: string = bb_config?.storage_prefix
-    ? bb_config.address + bb_config.storage_prefix
-    : bb_config.address
-  return { storage, storage_id }
-}
+import getStorage from './get_storage'
 
 const CORES = {}
 
 class CoreClass {
   config: CoreConfig
-  store: any // needs types
+  datamanager: any // needs types
   address: string
   address_hash: string
   network: any // needs types
-  kv: any // needs types
-  drive: any // needs types
-  rebase: any // needs types
+  datadb: any // needs types
+  dataviewer: any // needs types
   protocol: any
-  rebased_index: any // needs types
   writer_key: string
   index_key: string
   connection_id: string
   encryption_key: b4a
   writer: any
   index: any
+  meta: any
+  metadb: any
   network_refresh_timer: any
 
   constructor(config: CoreConfig, protocol: any) {
+    // Set the config and protocol
     this.config = {
       network: {
         bootstrap: default_config.network.bootstrap_servers,
-        // simplePeer: {
-        //   config: {
-        //     iceServers: [
-        //       {
-        //         urls: default_config.network.stunturn_servers,
-        //       },
-        //     ],
-        //   },
-        // },
+        simplePeer: {
+          config: {
+            iceServers: [
+              {
+                urls: default_config.network.stunturn_servers,
+              },
+            ],
+          },
+        },
       },
       ...config,
     }
-    const { storage, storage_id } = getStorage(config)
-    this.store = CORES[storage_id] || new Store(storage)
-    if (!CORES[storage_id]) CORES[storage_id] = this.store
     this.protocol = protocol
+
+    // Get storage medium and create new Data Manager
+    const { storage, storage_id } = getStorage(config)
+    this.datamanager = CORES[storage_id] || new DataManager(storage)
+
+    // Simple in-memory cache to avoid duplicate Data Managers
+    if (!CORES[storage_id]) CORES[storage_id] = this.datamanager
   }
 
   async init(this: CoreClass) {
     const self = this
 
-    // init cores
+    // Setup encryption
     let encryptionKey
     if (this.config?.encryption_key !== false && typeof this.config.encryption_key === 'string') {
-      encryptionKey = b4a.from(this.config.encryption_key, 'hex')
+      encryptionKey = b4a.from(createHash(this.config.encryption_key), 'hex')
       this.encryption_key = encryptionKey
     } else encryptionKey = null
-    const writer = this.store.get({ name: 'writer', encryptionKey })
-    const index = this.store.get({ name: 'index', encryptionKey })
-    await writer.ready()
-    await index.ready()
 
-    this.writer_key = buf2hex(writer.key)
-    this.index_key = buf2hex(index.key)
+    // Setup data stores
+    let writer_conf = { encryptionKey }
+    let index_conf = { encryptionKey }
+    let meta_conf = { encryptionKey }
+
+    if (this.config.key) {
+      // ... if key is provided, use it to create a new keypair for the core
+      writer_conf['keyPair'] = keyPair(createHash(this.config.key + 'writer'))
+      index_conf['keyPair'] = keyPair(createHash(this.config.key + 'index'))
+      meta_conf['keyPair'] = keyPair(createHash(this.config.key + 'meta'))
+    } else {
+      // ... if not, use names
+      writer_conf['name'] = 'writer'
+      index_conf['name'] = 'index'
+      meta_conf['name'] = 'meta'
+    }
+
+    // Initialize data cores
+    this.writer = this.datamanager.get(writer_conf)
+    this.index = this.datamanager.get(index_conf)
+    this.meta = this.datamanager.get(meta_conf)
+    await this.writer.ready()
+    await this.index.ready()
+    await this.meta.ready()
+
+    this.writer_key = buf2hex(this.writer.key)
+    this.index_key = buf2hex(this.index.key)
+
+    // Setup backbone:// address
     this.address = this.config.address
-    this.address_hash = createHash(`backbone://${this.config.address}`)
+    if (!this.address.match('backbone://'))
+      this.address_hash = createHash(`backbone://${this.config.address}`)
+    else this.address_hash = createHash(this.config.address)
 
-    // init index
-    this.rebase = new Rebase({
-      localInput: writer,
-      inputs: [writer],
+    // Initialize DataViewer
+    this.dataviewer = new DataViewer({
+      localInput: this.writer,
+      inputs: [this.writer],
       outputs: [],
-      localOutput: index,
+      localOutput: this.index,
       autostart: true,
       unwrap: true,
-      async apply(batch) {
-        const index = self.kv.batch({ update: false })
-        for (const { value } of batch) {
+      async apply(operations) {
+        // Process incoming operations
+        const data = self.datadb.batch({ update: false })
+        for (const { value } of operations) {
           const o = decodeCoreData(value)
           const op = new Operation(o)
           try {
+            // Run operation through protocol
             await self.protocol(
               op,
+              // Data API
               {
                 put: async (params: { key: string; value: any }) => {
                   if (typeof params === 'string' || !params?.key || !params?.value)
                     throw new Error('INVALID PARAMS')
                   const encoded_data = encodeCoreData(params.value)
-                  await index.put(params.key, encoded_data)
-                  const value = await index.get(params.key)
+                  await data.put(params.key, encoded_data)
+                  const value = await data.get(params.key)
                   if (value?.value.toString() === encoded_data.toString()) return
                   console.log('FAIL', params.key, value, encoded_data)
                   throw new Error('PUT FAILED')
                 },
                 del: async (key: string) => {
-                  return index.del(key)
+                  return data.del(key)
                 },
                 get: async (key: string) => {
-                  const data = await index.get(key)
-                  if (!data) return null
-                  return decodeCoreData(data.value)
+                  const dat = await data.get(key)
+                  if (!dat) return null
+                  return decodeCoreData(dat.value)
                 },
                 query: async function (params: {
                   gte: string
@@ -150,7 +155,7 @@ class CoreClass {
                   reverse?: boolean
                 }) {
                   if (!params?.limit) params.limit = 100
-                  const stream = index.createReadStream(params)
+                  const stream = data.createReadStream(params)
                   if (params?.stream) return stream
                   return new Promise((resolve, reject) => {
                     const bundle: string[] = []
@@ -163,9 +168,10 @@ class CoreClass {
                   })
                 },
               },
+              // DataViewer view API
               {
                 get: async (key: string) => {
-                  const data = await self.kv.get(key)
+                  const data = await self.datadb.get(key)
                   if (!data) return null
                   return decodeCoreData(data.value)
                 },
@@ -177,7 +183,7 @@ class CoreClass {
                   reverse?: boolean
                 }) {
                   if (!params?.limit) params.limit = 100
-                  const stream = self.kv.createReadStream(params)
+                  const stream = self.datadb.createReadStream(params)
                   if (params?.stream) return stream
                   return new Promise((resolve, reject) => {
                     const bundle: string[] = []
@@ -195,32 +201,39 @@ class CoreClass {
             throw error
           }
         }
-
-        await index.flush()
+        // Update Dataviewer
+        await data.flush()
       },
     })
 
-    // add remote writers
-    for (const key of this.config.writers || []) {
-      if (key !== this.writer_key) {
-        await this.addWriter({ key })
+    // Setup MetaDB for Core metadata
+    this.metadb = new DataDB(this.meta, {
+      extension: false,
+      keyEncoding: 'utf-8',
+      valueEncoding: 'json',
+    })
+
+    // If known peers exists, add them
+    const peers = (await this.metadb.get('peers')) || []
+    if (peers?.value) {
+      for (const key of peers?.value) {
+        if (key !== this.writer_key) {
+          await this.addPeer({ key, pass_check: true })
+        }
       }
     }
 
-    // add remote indexes
-    for (const key of this.config.indexes || []) {
+    // Add trusted peers (pre-computed views)
+    for (const key of this.config.trusted_peers || []) {
       if (key !== this.index_key) {
-        await this.addIndex({ key })
+        await this.addTrustedPeer({ key })
       }
     }
 
-    await this.rebase.ready()
+    await this.dataviewer.ready()
 
-    // init index generator
-    this.rebased_index = this.rebase.view
-
-    // init kv
-    this.kv = new DataDB(this.rebased_index, {
+    // Setup Data aggregation layer
+    this.datadb = new DataDB(this.dataviewer.view, {
       extension: false,
       keyEncoding: 'utf-8',
       valueEncoding: 'binary',
@@ -228,39 +241,46 @@ class CoreClass {
 
     log(`initialized Core ${this.writer_key} / ${this.index_key}`)
 
-    // Automated key exchange extension
+    // Setup automated key exchange extension
     const kp = keyPair(this.address_hash)
-    const root = this.store.get(b4a.from(kp.publicKey, 'hex'))
+    const root = this.datamanager.get(b4a.from(kp.publicKey, 'hex'))
     await root.ready()
 
-    emit({
-      ch: 'network',
-      msg: `discovery keys:\nwriter: ${writer.discoveryKey}\nindex: ${index.discoveryKey}\nroot: ${root.discoveryKey}`,
-    })
-    emit({
-      ch: 'network',
-      msg: `public keys:\nwriter: ${buf2hex(writer.key)}\nindex: ${buf2hex(
-        index.key
-      )}\nroot: ${buf2hex(root.key)}`,
-    })
-
-    const addWritersExt = root.registerExtension('polycore', {
+    const addPeersExt = root.registerExtension('key-exchange', {
       encoding: 'json',
       onmessage: async (msg) => {
-        msg.writers.forEach((key) => {
-          emit({
-            ch: 'network',
-            msg: `${this.writer_key.slice(0, 8)} got key ${key} from peer`,
-          })
-          this.addWriter({ key })
+        msg.peers.forEach((key) => {
+          // Add peers to the Core
+          if (key !== this.writer_key) {
+            emit({
+              ch: 'network',
+              msg: `Peer: ${this.writer_key.slice(0, 8)} got key ${key} from peer`,
+            })
+
+            this.addPeer({ key })
+          }
+        })
+        msg.trusted_peers.forEach((key) => {
+          // Add trusted peers to the Core
+          // disabled because there needs to be a mechanism to approve trusted peers to be added
+          return
+          if (key !== this.index_key) {
+            emit({
+              ch: 'network',
+              msg: `Trusted peer: ${this.index_key.slice(0, 8)} got key ${key} from peer`,
+            })
+
+            this.addTrustedPeer({ key })
+          }
         })
       },
     })
 
     root.on('peer-add', (peer) => {
-      addWritersExt.send(
+      addPeersExt.send(
         {
-          writers: this.rebase.inputs.map((core) => buf2hex(core.key)),
+          peers: this.dataviewer.inputs.map((core) => buf2hex(core.key)),
+          trusted_peers: this.dataviewer.outputs.map((core) => buf2hex(core.key)),
         },
         peer
       )
@@ -270,8 +290,19 @@ class CoreClass {
       })
     })
 
-    this.writer = writer
-    this.index = index
+    // Debug log Core details
+    emit({
+      ch: 'network',
+      msg: `discovery keys:\nwriter: ${buf2hex(this.writer.discoveryKey)}\nindex: ${buf2hex(
+        this.index.discoveryKey
+      )}\nroot: ${buf2hex(root.discoveryKey)}`,
+    })
+    emit({
+      ch: 'network',
+      msg: `public keys:\nwriter: ${buf2hex(this.writer.key)}\nindex: ${buf2hex(
+        this.index.key
+      )}\nroot: ${buf2hex(root.key)}`,
+    })
   }
   async connect(this: CoreClass, use_unique_swarm?: boolean) {
     if (!this.config?.network) throw new Error('CONNECT NEEDS NETWORK CONFIG')
@@ -322,9 +353,7 @@ class CoreClass {
           } - new connection from ${buf2hex(peer.peer.host).slice(0, 8)}`,
         })
 
-        const r = socket.pipe(self.store.replicate(peer.client)).pipe(socket)
-        // const r = self.store.replicate(socket, { live: true })
-        // console.log('r', r)
+        const r = socket.pipe(self.datamanager.replicate(peer.client)).pipe(socket)
         r.on('error', (err) => {
           if (err.message !== 'UTP_ETIMEOUT' || err.message !== 'Duplicate connection')
             error(err.message)
@@ -347,7 +376,7 @@ class CoreClass {
       return network
     }
     this.network = await connectToNetwork()
-    this.rebased_index.update()
+    this.dataviewer.view.update()
 
     // for faster restarts
     process.once('SIGINT', () => {
@@ -365,79 +394,90 @@ class CoreClass {
 
   async getKeys(this: CoreClass) {
     return {
-      writers: [...this.rebase.inputs.map((i) => buf2hex(i.key))],
+      writers: [...this.dataviewer.inputs.map((i) => buf2hex(i.key))],
       indexes: [
-        ...this.rebase.outputs.map((i) => buf2hex(i.key)),
-        buf2hex(this.rebase.localOutput.key),
+        ...this.dataviewer.outputs.map((i) => buf2hex(i.key)),
+        buf2hex(this.dataviewer.localOutput.key),
       ],
     }
   }
 
-  async addWriter(this: CoreClass, opts: { key: string }) {
+  async addPeer(this: CoreClass, opts: { key: string; pass_check?: boolean }) {
     const { key } = opts
+    const peers = await this.metadb.get('peers')
+    if (!peers?.value || peers?.value.indexOf(key) === -1 || opts.pass_check) {
+      const w = peers?.value || []
+      if (w.indexOf(key) === -1) {
+        // TODO: implement status in peers [active | frozen | destroyed]
+        w.push(key)
+        await this.metadb.put('peers', w)
+      }
+      const k = b4a.from(key, 'hex')
+      const v = await this.datamanager.get({
+        key: k,
+        publicKey: k,
+        encryptionKey: this.encryption_key,
+      })
+      this.dataviewer.addInput(v)
+      emit({ ch: 'network', msg: `added peer ${key} to ${this.connection_id || 'n/a'}` })
+    }
+  }
 
-    // if (key === (await this.writer_key)) {
-    //   emit({ ch: 'network', msg: `duplicated writer key ${key}` })
-    //   return null
-    // }
+  async removePeer(this: CoreClass, opts: { key: string, destroy?: boolean }) {
+    const { key } = opts
+    // TODO: implement marking peers as frozen or destroyed in metadb
     const k = b4a.from(key, 'hex')
-    this.rebase.addInput(
-      this.store.get({
+    this.dataviewer.removeInput(
+      this.datamanager.get({ key: k, publicKey: k, encryptionKey: this.encryption_key })
+    )
+    emit({ ch: 'network', msg: `removed peer ${key} from ${this.connection_id || 'n/a'}` })
+  }
+
+  async addTrustedPeer(this: CoreClass, opts: { key: string, pass_check?: boolean, destroy?: boolean }) {
+    const { key } = opts
+    if (key === (await this.index_key)) return null
+    const trusted_peers = await this.metadb.get('trusted_peers')
+    if (!trusted_peers?.value || trusted_peers?.value.indexOf(key) === -1 || opts.pass_check) {
+      const w = trusted_peers?.value || []
+      if (w.indexOf(key) === -1) {
+        w.push(key)
+        await this.metadb.put('trusted_peers', w)
+      }
+    const k = b4a.from(key, 'hex')
+    this.dataviewer.addOutput(
+      this.datamanager.get({
         key: k,
         publicKey: k,
         encryptionKey: this.encryption_key,
       })
     )
-    emit({ ch: 'network', msg: `added writer ${key} to ${this.connection_id || 'n/a'}` })
+    emit({ ch: 'network', msg: `added trusted peer ${key} to ${this.connection_id || 'n/a'}` })
+    }
   }
 
-  async removeWriter(this: CoreClass, opts: { key: string }) {
-    const { key } = opts
-    // if (key === (await this.index_key)) return null
-    const k = b4a.from(key, 'hex')
-    this.rebase.removeInput(
-      this.store.get({ key: k, publicKey: k, encryptionKey: this.encryption_key })
-    )
-    emit({ ch: 'network', msg: `removed writer ${key} from ${this.connection_id || 'n/a'}` })
-  }
-
-  async addIndex(this: CoreClass, opts: { key: string }) {
+  async removeTrustedPeer(this: CoreClass, opts: { key: string, destroy?: boolean }) {
     const { key } = opts
     if (key === (await this.index_key)) return null
     const k = b4a.from(key, 'hex')
-    this.rebase.addOutput(
-      this.store.get({
-        key: k,
-        publicKey: k,
-        encryptionKey: this.encryption_key,
-      })
+    this.dataviewer.removeOutput(
+      this.datamanager.get({ key: k, publicKey: k, encryptionKey: this.encryption_key })
     )
-    emit({ ch: 'network', msg: `added index ${key} to ${this.connection_id || 'n/a'}` })
-  }
-
-  async removeIndex(this: CoreClass, key: string) {
-    if (key === (await this.index_key)) return null
-    const k = b4a.from(key, 'hex')
-    this.rebase.removeOutput(
-      this.store.get({ key: k, publicKey: k, encryptionKey: this.encryption_key })
-    )
-    emit({ ch: 'network', msg: `removed index ${key} from ${this.connection_id || 'n/a'}` })
+    emit({ ch: 'network', msg: `removed trusted peer ${key} from ${this.connection_id || 'n/a'}` })
   }
 }
 
 async function Core(params: { config: CoreConfig; app: { API: Function; Protocol: Function } }) {
   const { config } = params
-  // const protocol = typeof config.protocol === 'string' ? Protocol[config.protocol] : config.protocol
   const C = new CoreClass(config, params.app.Protocol)
   await C.init()
   const API: any = {
     connect: async (use_unique_swarm) => C.connect(use_unique_swarm),
     disconnect: async () => C.disconnect(),
     getKeys: async () => C.getKeys(),
-    addWriter: async (key) => C.addWriter(key),
-    removeWriter: async (key) => C.removeWriter(key),
-    addIndex: async (key) => C.addIndex(key),
-    removeIndex: async (key) => C.removeIndex(key),
+    addPeer: async (key) => C.addPeer(key),
+    removePeer: async (key) => C.removePeer(key),
+    addTrustedPeer: async (key) => C.addTrustedPeer(key),
+    removeTrustedPeer: async (key) => C.removeTrustedPeer(key),
     getWriterKey: () => C.writer_key,
     getIndexKey: () => C.index_key,
     getConnectionId: () => C.connection_id,
@@ -445,14 +485,16 @@ async function Core(params: { config: CoreConfig; app: { API: Function; Protocol
     _: {
       getWriter: () => C.writer,
       getIndex: () => C.index,
-      getManager: () => C.store,
+      getManager: () => C.datamanager,
+      getViewer: () => C.dataviewer,
+      getViewerView: () => C.dataviewer.view,
     },
   }
 
   const protocolAPI = await params.app.API(
     {
       get: async (key: string) => {
-        const data = await C.kv.get(key)
+        const data = await C.datadb.get(key)
         if (!data) return null
         return decodeCoreData(data.value)
       },
@@ -462,17 +504,17 @@ async function Core(params: { config: CoreConfig; app: { API: Function; Protocol
         limit?: number
         stream?: boolean
         reverse?: boolean
-        i?: boolean
+        include_meta?: boolean
       }) {
         if (!params?.limit) params.limit = 100
-        const stream = C.kv.createReadStream(params)
+        const stream = C.datadb.createReadStream(params)
         if (params?.stream) return stream
         return new Promise((resolve, reject) => {
           const bundle: object[] = []
           stream.on('data', (data) => {
             const val = decodeCoreData(data.value)
-            if (params.i) {
-              bundle.push({ value: val, i: data.seq })
+            if (params.include_meta) {
+              bundle.push({ value: val, i: data.seq, key: data.key })
             } else bundle.push(val)
           })
           stream.on('end', () => {
@@ -484,8 +526,8 @@ async function Core(params: { config: CoreConfig; app: { API: Function; Protocol
     async function (op) {
       const o = new Operation(op)
       const op_buf = encodeCoreData(op)
-      await C.rebase.append(op_buf)
-      await C.rebased_index.update()
+      await C.dataviewer.append(op_buf)
+      await C.dataviewer.view.update()
     }
   )
   for (const method in protocolAPI) {

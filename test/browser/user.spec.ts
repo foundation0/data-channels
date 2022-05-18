@@ -1,10 +1,9 @@
-import { createHash, hex2buf } from '@backbonedao/crypto'
+import { createHash, hex2buf, sign, buf2hex, keyPair } from '@backbonedao/crypto'
 import { test, expect } from '@playwright/test'
 import { ethers } from 'ethers'
 import { randomStr } from '../../common/crypto'
 import { UserConfig } from '../../common/interfaces'
 import User from '../../user'
-import { sign, buf2hex, keyPair } from '@backbonedao/crypto'
 
 test('username/password', async () => {
   // create user
@@ -33,7 +32,7 @@ test('username/password', async () => {
   expect(opened_root_pass).toEqual(root_pass)
 })
 
-test('verification', async () => {
+test('session', async () => {
   // create wallet from seed
   const wallet = ethers.utils.HDNode.fromSeed(createHash('d34db33f'))
 
@@ -49,7 +48,7 @@ test('verification', async () => {
   )
 })
 
-test('backbone keys', async () => {
+test('key/path derivation', async () => {
   // create user
   const user_cfg: UserConfig = {
     username: 'jensen',
@@ -61,7 +60,7 @@ test('backbone keys', async () => {
   const signature =
     '1cd413ba812b961fac899cfbd0a47bc4d121aedb9ea0d32c4d619db48929566f473095801bbfdf7fc3827b3c53bb5468c5ec39ea476472238573d1a8369c4f3b1c'
 
-  user.authenticate({
+  await user.authenticate({
     signature,
   })
 
@@ -73,11 +72,12 @@ test('backbone keys', async () => {
   )
 
   // generate path keys
-  const core_meta = await user.createNewCore({ path: '1/1', name: 'test' })
+  const [ core_meta ] = await user.createCore({ path: '1/1', name: 'test' })
   expect(core_meta).toEqual({
-    secretKey: "79d7c874521c8b25445a4fe3b13ec841cb0337aa1f947f497c9ee195d91e9891",
-    publicKey: "03e2f6a20551edc86ab2b2780fec48a4a4f6f7a32b7914dfeb65b5e23d8eceb917",
+    secretKey: '79d7c874521c8b25445a4fe3b13ec841cb0337aa1f947f497c9ee195d91e9891',
+    publicKey: '03e2f6a20551edc86ab2b2780fec48a4a4f6f7a32b7914dfeb65b5e23d8eceb917',
     path: `m/44'/60'/0'/1/1`,
     name: 'test',
+    address: hex2buf('2066d2db2f15ea68f82f902473cff1f2448b2759')
   })
 })

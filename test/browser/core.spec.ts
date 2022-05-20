@@ -3,8 +3,8 @@ import Core from '../../core'
 import { CoreConfig } from '../../common/interfaces'
 import { cleanup } from '../helper'
 import { sleep } from '../../common'
-import default_config from '../../bbconfig'
 import Apps from '../../apps'
+import { keyPair, buf2hex, createHash } from '@backbonedao/crypto'
 
 const cores = {}
 
@@ -21,10 +21,32 @@ test.describe('Core', () => {
     const core = await Core({
       config: {
         address: 'init-test',
-        encryption_key: default_config.keys.index,
+        encryption_key: 'foobar',
         private: false,
         storage_prefix: 'test',
         storage: 'ram',
+      },
+      app: Apps['keyvalue'],
+    })
+    const keys = await core.getKeys()
+    expect(Object.keys(keys)).toEqual(['writers', 'indexes'])
+    expect(keys.writers[0]).toHaveLength(66)
+    expect(keys.indexes[0]).toHaveLength(66)
+    await core.set({ key: 'foo', value: 'bar'})
+    const foo = await core.get('foo')
+    expect(foo).toEqual('bar')
+  })
+
+  test('should initialize core with keys', async () => {
+    const keypair = keyPair()
+    const core = await Core({
+      config: {
+        address: 'init-test',
+        encryption_key: 'foobar',
+        private: false,
+        storage_prefix: 'test',
+        storage: 'ram',
+        key: createHash(buf2hex(keypair.secretKey))
       },
       app: Apps['keyvalue'],
     })
@@ -42,22 +64,22 @@ test.describe('Core', () => {
     cores['core1'] = await Core({
       config: {
         address: 'replica-test2',
-        encryption_key: default_config.keys.index,
+        encryption_key: 'foobar',
         private: false,
         storage_prefix: 'test',
-        storage: 'ram',
+        storage: 'rai',
       },
       app: Apps['keyvalue'],
     })
 
     await cores['core1'].connect(true)
     await cores['core1'].set({ key: 'hello', value: 'foobar' })
-    await sleep(100)
+    await sleep(5000)
     // create second core
     let config2: CoreConfig = {
       address: 'replica-test2',
       storage_prefix: '2',
-      encryption_key: default_config.keys.index,
+      encryption_key: 'foobar',
       private: false,
       storage: 'ram',
     }
@@ -103,7 +125,7 @@ test.describe('Core', () => {
     cores['core_encrypted'] = await Core({
       config: {
         address: 'enc-test',
-        encryption_key: default_config.keys.index,
+        encryption_key: 'foobar',
         private: false,
         storage_prefix: 'test',
       },
@@ -121,7 +143,7 @@ test.describe('Core', () => {
       storage_prefix: 'test',
     }
     config_wrong_pass.writers = keys1.writers
-    config_wrong_pass.indexes = keys1.indexes
+    config_wrong_pass.trusted_peers = keys1.indexes
 
     cores['core_wrong_pass'] = await Core({
       config: {
@@ -143,7 +165,7 @@ test.describe('Core', () => {
     cores['core_private'] = await Core({
       config: {
         address: 'private-test',
-        encryption_key: default_config.keys.index,
+        encryption_key: 'foobar',
         private: true,
         storage_prefix: 'test',
       },

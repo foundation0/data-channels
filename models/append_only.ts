@@ -5,7 +5,7 @@ import b4a from 'b4a'
 const AppendOnly = function (model) {
   let size = 0
   let hash
-  return ArrayModel([model])
+  return ArrayModel(model)
     .assert((data) => {
       if (!data ) return true
       const new_size = data.length

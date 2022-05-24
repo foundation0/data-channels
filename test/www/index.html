@@ -6,6 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Core (alpha)</title>
     <script src="index.ts"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
   </head>
   <body>
     <script>
@@ -23,8 +29,8 @@
         window.core = await Backbone.Core(core_cfg)
         console.log(window.core)
 
-        const user = await Backbone.User()
-        window.user = await user()
+        // const user = await Backbone.User()
+        // window.user = await user()
       })()
     </script>
   </body>

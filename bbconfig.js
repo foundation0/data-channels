@@ -3,6 +3,10 @@
 module.exports = {
   user: {
     home_dir: '~',
+    auth_app_url:
+      typeof window !== 'undefined'
+        ? window.localStorage.getItem('bb.auth_app_url') || 'https://auth.backbonedao.com'
+        : 'https://auth.backbonedao.com',
   },
   addresses: {},
   keys: {
@@ -20,7 +24,7 @@ module.exports = {
     bootstrap_servers_ws: process.env.BOOTSTRAP
       ? 'ws://127.0.0.1:50000'
       : 'wss://network.backbonedao.com:50000',
-    stunturn_servers: ['stun:node1.network.backbonedao.com:19302', 'turn:node1.network.backbonedao.com:3478'],
+    stunturn_servers: ['stun:node1.network.backbonedao.com:19302'],
     swarm_refresh_frequency: 15 * 60 * 1000, // 15 mins
   },
 }

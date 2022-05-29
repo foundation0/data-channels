@@ -1,10 +1,12 @@
-import User from './user'
+import User from './user/index-old'
 import Core from './core'
 import platform from 'platform-detect'
+import * as Crypto from '@backbonedao/crypto'
 
 const Backbone = {
   User,
   Core,
+  Crypto
 }
 
 if (platform.browser) {
@@ -17,5 +19,6 @@ if (platform.browser) {
     return suppressErrorAlert
   }
 }
+
+module.exports = { User, Core, Crypto }
 export default Backbone
-module.exports = Backbone

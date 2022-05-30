@@ -9,7 +9,7 @@ const b4a_1 = __importDefault(require("b4a"));
 const AppendOnly = function (model) {
     let size = 0;
     let hash;
-    return base_1.ArrayModel([model])
+    return base_1.ArrayModel(model)
         .assert((data) => {
         if (!data)
             return true;

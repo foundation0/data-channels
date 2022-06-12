@@ -14,6 +14,7 @@ import b4a from 'b4a'
 import { createHash, keyPair } from '@backbonedao/crypto'
 import { Operation } from '../models'
 import getStorage from './get_storage'
+import { options } from 'preact'
 
 const CORES = {}
 
@@ -213,23 +214,6 @@ class CoreClass {
       valueEncoding: 'json',
     })
 
-    // If known peers exists, add them
-    const peers = (await this.metadb.get('peers')) || []
-    if (peers?.value) {
-      for (const key of peers?.value) {
-        if (key !== this.writer_key) {
-          await this.addPeer({ key, pass_check: true })
-        }
-      }
-    }
-
-    // Add trusted peers (pre-computed views)
-    for (const key of this.config.trusted_peers || []) {
-      if (key !== this.index_key) {
-        await this.addTrustedPeer({ key })
-      }
-    }
-
     await this.dataviewer.ready()
 
     // Setup Data aggregation layer
@@ -290,6 +274,61 @@ class CoreClass {
       })
     })
 
+    // If known peers exists, add them
+    const peers = (await this.metadb.get('peers')) || []
+    if (peers?.value) {
+      for (const key in peers?.value) {
+        if (key !== this.writer_key) {
+          if (peers.value[key].status === 'active' || peers.value[key].status === 'frozen') {
+            await this.addPeer({ key, skip_status_change: true })
+          }
+
+          if (peers.value[key].status === 'frozen') {
+            // replace core with snapshot
+            // NOTE: we are sort of trusting that core hasn't updated and eager isn't on
+            const core_i = this.dataviewer.inputs.findIndex((core) => b4a.equals(core.key, key))
+
+            if (core_i >= 0) {
+              const snapshot = this.dataviewer.inputs[core_i].snapshot()
+              await snapshot.ready()
+              this.dataviewer._inputsByKey.set(key, snapshot)
+            } else {
+              return emit({ ch: 'error', msg: `couldn't snapshot core ${key}` })
+            }
+          }
+        }
+      }
+    }
+
+    // Add trusted peers (pre-computed views)
+    const trusted_peers = (await this.metadb.get('trusted_peers')) || []
+    if (trusted_peers?.value) {
+      for (const key in trusted_peers?.value) {
+        if (key !== this.writer_key) {
+          if (
+            trusted_peers.value[key].status === 'active' ||
+            trusted_peers.value[key].status === 'frozen'
+          ) {
+            await this.addTrustedPeer({ key, skip_status_change: true })
+          }
+
+          if (trusted_peers.value[key].status === 'frozen') {
+            // replace core with snapshot
+            // NOTE: we are sort of trusting that core hasn't updated and eager isn't on
+            const core_i = this.dataviewer.outputs.findIndex((core) => b4a.equals(core.key, key))
+
+            if (core_i >= 0) {
+              const snapshot = this.dataviewer.outputs[core_i].snapshot()
+              await snapshot.ready()
+              this.dataviewer._outputsByKey.set(key, snapshot)
+            } else {
+              return emit({ ch: 'error', msg: `couldn't snapshot core ${key}` })
+            }
+          }
+        }
+      }
+    }
+
     // Debug log Core details
     emit({
       ch: 'network',
@@ -304,7 +343,10 @@ class CoreClass {
       )}\nroot: ${buf2hex(root.key)}`,
     })
   }
-  async connect(this: CoreClass, use_unique_swarm?: boolean) {
+  async connect(
+    this: CoreClass,
+    opts?: { use_unique_swarm?: boolean; local_only?: { initiator: boolean } }
+  ) {
     if (!this.config?.network) throw new Error('CONNECT NEEDS NETWORK CONFIG')
     if (this.config.private) throw new Error('ACCESS DENIED - PRIVATE CORE')
 
@@ -375,7 +417,12 @@ class CoreClass {
       await network.flush(() => {})
       return network
     }
-    this.network = await connectToNetwork()
+    if (!opts?.local_only) {
+      this.network = await connectToNetwork()
+      this.connection_id = buf2hex(this.network.webrtc.id)
+    } else {
+      this.network = this.datamanager.replicate(opts?.local_only?.initiator, { live: true })
+    }
     this.dataviewer.view.update()
 
     // for faster restarts
@@ -383,7 +430,6 @@ class CoreClass {
       this.network.destroy()
     })
 
-    this.connection_id = buf2hex(this.network.webrtc.id)
     return this.network
   }
 
@@ -402,47 +448,71 @@ class CoreClass {
     }
   }
 
-  async addPeer(this: CoreClass, opts: { key: string; pass_check?: boolean }) {
-    const { key } = opts
-    const peers = await this.metadb.get('peers')
-    if (!peers?.value || peers?.value.indexOf(key) === -1 || opts.pass_check) {
-      const w = peers?.value || []
-      if (w.indexOf(key) === -1) {
-        // TODO: implement status in peers [active | frozen | destroyed]
-        w.push(key)
-        await this.metadb.put('peers', w)
+  async _changePeerStatus(
+    this: CoreClass,
+    opts: { key: string; type?: 'peer' | 'trusted_peer'; status: 'active' | 'frozen' | 'destroyed' }
+  ) {
+    const { key, status, type = 'peer' } = opts
+    const peers_val = await this.metadb.get(type + 's')
+    let peers = {}
+    if (peers_val?.value) peers = peers_val.value
+    if (peers[key]) {
+      peers[key].status = status
+    } else {
+      peers[key] = {
+        status,
+        type,
       }
-      const k = b4a.from(key, 'hex')
-      const v = await this.datamanager.get({
-        key: k,
-        publicKey: k,
-        encryptionKey: this.encryption_key,
-      })
-      this.dataviewer.addInput(v)
-      emit({ ch: 'network', msg: `added peer ${key} to ${this.connection_id || 'n/a'}` })
     }
+    await this.metadb.put(type + 's', peers)
   }
 
-  async removePeer(this: CoreClass, opts: { key: string, destroy?: boolean }) {
+  async addPeer(this: CoreClass, opts: { key: string; skip_status_change?: boolean }) {
     const { key } = opts
-    // TODO: implement marking peers as frozen or destroyed in metadb
+    if (key === (await this.writer_key)) return null
+    if (!opts.skip_status_change)
+      await this._changePeerStatus({ key, status: 'active', type: 'peer' })
     const k = b4a.from(key, 'hex')
-    this.dataviewer.removeInput(
-      this.datamanager.get({ key: k, publicKey: k, encryptionKey: this.encryption_key })
-    )
+    const v = await this.datamanager.get({
+      key: k,
+      publicKey: k,
+      encryptionKey: this.encryption_key,
+    })
+    this.dataviewer.addInput(v)
+    emit({ ch: 'network', msg: `added peer ${key} to ${this.connection_id || 'n/a'}` })
+  }
+
+  async removePeer(this: CoreClass, opts: { key: string; destroy?: boolean }) {
+    const { key, destroy } = opts
+    const k = b4a.from(key, 'hex')
+    if (destroy) {
+      this.dataviewer.removeInput(
+        this.datamanager.get({ key: k, publicKey: k, encryptionKey: this.encryption_key })
+      )
+    } else {
+      // replace core with snapshot
+      const core_i = this.dataviewer.inputs.findIndex((core) => b4a.equals(core.key, k))
+
+      if (core_i >= 0) {
+        const snapshot = this.dataviewer.inputs[core_i].snapshot()
+        await snapshot.ready()
+        this.dataviewer._inputsByKey.set(key, snapshot)
+      } else {
+        return emit({ ch: 'error', msg: `couldn't snapshot core ${key}` })
+      }
+    }
+    // mark core as frozen or destroyed in the metadb
+    await this._changePeerStatus({ key, status: destroy ? 'destroyed' : 'frozen' })
+
     emit({ ch: 'network', msg: `removed peer ${key} from ${this.connection_id || 'n/a'}` })
   }
 
-  async addTrustedPeer(this: CoreClass, opts: { key: string, pass_check?: boolean, destroy?: boolean }) {
+  async addTrustedPeer(this: CoreClass, opts: { key: string; skip_status_change?: boolean }) {
     const { key } = opts
     if (key === (await this.index_key)) return null
-    const trusted_peers = await this.metadb.get('trusted_peers')
-    if (!trusted_peers?.value || trusted_peers?.value.indexOf(key) === -1 || opts.pass_check) {
-      const w = trusted_peers?.value || []
-      if (w.indexOf(key) === -1) {
-        w.push(key)
-        await this.metadb.put('trusted_peers', w)
-      }
+    if (!opts.skip_status_change)
+      await this._changePeerStatus({ key, status: 'active', type: 'trusted_peer' })
+
     const k = b4a.from(key, 'hex')
     this.dataviewer.addOutput(
       this.datamanager.get({
@@ -452,16 +522,32 @@ class CoreClass {
       })
     )
     emit({ ch: 'network', msg: `added trusted peer ${key} to ${this.connection_id || 'n/a'}` })
-    }
   }
 
-  async removeTrustedPeer(this: CoreClass, opts: { key: string, destroy?: boolean }) {
-    const { key } = opts
+  async removeTrustedPeer(this: CoreClass, opts: { key: string; destroy?: boolean }) {
+    const { key, destroy } = opts
     if (key === (await this.index_key)) return null
     const k = b4a.from(key, 'hex')
-    this.dataviewer.removeOutput(
-      this.datamanager.get({ key: k, publicKey: k, encryptionKey: this.encryption_key })
-    )
+    if (destroy) {
+      // remove core from outputs (destroy history as well)
+      this.dataviewer.removeOutput(
+        this.datamanager.get({ key: k, publicKey: k, encryptionKey: this.encryption_key })
+      )
+    } else {
+      // replace core with snapshot
+      const core_i = this.dataviewer.outputs.findIndex((core) => b4a.equals(core.key, k))
+
+      if (core_i >= 0) {
+        const snapshot = this.dataviewer.outputs[core_i].snapshot()
+        await snapshot.ready()
+        this.dataviewer._outputsByKey.set(key, snapshot)
+        // mark core as frozen in the metadb
+      } else {
+        return emit({ ch: 'error', msg: `couldn't snapshot core ${key}` })
+      }
+    }
+    await this._changePeerStatus({ key, status: destroy ? 'destroyed' : 'frozen' })
+
     emit({ ch: 'network', msg: `removed trusted peer ${key} from ${this.connection_id || 'n/a'}` })
   }
 }
@@ -471,13 +557,13 @@ async function Core(params: { config: CoreConfig; app: { API: Function; Protocol
   const C = new CoreClass(config, params.app.Protocol)
   await C.init()
   const API: any = {
-    connect: async (use_unique_swarm) => C.connect(use_unique_swarm),
+    connect: async (opts: { local_only: { initiator: true } }) => C.connect(opts),
     disconnect: async () => C.disconnect(),
     getKeys: async () => C.getKeys(),
-    addPeer: async (key) => C.addPeer(key),
-    removePeer: async (key) => C.removePeer(key),
-    addTrustedPeer: async (key) => C.addTrustedPeer(key),
-    removeTrustedPeer: async (key) => C.removeTrustedPeer(key),
+    addPeer: async (opts: { key: string }) => C.addPeer(opts),
+    removePeer: async (opts: { key: string }) => C.removePeer(opts),
+    addTrustedPeer: async (opts: { key: string }) => C.addTrustedPeer(opts),
+    removeTrustedPeer: async (opts: { key: string }) => C.removeTrustedPeer(opts),
     getWriterKey: () => C.writer_key,
     getIndexKey: () => C.index_key,
     getConnectionId: () => C.connection_id,

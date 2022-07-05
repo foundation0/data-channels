@@ -24,9 +24,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const Comlink = __importStar(require("comlink"));
 const bbconfig_1 = __importDefault(require("../bbconfig"));
-class UserManagerClass {
+class IdManagerClass {
     constructor() {
-        this.AuthApp = null;
+        this.IdApp = null;
     }
     async init() {
         const self = this;
@@ -41,18 +41,19 @@ class UserManagerClass {
         const ifr = document.getElementById('bb-auth-app');
         if (ifr) {
             await new Promise((resolve) => (ifr.onload = resolve));
-            self.AuthApp = Comlink.wrap(Comlink.windowEndpoint(ifr.contentWindow));
-            const pong = await self.AuthApp.ping();
+            self.IdApp = Comlink.wrap(Comlink.windowEndpoint(ifr.contentWindow));
+            const pong = await self.IdApp.ping();
             if (!pong)
                 throw new Error(`communication with auth app failed`);
         }
         else
             throw new Error(`couldn't initialize auth app`);
     }
-    async authenticate() {
-        const popup = window.open(bbconfig_1.default.user.auth_app_url, 'auth-app', 'width=500,height=300');
+    async authenticate(params) {
+        const self = this;
+        const popup = window.open(bbconfig_1.default.user.auth_app_url, 'auth-app', 'width=500,height=500');
         if (popup) {
-            return new Promise((resolve, reject) => {
+            return new Promise(async (resolve, reject) => {
                 function authenticated(is_authenticated) {
                     if (is_authenticated) {
                         console.log('authenticated');
@@ -62,6 +63,7 @@ class UserManagerClass {
                         reject(`couldn't authenticate`);
                 }
                 Comlink.expose(authenticated, Comlink.windowEndpoint(popup));
+                await self.IdApp.registerApp(params);
             });
         }
         else
@@ -69,18 +71,18 @@ class UserManagerClass {
     }
     async isAuthenticated() {
         const self = this;
-        if (!self.AuthApp)
+        if (!self.IdApp)
             await self.init();
-        if (self.AuthApp)
-            return self.AuthApp.isAuthenticated();
+        if (self.IdApp)
+            return self.IdApp.isAuthenticated();
         else
             throw new Error(`no auth app available`);
     }
 }
-async function UserManager() {
-    const AM = new UserManagerClass();
+async function IdManager() {
+    const AM = new IdManagerClass();
     await AM.init();
     return AM;
 }
-exports.default = UserManager;
+exports.default = IdManager;
 //# sourceMappingURL=index.js.map

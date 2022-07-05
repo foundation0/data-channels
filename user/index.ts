@@ -2,12 +2,12 @@ import * as Comlink from 'comlink'
 import Config from '../bbconfig'
 import { registerMethods } from '../common'
 
-class UserManagerClass {
-  AuthApp: { isAuthenticated: Function } | null = null
+class IdManagerClass {
+  IdApp: { isAuthenticated: Function } | null = null
 
   constructor() {}
 
-  async init(this: UserManagerClass) {
+  async init(this: IdManagerClass) {
     const self = this
     let auth_app_e = document.getElementById('bb-auth-app')
 
@@ -25,21 +25,25 @@ class UserManagerClass {
     if (ifr) {
       await new Promise((resolve) => (ifr.onload = resolve))
       // @ts-ignore - ts doesn't recognize ifr is iframe
-      self.AuthApp = Comlink.wrap(Comlink.windowEndpoint(ifr.contentWindow))
+      self.IdApp = Comlink.wrap(Comlink.windowEndpoint(ifr.contentWindow))
       // @ts-ignore - ts doesn't work well with Comlink
-      const pong = await self.AuthApp.ping()
+      const pong = await self.IdApp.ping()
       if (!pong) throw new Error(`communication with auth app failed`)
     } else throw new Error(`couldn't initialize auth app`)
   }
 
-  async authenticate(this: UserManagerClass) {
+  async authenticate(this: IdManagerClass, params: {
+    permissions: string[],
+    name: string
+  }) {
+    const self = this
     const popup = window.open(
       Config.user.auth_app_url,
       'auth-app',
-      'width=500,height=300'
+      'width=500,height=500'
     )
     if (popup) {
-      return new Promise((resolve, reject) => {
+      return new Promise(async (resolve, reject) => {
         function authenticated(is_authenticated) {
           if (is_authenticated) {
             console.log('authenticated')
@@ -47,20 +51,22 @@ class UserManagerClass {
           } else reject(`couldn't authenticate`)
         }
         Comlink.expose(authenticated, Comlink.windowEndpoint(popup))
+        // @ts-ignore
+        await self.IdApp.registerApp(params)
       })
     } else throw new Error(`couldn't open auth app`)
   }
 
-  async isAuthenticated(this: UserManagerClass) {
+  async isAuthenticated(this: IdManagerClass) {
     const self = this
-    if (!self.AuthApp) await self.init()
-    if (self.AuthApp) return self.AuthApp.isAuthenticated()
+    if (!self.IdApp) await self.init()
+    if (self.IdApp) return self.IdApp.isAuthenticated()
     else throw new Error(`no auth app available`)
   }
 }
 
-async function UserManager() {
-  const AM = new UserManagerClass()
+async function IdManager() {
+  const AM = new IdManagerClass()
   await AM.init()
   // const API = registerMethods({
   //   source: AM,
@@ -69,4 +75,4 @@ async function UserManager() {
   return AM
 }
 
-export default UserManager
+export default IdManager

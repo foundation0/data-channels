@@ -15,7 +15,8 @@ export function log(message: string, ...data: any) {
 }
 export function error(message: string, ...data: any) {
   if (process.env['LOG'] || (platform.browser && window?.localStorage.getItem('LOG'))) console.log(`ERROR: ${message}`, ...data)
-  EE.emit('error', `${message} - ${JSON.stringify(data)}`)
+  throw new Error(message)
+  // EE.emit('error', `${message} - ${JSON.stringify(data)}`)
 }
 
 export function buf2hex(buffer) { // buffer is an ArrayBuffer

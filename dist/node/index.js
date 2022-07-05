@@ -22,12 +22,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const index_old_1 = __importDefault(require("./user/index-old"));
+const user_1 = __importDefault(require("./user"));
 const core_1 = __importDefault(require("./core"));
 const platform_detect_1 = __importDefault(require("platform-detect"));
 const Crypto = __importStar(require("@backbonedao/crypto"));
 const Backbone = {
-    User: index_old_1.default,
+    User: user_1.default,
     Core: core_1.default,
     Crypto
 };
@@ -41,6 +41,6 @@ if (platform_detect_1.default.browser) {
         return suppressErrorAlert;
     };
 }
-module.exports = { User: index_old_1.default, Core: core_1.default, Crypto };
+module.exports = { User: user_1.default, Core: core_1.default, Crypto };
 exports.default = Backbone;
 //# sourceMappingURL=index.js.map

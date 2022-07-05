@@ -22,7 +22,7 @@ exports.log = log;
 function error(message, ...data) {
     if (process.env['LOG'] || (platform_detect_1.default.browser && window?.localStorage.getItem('LOG')))
         console.log(`ERROR: ${message}`, ...data);
-    EE.emit('error', `${message} - ${JSON.stringify(data)}`);
+    throw new Error(message);
 }
 exports.error = error;
 function buf2hex(buffer) {

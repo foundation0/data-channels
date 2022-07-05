@@ -39,7 +39,9 @@ export interface CoreConfig extends BackboneConfig {
   network_id?: {
     secretKey: string
     publicKey: string
-  }
+  },
+  id?: any,
+  disable_timeout?: boolean
 }
 
 export interface AccessConfig extends BackboneConfig {

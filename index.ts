@@ -1,4 +1,4 @@
-import User from './user/index-old'
+import User from './user'
 import Core from './core'
 import platform from 'platform-detect'
 import * as Crypto from '@backbonedao/crypto'

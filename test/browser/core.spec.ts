@@ -29,9 +29,9 @@ test.describe('Core', () => {
       app: Apps['keyvalue'],
     })
     const keys = await core.getKeys()
-    expect(Object.keys(keys)).toEqual(['writers', 'indexes'])
-    expect(keys.writers[0]).toHaveLength(66)
-    expect(keys.indexes[0]).toHaveLength(66)
+    expect(Object.keys(keys.data)).toEqual(['writers', 'indexes'])
+    expect(keys.data.writers[0]).toHaveLength(66)
+    expect(keys.data.indexes[0]).toHaveLength(66)
 
     // test bootloader apis while at it...
     await core._setMeta({ key: 'foo', value: 'bar' })
@@ -53,9 +53,9 @@ test.describe('Core', () => {
       app: Apps['keyvalue'],
     })
     const keys = await core.getKeys()
-    expect(Object.keys(keys)).toEqual(['writers', 'indexes'])
-    expect(keys.writers[0]).toHaveLength(66)
-    expect(keys.indexes[0]).toHaveLength(66)
+    expect(Object.keys(keys.data)).toEqual(['writers', 'indexes'])
+    expect(keys.data.writers[0]).toHaveLength(66)
+    expect(keys.data.indexes[0]).toHaveLength(66)
     await core.set({ key: 'foo', value: 'bar' })
     const foo = await core.get('foo')
     expect(foo).toEqual('bar')
@@ -86,9 +86,9 @@ test.describe('Core', () => {
     }
     const keys1 = await cores['core1'].getKeys()
     cores['core2'] = await Core({ config: config2, app: Apps['keyvalue'] })
-    await cores['core2'].addPeer({ key: keys1.writers[0], partition: 'data' })
+    await cores['core2'].addPeer({ key: keys1.data.writers[0], partition: 'data' })
     const keys2 = await cores['core2'].getKeys()
-    await cores['core1'].addPeer({ key: keys2.writers[0], partition: 'data' })
+    await cores['core1'].addPeer({ key: keys2.data.writers[0], partition: 'data' })
 
     // connect and verify replication
     const n1 = await cores['core1'].connect({ local_only: { initiator: true } })
@@ -115,7 +115,7 @@ test.describe('Core', () => {
     expect(posts3[1]).toEqual('second')
 
     // freeze second core, make a post on second
-    await cores['core1'].removePeer({ key: keys2.writers[0], partition: 'data' })
+    await cores['core1'].removePeer({ key: keys2.data.writers[0], partition: 'data' })
     await cores['core2'].set({ key: '!!', value: 'third' })
 
     const posts4 = await cores['core2'].all()
@@ -128,7 +128,7 @@ test.describe('Core', () => {
     expect(posts5[1]).toEqual('second')
 
     // remove second core and destroy everything
-    await cores['core1'].removePeer({ key: keys2.writers[0], destroy: true, partition: 'data' })
+    await cores['core1'].removePeer({ key: keys2.data.writers[0], destroy: true, partition: 'data' })
     const posts6 = await cores['core1'].all()
     expect(posts6).toHaveLength(1)
   })

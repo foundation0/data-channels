@@ -19,7 +19,7 @@
     "typeRoots": ["./node_modules/@types"],
     "types": ["node"]
   },
-  "exclude": ["archive", "test", "dist", "demo", "tmp"],
+  "exclude": ["archive", "test", "dist", "tmp"],
   // "include": ["node_modules/objectmodel", "**/*.ts", "**/*.js"],
   "ts-node": {
     "files": true

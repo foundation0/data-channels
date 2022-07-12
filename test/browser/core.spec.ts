@@ -3,7 +3,8 @@ import Core from '../../core'
 import { CoreConfig } from '../../common/interfaces'
 import { cleanup } from '../helper'
 import { error, sleep } from '../../common'
-import Apps from '../../apps'
+import KeyValue from './keyvalue'
+import Chat from './chat'
 import { keyPair, buf2hex, createHash } from '@backbonedao/crypto'
 
 const cores = {}
@@ -26,7 +27,7 @@ test.describe('Core', () => {
         storage_prefix: 'test',
         storage: 'ram',
       },
-      app: Apps['keyvalue'],
+      app: KeyValue,
     })
     const keys = await core.getKeys()
     expect(Object.keys(keys.data)).toEqual(['writers', 'indexes'])
@@ -50,7 +51,7 @@ test.describe('Core', () => {
         storage: 'ram',
         key: createHash(buf2hex(keypair.secretKey)),
       },
-      app: Apps['keyvalue'],
+      app: KeyValue,
     })
     const keys = await core.getKeys()
     expect(Object.keys(keys.data)).toEqual(['writers', 'indexes'])
@@ -71,7 +72,7 @@ test.describe('Core', () => {
         storage_prefix: 'test',
         storage: 'ram',
       },
-      app: Apps['keyvalue'],
+      app: KeyValue,
     })
 
     await cores['core1'].set({ key: 'hello', value: 'first' })
@@ -84,19 +85,11 @@ test.describe('Core', () => {
       private: false,
       storage: 'ram',
     }
-    const keys1 = await cores['core1'].getKeys()
-    cores['core2'] = await Core({ config: config2, app: Apps['keyvalue'] })
-    await cores['core2'].addPeer({ key: keys1.data.writers[0], partition: 'data' })
+    cores['core2'] = await Core({ config: config2, app: KeyValue })
     const keys2 = await cores['core2'].getKeys()
-    await cores['core1'].addPeer({ key: keys2.data.writers[0], partition: 'data' })
 
-    // connect and verify replication
-    const n1 = await cores['core1'].connect({ local_only: { initiator: true } })
-    const n2 = await cores['core2'].connect({ local_only: { initiator: false } })
-    const s = n1.pipe(n2).pipe(n1)
-
-    // this needs to be here or otherwise replication doesn't work properly
-    // let posts1 = await cores['core1'].all()
+    // wait for network to catch up
+    await sleep(5000)
 
     let posts = await cores['core2'].all()
 
@@ -109,7 +102,7 @@ test.describe('Core', () => {
     const posts2 = await cores['core2'].all()
     expect(posts2).toHaveLength(2)
     expect(posts2[1]).toEqual('second')
-
+    await sleep(1000)
     const posts3 = await cores['core1'].all()
     expect(posts3).toHaveLength(2)
     expect(posts3[1]).toEqual('second')
@@ -128,7 +121,11 @@ test.describe('Core', () => {
     expect(posts5[1]).toEqual('second')
 
     // remove second core and destroy everything
-    await cores['core1'].removePeer({ key: keys2.data.writers[0], destroy: true, partition: 'data' })
+    await cores['core1'].removePeer({
+      key: keys2.data.writers[0],
+      destroy: true,
+      partition: 'data',
+    })
     const posts6 = await cores['core1'].all()
     expect(posts6).toHaveLength(1)
   })
@@ -141,10 +138,9 @@ test.describe('Core', () => {
         private: false,
         storage_prefix: 'test',
       },
-      app: Apps['chat'],
+      app: Chat,
     })
     const keys1 = await cores['core_encrypted'].getKeys()
-    await cores['core_encrypted'].connect({ local_only: { initiator: true } })
     await cores['core_encrypted'].post({ text: 'world', user: 'foobar' })
 
     // create second core
@@ -164,13 +160,14 @@ test.describe('Core', () => {
         encryption_key: 'd34db34t',
         private: false,
       },
-      app: Apps['chat'],
+      app: Chat,
     })
 
-    await cores['core_wrong_pass'].connect({ local_only: { initiator: false } })
+    // waiting for the network to catch up
+    await sleep(5000)
+    
     let posts = await cores['core_wrong_pass'].all()
     expect(posts.length).toEqual(0)
-    // expect(posts[0].data).to.not.eql('hello')
   })
 
   test('should not allow private core to be connected', async () => {
@@ -182,9 +179,8 @@ test.describe('Core', () => {
           private: true,
           storage_prefix: 'test',
         },
-        app: Apps['chat'],
+        app: Chat,
       })
-      // await cores['core_private'].connect({ local_only: { initiator: true } })
     } catch (e) {
       expect(e.message).toEqual('ACCESS DENIED - PRIVATE CORE')
     }
@@ -197,7 +193,6 @@ test('deploy app to core and get other cores to run it', async () => {
       address: '0x594a0EbDe3d9E52752040a676c978e076dA32F3D',
       encryption_key: 'foobar',
       storage: 'ram',
-      // connect: { local_only: { initiator: true } }
     },
     app: {
       API: async function (Data, Protocol) {
@@ -242,53 +237,29 @@ test('deploy app to core and get other cores to run it', async () => {
   const ccode = await core1._getMeta('code')
   expect(ccode).toBeTruthy()
   expect(buf2hex(createHash(ccode.code))).toEqual(buf2hex(createHash(code)))
-  // await core1.connect()
 
-  const storage_prefix = Math.round(Math.random()*100000).toString()
+  const storage_prefix = Math.round(Math.random() * 100000).toString()
   const core2 = await Core({
     config: {
       address: '0x594a0EbDe3d9E52752040a676c978e076dA32F3D',
       encryption_key: 'foobar',
       storage_prefix,
       storage: 'raf',
-      // connect: { local_only: { initiator: false } }
     },
   })
 
-  // const core1_keys = await core1.getKeys()
-  // await core2.addPeer({ key: core1_keys.data.writers[0], partition: 'data' })
-  // await core2.addPeer({ key: core1_keys.meta.writers[0], partition: 'meta' })
-  // const core2_keys = await core2.getKeys()
-  // await core1.addPeer({ key: core2_keys.data.writers[0], partition: 'data' })
-  // await core1.addPeer({ key: core2_keys.meta.writers[0], partition: 'meta' })
-
-  // await core2.connect()
-  // console.log('asdf', await core1._allMeta())
-  // connect and verify replication
-  // const s = n1.pipe(n2).pipe(n1)
-  // await core2._allMeta()
   const code2 = await core2._getMeta('code')
   expect(buf2hex(createHash(code2.code))).toEqual(buf2hex(createHash(code)))
 
-  const storage_prefix2 = Math.round(Math.random()*100000).toString()
+  const storage_prefix2 = Math.round(Math.random() * 100000).toString()
   const core3 = await Core({
     config: {
       address: '0x594a0EbDe3d9E52752040a676c978e076dA32F3D',
       encryption_key: 'foobar',
       storage_prefix: storage_prefix2,
       storage: 'raf',
-      // connect: { local_only: { initiator: false } }
     },
   })
-  // const core3_keys = await core3.getKeys()
-  // await core3.addPeer({ key: core2_keys.meta.writers[0], partition: 'meta' })
-  // await core3.addPeer({ key: core1_keys.meta.writers[0], partition: 'meta' })
-  // await core3.addPeer({ key: core2_keys.data.writers[0], partition: 'data' })
-  // await core3.addPeer({ key: core1_keys.data.writers[0], partition: 'data' })
-
-  // connect and verify replication
-  // const n3 = await core3.connect()
-  // const s3 = n2.pipe(n3).pipe(n2)
 
   const code3 = await core3._getMeta('code')
   expect(buf2hex(createHash(code3.code))).toEqual(buf2hex(createHash(code)))

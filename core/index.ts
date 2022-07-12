@@ -976,6 +976,7 @@ async function Core(params: {
         log(`App provided as argument, loading...`)
         await startCore(params.app.Protocol, params.app.API)
       } else {
+        if(params.config.private) return reject('Private mode is on, but no code was found. Please start core with app when using private mode.')
         log(`Loading app...`)
         // Check if we have already downloaded the code
         const code = await API['_getMeta']('code')

@@ -3,7 +3,7 @@ import Core from '../../core'
 import { CoreConfig } from '../../common/interfaces'
 import { cleanup } from '../helper'
 import default_config from '../../bbconfig'
-import Apps from '../../apps'
+import KeyValue from './keyvalue'
 // import { createStore } from 'idb-keyval'
 
 const config_kv: CoreConfig = {
@@ -11,7 +11,6 @@ const config_kv: CoreConfig = {
   encryption_key: default_config.keys.index,
   writers: [],
   trusted_peers: [],
-  private: true,
   storage: 'ram',
   storage_prefix: 'test',
 }
@@ -20,9 +19,7 @@ test.beforeEach(cleanup)
 test.afterEach(cleanup)
 
 test('Apps', async () => {
-  // const idsStore = createStore("ids", "backbone")
-  expect(window).toBeTruthy()
-  const core = await Core({ config: config_kv, app: Apps['keyvalue'] })
+  const core = await Core({ config: config_kv, app: KeyValue })
 
   await core.set({ key: 'key', value: 'value' })
   expect(await core.get('key')).toEqual('value')

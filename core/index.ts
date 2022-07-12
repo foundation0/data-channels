@@ -1,7 +1,7 @@
-// import Store from '../../data-manager'
-// import Rebase from '../../data-viewer'
+// import DataManager from '../../data-manager'
+// import DataViewer from '../../data-viewer'
 // import DataDB from '../../data-db'
-// import Swarm from '../../network-node'
+// import Network from '../../network-node'
 import DataManager from '@backbonedao/data-manager'
 import DataViewer from '@backbonedao/data-viewer'
 import DataDB from '@backbonedao/data-db'
@@ -14,7 +14,7 @@ import b4a from 'b4a'
 import { createHash, keyPair } from '@backbonedao/crypto'
 import { Operation } from '../models'
 import getStorage from './get_storage'
-import { unpack } from 'msgpackr'
+// import { unpack } from 'msgpackr'
 
 const CORES = {}
 
@@ -182,7 +182,8 @@ class CoreClass {
       }
     }
 
-    // Initialize DataViewer for Data
+    // Initialize DataViewer for Meta
+    // @ts-ignore
     this.metaviewer = new DataViewer({
       localInput: this.meta,
       inputs: [this.meta],
@@ -190,10 +191,18 @@ class CoreClass {
       localOutput: this.meta_index,
       autostart: true,
       unwrap: true,
-      async apply(operations) {
+      eagerUpdate: true,
+      // sparse: true,
+      view: (core) =>
+        new DataDB(core.unwrap(), {
+          keyEncoding: 'utf-8',
+          valueEncoding: 'binary',
+          extension: false,
+        }),
+      async apply(data, operations) {
         // Process incoming operations
-        const data = self.metadb.batch({ update: false })
-        const DataAPI = await getDataAPI(data)
+        const dat = data.batch({ update: false })
+        const DataAPI = await getDataAPI(dat)
         for (const { value } of operations) {
           const o = decodeCoreData(value)
           const op = new Operation(o)
@@ -210,20 +219,14 @@ class CoreClass {
           }
         }
         // Update Dataviewer
-        await data.flush()
+        await dat.flush()
       },
     })
-
+    this.metadb = this.metaviewer.view
     await this.metaviewer.ready()
 
-    // Setup MetaDB for Core metadata
-    this.metadb = new DataDB(this.metaviewer.view, {
-      extension: false,
-      keyEncoding: 'utf-8',
-      valueEncoding: 'binary',
-    })
-
     // Initialize DataViewer for Data
+    // @ts-ignore
     this.dataviewer = new DataViewer({
       localInput: this.writer,
       inputs: [this.writer],
@@ -231,10 +234,18 @@ class CoreClass {
       localOutput: this.index,
       autostart: true,
       unwrap: true,
-      async apply(operations) {
+      eagerUpdate: true,
+      //sparse: true,
+      view: (core) =>
+        new DataDB(core.unwrap(), {
+          keyEncoding: 'utf-8',
+          valueEncoding: 'binary',
+          extension: false,
+        }),
+      async apply(data, operations) {
         // Process incoming operations
-        const data = self.datadb.batch({ update: false })
-        const DataAPI = await getDataAPI(data)
+        const dat = data.batch({ update: false })
+        const DataAPI = await getDataAPI(dat)
         for (const { value } of operations) {
           const o = decodeCoreData(value)
           const op = new Operation(o)
@@ -281,18 +292,11 @@ class CoreClass {
         }
 
         // Update Dataviewer
-        await data.flush()
+        await dat.flush()
       },
     })
-
+    this.datadb = this.dataviewer.view
     await this.dataviewer.ready()
-
-    // Setup Data aggregation layer
-    this.datadb = new DataDB(this.dataviewer.view, {
-      extension: false,
-      keyEncoding: 'utf-8',
-      valueEncoding: 'binary',
-    })
 
     log(`initialized Core ${this.writer_key} / ${this.index_key}`)
 
@@ -380,6 +384,7 @@ class CoreClass {
     this: CoreClass,
     opts?: { use_unique_swarm?: boolean; local_only?: { initiator: boolean } }
   ) {
+    if (this.network) return error('NETWORK EXISTS')
     if (!this.config?.network) return error('CONNECT NEEDS NETWORK CONFIG')
     if (this.config.private) return error('ACCESS DENIED - PRIVATE CORE')
 
@@ -403,6 +408,7 @@ class CoreClass {
     if (!this.config.network_id) {
       this.config.network_id = keyPair()
     }
+
     network_config.keyPair = this.config.network_id
 
     let self = this
@@ -452,7 +458,15 @@ class CoreClass {
     if (!opts?.local_only) {
       this.network = await connectToNetwork()
       this.connection_id = buf2hex(this.network.webrtc.id)
+      emit({
+        ch: 'network',
+        msg: `Connection id: ${this.connection_id}`,
+      })
     } else {
+      emit({
+        ch: 'network',
+        msg: `Using local connection`,
+      })
       this.network = this.datamanager.replicate(opts?.local_only?.initiator, { live: true })
     }
     this.dataviewer.view.update()
@@ -638,7 +652,12 @@ class CoreClass {
     opts: { key: string; partition: 'data' | 'meta'; skip_status_change?: boolean }
   ) {
     const { key, partition } = opts
-    if (key === (await this.writer_key) && key === (await this.meta_key)) return null
+    emit({
+      ch: 'network',
+      msg: `Trying to add peer ${partition}/${key} to ${this.connection_id || 'n/a'}`,
+    })
+
+    if (key === (await this.writer_key) || key === (await this.meta_key)) return null
     const dataviewer_keys = this.dataviewer.inputs.map((core) => buf2hex(core.key))
     const metaviewer_keys = this.metaviewer.inputs.map((core) => buf2hex(core.key))
 
@@ -657,12 +676,17 @@ class CoreClass {
       publicKey: k,
       encryptionKey: this.encryption_key,
     })
+    await c.ready()
     switch (partition) {
       case 'data':
-        await this.dataviewer.addInput(c)
+        setTimeout(async () => {
+          await this.dataviewer.addInput(c)
+        }, 100)
         break
       case 'meta':
-        await this.metaviewer.addInput(c)
+        setTimeout(async () => {
+          await this.metaviewer.addInput(c)
+        }, 100)
         break
       default:
         return error('partition not specified')
@@ -908,6 +932,11 @@ async function Core(params: {
     if (!data) return null
     return decodeCoreData(data.value)
   }
+  API['_allMeta'] = async () => {
+    const data = await C.metadb.query({ lt: '~' })
+    if (!data) return null
+    return decodeCoreData(data)
+  }
   API['_setMeta'] = async (params: { key: string; value: string }) => {
     await C.metaprotocol({
       type: 'set',
@@ -932,7 +961,12 @@ async function Core(params: {
         // Add known peers for data partition
         await C.addKnownPeers({ partition: 'data' })
         // If we haven't connected to backbone:// yet, do it now
-        if (!(await API.getNetwork())) await C.connect()
+        if (!(await API.getNetwork()))
+          await C.connect(
+            params?.config?.connect?.local_only
+              ? { local_only: params?.config?.connect?.local_only }
+              : {}
+          )
 
         log(`Container initialized successfully`)
         resolve(API)
@@ -944,7 +978,7 @@ async function Core(params: {
       } else {
         log(`Loading app...`)
         // Check if we have already downloaded the code
-        const code = await API['_getMeta']('_/code')
+        const code = await API['_getMeta']('code')
         if (code?.code) {
           // Code was found locally, so let's try to eval it
           const app = Function(code.code + ';return app')()
@@ -954,7 +988,11 @@ async function Core(params: {
         } else {
           // Code was not found locally, so we need to connect to peers and get the code...
           log(`No code found, querying peers for code, standby...`)
-          await API.connect()
+          await API.connect(
+            params?.config?.connect?.local_only
+              ? { local_only: params?.config?.connect?.local_only }
+              : {}
+          )
 
           // 60sec timeout sounds reasonable for most network conditions
           let timeout = 60
@@ -964,7 +1002,7 @@ async function Core(params: {
             if (n._peers.size > 0) {
               // Peers found, so try to download the code
               log(`Got peers, loading code...`)
-              const code = await API['_getMeta']('_/code')
+              const code = await API['_getMeta']('code')
               if (code?.code) {
                 // Code found, so clean up and try to eval it
                 clearInterval(interval)
@@ -983,7 +1021,7 @@ async function Core(params: {
               clearInterval(interval)
               return reject('no peers found')
             }
-          }, 1000)
+          }, 5000)
         }
       }
     } catch (error) {

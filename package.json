@@ -12,7 +12,11 @@
     "fs": false
   },
   "browserify": {
-    "transforms": [ [ "babelify"] ]
+    "transforms": [
+      [
+        "babelify"
+      ]
+    ]
   },
   "engineStrict": true,
   "scripts": {
@@ -36,7 +40,7 @@
     "@milahu/patch-package": "^6.4.11",
     "@noble/secp256k1": "^1.5.5",
     "async": "^3.2.3",
-    "b4a": "^1.5.0",
+    "b4a": "^1.5.3",
     "comlink": "^4.3.1",
     "cross-env": "^7.0.3",
     "ethers": "^5.6.4",

@@ -19,6 +19,8 @@ function getStorage(bb_config) {
     else if (bb_config?.env === 'node' || platform_detect_1.default?.node) {
         common_1.log('Node runtime detected, using file system for storage');
         const prefix = bb_config?.storage_prefix ? `${bb_config?.storage_prefix}/` : '';
+        if (prefix)
+            common_1.log(`Using storage prefix: ${prefix}`);
         const pathname = bb_config.address.match(/.{1,2}/g)?.join('/');
         storage = process.env.TEST
             ? `${os_1.homedir()}/.backbone-test/${prefix}${pathname}`

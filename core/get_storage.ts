@@ -15,6 +15,7 @@ export default function getStorage(bb_config: CoreConfig) {
   } else if (bb_config?.env === 'node' || platform?.node) {
     log('Node runtime detected, using file system for storage')
     const prefix = bb_config?.storage_prefix ? `${bb_config?.storage_prefix}/` : ''
+    if(prefix) log(`Using storage prefix: ${prefix}`)
     // split the path in chunks of two letters to avoid creating file explorer killing directories
     const pathname = bb_config.address.match(/.{1,2}/g)?.join('/')
     storage = process.env.TEST

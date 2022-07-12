@@ -135,9 +135,15 @@ class CoreClass {
             localOutput: this.meta_index,
             autostart: true,
             unwrap: true,
-            async apply(operations) {
-                const data = self.metadb.batch({ update: false });
-                const DataAPI = await getDataAPI(data);
+            eagerUpdate: true,
+            view: (core) => new data_db_1.default(core.unwrap(), {
+                keyEncoding: 'utf-8',
+                valueEncoding: 'binary',
+                extension: false,
+            }),
+            async apply(data, operations) {
+                const dat = data.batch({ update: false });
+                const DataAPI = await getDataAPI(dat);
                 for (const { value } of operations) {
                     const o = common_1.decodeCoreData(value);
                     const op = new models_1.Operation(o);
@@ -152,15 +158,11 @@ class CoreClass {
                         throw error;
                     }
                 }
-                await data.flush();
+                await dat.flush();
             },
         });
+        this.metadb = this.metaviewer.view;
         await this.metaviewer.ready();
-        this.metadb = new data_db_1.default(this.metaviewer.view, {
-            extension: false,
-            keyEncoding: 'utf-8',
-            valueEncoding: 'binary',
-        });
         this.dataviewer = new data_viewer_1.default({
             localInput: this.writer,
             inputs: [this.writer],
@@ -168,61 +170,52 @@ class CoreClass {
             localOutput: this.index,
             autostart: true,
             unwrap: true,
-            async apply(operations) {
-                const data = self.datadb.batch({ update: false });
-                const DataAPI = await getDataAPI(data);
+            eagerUpdate: true,
+            view: (core) => new data_db_1.default(core.unwrap(), {
+                keyEncoding: 'utf-8',
+                valueEncoding: 'binary',
+                extension: false,
+            }),
+            async apply(data, operations) {
+                const dat = data.batch({ update: false });
+                const DataAPI = await getDataAPI(dat);
                 for (const { value } of operations) {
                     const o = common_1.decodeCoreData(value);
                     const op = new models_1.Operation(o);
-                    try {
-                        switch (op.type) {
-                            case '_set':
-                                await DataAPI.put({ key: op.key, value: op.value });
-                                break;
-                            default:
-                                await self.protocol(op, DataAPI, this.mode === 'write'
-                                    ? {
-                                        sign: {},
-                                    }
-                                    : null, {
-                                    get: async (key) => {
-                                        const data = await self.datadb.get(key);
-                                        if (!data)
-                                            return null;
-                                        return common_1.decodeCoreData(data.value);
-                                    },
-                                    query: async function (params) {
-                                        if (!params?.limit)
-                                            params.limit = 100;
-                                        const stream = self.datadb.createReadStream(params);
-                                        if (params?.stream)
-                                            return stream;
-                                        return new Promise((resolve, reject) => {
-                                            const bundle = [];
-                                            stream.on('data', (data) => {
-                                                bundle.push(common_1.decodeCoreData(data.value));
-                                            });
-                                            stream.on('end', () => {
-                                                resolve(bundle);
-                                            });
-                                        });
-                                    },
-                                });
+                    await self.protocol(op, DataAPI, this.mode === 'write'
+                        ? {
+                            sign: {},
                         }
-                    }
-                    catch (error) {
-                        throw error;
-                    }
+                        : null, {
+                        get: async (key) => {
+                            const data = await self.datadb.get(key);
+                            if (!data)
+                                return null;
+                            return common_1.decodeCoreData(data.value);
+                        },
+                        query: async function (params) {
+                            if (!params?.limit)
+                                params.limit = 100;
+                            const stream = self.datadb.createReadStream(params);
+                            if (params?.stream)
+                                return stream;
+                            return new Promise((resolve, reject) => {
+                                const bundle = [];
+                                stream.on('data', (data) => {
+                                    bundle.push(common_1.decodeCoreData(data.value));
+                                });
+                                stream.on('end', () => {
+                                    resolve(bundle);
+                                });
+                            });
+                        },
+                    });
                 }
-                await data.flush();
+                await dat.flush();
             },
         });
+        this.datadb = this.dataviewer.view;
         await this.dataviewer.ready();
-        this.datadb = new data_db_1.default(this.dataviewer.view, {
-            extension: false,
-            keyEncoding: 'utf-8',
-            valueEncoding: 'binary',
-        });
         common_1.log(`initialized Core ${this.writer_key} / ${this.index_key}`);
         const kp = crypto_1.keyPair(this.address_hash);
         const root = this.datamanager.get(b4a_1.default.from(kp.publicKey, 'hex'));
@@ -286,6 +279,8 @@ class CoreClass {
         });
     }
     async connect(opts) {
+        if (this.network)
+            return common_1.error('NETWORK EXISTS');
         if (!this.config?.network)
             return common_1.error('CONNECT NEEDS NETWORK CONFIG');
         if (this.config.private)
@@ -334,8 +329,16 @@ class CoreClass {
         if (!opts?.local_only) {
             this.network = await connectToNetwork();
             this.connection_id = common_1.buf2hex(this.network.webrtc.id);
+            common_1.emit({
+                ch: 'network',
+                msg: `Connection id: ${this.connection_id}`,
+            });
         }
         else {
+            common_1.emit({
+                ch: 'network',
+                msg: `Using local connection`,
+            });
             this.network = this.datamanager.replicate(opts?.local_only?.initiator, { live: true });
         }
         this.dataviewer.view.update();
@@ -350,11 +353,20 @@ class CoreClass {
     }
     async getKeys() {
         return {
-            writers: [...this.dataviewer.inputs.map((i) => common_1.buf2hex(i.key))],
-            indexes: [
-                ...this.dataviewer.outputs.map((i) => common_1.buf2hex(i.key)),
-                common_1.buf2hex(this.dataviewer.localOutput.key),
-            ],
+            data: {
+                writers: [...this.dataviewer.inputs.map((i) => common_1.buf2hex(i.key))],
+                indexes: [
+                    ...this.dataviewer.outputs.map((i) => common_1.buf2hex(i.key)),
+                    common_1.buf2hex(this.dataviewer.localOutput.key),
+                ],
+            },
+            meta: {
+                writers: [...this.metaviewer.inputs.map((i) => common_1.buf2hex(i.key))],
+                indexes: [
+                    ...this.metaviewer.outputs.map((i) => common_1.buf2hex(i.key)),
+                    common_1.buf2hex(this.metaviewer.localOutput.key),
+                ],
+            },
         };
     }
     async _updatePeerCache() {
@@ -476,7 +488,11 @@ class CoreClass {
     }
     async addPeer(opts) {
         const { key, partition } = opts;
-        if (key === (await this.writer_key) && key === (await this.meta_key))
+        common_1.emit({
+            ch: 'network',
+            msg: `Trying to add peer ${partition}/${key} to ${this.connection_id || 'n/a'}`,
+        });
+        if (key === (await this.writer_key) || key === (await this.meta_key))
             return null;
         const dataviewer_keys = this.dataviewer.inputs.map((core) => common_1.buf2hex(core.key));
         const metaviewer_keys = this.metaviewer.inputs.map((core) => common_1.buf2hex(core.key));
@@ -497,12 +513,17 @@ class CoreClass {
             publicKey: k,
             encryptionKey: this.encryption_key,
         });
+        await c.ready();
         switch (partition) {
             case 'data':
-                await this.dataviewer.addInput(c);
+                setTimeout(async () => {
+                    await this.dataviewer.addInput(c);
+                }, 100);
                 break;
             case 'meta':
-                await this.metaviewer.addInput(c);
+                setTimeout(async () => {
+                    await this.metaviewer.addInput(c);
+                }, 100);
                 break;
             default:
                 return common_1.error('partition not specified');
@@ -701,6 +722,12 @@ async function Core(params) {
             return null;
         return common_1.decodeCoreData(data.value);
     };
+    API['_allMeta'] = async () => {
+        const data = await C.metadb.query({ lt: '~' });
+        if (!data)
+            return null;
+        return common_1.decodeCoreData(data);
+    };
     API['_setMeta'] = async (params) => {
         await C.metaprotocol({
             type: 'set',
@@ -717,7 +744,9 @@ async function Core(params) {
                 await injectAppAPI(app);
                 await C.addKnownPeers({ partition: 'data' });
                 if (!(await API.getNetwork()))
-                    await C.connect();
+                    await C.connect(params?.config?.connect?.local_only
+                        ? { local_only: params?.config?.connect?.local_only }
+                        : {});
                 common_1.log(`Container initialized successfully`);
                 resolve(API);
             }
@@ -727,7 +756,7 @@ async function Core(params) {
             }
             else {
                 common_1.log(`Loading app...`);
-                const code = await API['_getMeta']('_/code');
+                const code = await API['_getMeta']('code');
                 if (code?.code) {
                     const app = Function(code.code + ';return app')();
                     if (!app.Protocol)
@@ -736,13 +765,15 @@ async function Core(params) {
                 }
                 else {
                     common_1.log(`No code found, querying peers for code, standby...`);
-                    await API.connect();
+                    await API.connect(params?.config?.connect?.local_only
+                        ? { local_only: params?.config?.connect?.local_only }
+                        : {});
                     let timeout = 60;
                     const interval = setInterval(async () => {
                         const n = await API.getNetwork();
                         if (n._peers.size > 0) {
                             common_1.log(`Got peers, loading code...`);
-                            const code = await API['_getMeta']('_/code');
+                            const code = await API['_getMeta']('code');
                             if (code?.code) {
                                 clearInterval(interval);
                                 const app = Function(code.code + ';return app')();
@@ -759,7 +790,7 @@ async function Core(params) {
                             clearInterval(interval);
                             return reject('no peers found');
                         }
-                    }, 1000);
+                    }, 5000);
                 }
             }
         }

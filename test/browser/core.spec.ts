@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import Core from '../../core'
 import { CoreConfig } from '../../common/interfaces'
 import { cleanup } from '../helper'
-import { sleep } from '../../common'
+import { error, sleep } from '../../common'
 import Apps from '../../apps'
 import { keyPair, buf2hex, createHash } from '@backbonedao/crypto'
 
@@ -196,7 +196,8 @@ test('deploy app to core and get other cores to run it', async () => {
     config: {
       address: '0x594a0EbDe3d9E52752040a676c978e076dA32F3D',
       encryption_key: 'foobar',
-      storage: 'ram'
+      storage: 'ram',
+      // connect: { local_only: { initiator: true } }
     },
     app: {
       API: async function (Data, Protocol) {
@@ -216,30 +217,32 @@ test('deploy app to core and get other cores to run it', async () => {
       },
 
       Protocol: async function (op, Core, Id) {
-        if (typeof op !== 'object' || !op?.type) throw new Error('UNKNOWN OP')
+        if (typeof op !== 'object' || !op?.type) return error('UNKNOWN OP')
         switch (op.type) {
           case 'set': {
             await Core.put({ key: op.key, value: op.value })
             break
           }
           default:
-            throw new Error('UNKNOWN OP')
+            console.log('UNKNOWN OP')
+            return error('UNKNOWN OP')
         }
       },
     },
   })
-  const code = `!function(f){"object"==typeof exports&&"undefined"!=typeof module?module.exports=f():"function"==typeof define&&define.amd?define([],f):("undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:this).app=f()}(function(){return function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);throw(f=new Error("Cannot find module '"+i+"'")).code="MODULE_NOT_FOUND",f}c=n[i]={exports:{}},e[i][0].call(c.exports,function(r){return o(e[i][1][r]||r)},c,c.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}({1:[function(require,module,exports){module.exports=async function(Core,Protocol){return{async all(stream){return await Core.query({lt:"~"},stream)},async get(key){return await Core.get(key)||null},async del(key){await Protocol({type:"del",key:key})},async set(params={key:"",value:""}){await Protocol({type:"set",key:params.key,value:params.value})}}}},{}],2:[function(require,module,exports){var Protocol=require("./protocol"),require=require("./api");module.exports={Protocol:Protocol,API:require}},{"./api":1,"./protocol":3}],3:[function(require,module,exports){module.exports=async function(op,Core,Id){if("object"!=typeof op||!op?.type)throw new Error("UNKNOWN OP");switch(op.type){case"set":await Core.put({key:op.key,value:op.value});break;case"del":if(!await Core.get(op.key,{update:!1}))break;await Core.del(op.key);break;default:throw new Error("UNKNOWN OP")}}},{}]},{},[2])(2)});`
+  const code = `!function(f){"object"==typeof exports&&"undefined"!=typeof module?module.exports=f():"function"==typeof define&&define.amd?define([],f):("undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:this).app=f()}(function(){return function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);throw(f=new Error("Cannot find module '"+i+"'")).code="MODULE_NOT_FOUND",f}c=n[i]={exports:{}},e[i][0].call(c.exports,function(r){return o(e[i][1][r]||r)},c,c.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}({1:[function(require,module,exports){module.exports=async function(Core,Protocol){return{async all(stream){return await Core.query({lt:"~"},stream)},async get(key){return await Core.get(key)||null},async del(key){await Protocol({type:"del",key:key})},async set(params={key:"",value:""}){await Protocol({type:"set",key:params.key,value:params.value})}}}},{}],2:[function(require,module,exports){var Protocol=require("./protocol"),require=require("./api");module.exports={Protocol:Protocol,API:require}},{"./api":1,"./protocol":3}],3:[function(require,module,exports){module.exports=async function(op,Core,Id){if("object"!=typeof op||!op?.type)return error("UNKNOWN OP");switch(op.type){case"set":await Core.put({key:op.key,value:op.value});break;case"del":if(!await Core.get(op.key,{update:!1}))break;await Core.del(op.key);break;default:return error("UNKNOWN OP")}}},{}]},{},[2])(2)});`
   await core1._setMeta({
-    key: '_/code',
+    key: 'code',
     value: {
       code,
       signature:
         '835fe61c320a7e92797b4ddc90d7e92139b5546885a79c5d5262f9ffe5b9eb5d65c998552708fb3e01efc9d943dc9ed815dd2b5ddba67dc264dad8662eec0e641c',
     },
   })
-  const ccode = await core1._getMeta('_/code')
+  const ccode = await core1._getMeta('code')
   expect(ccode).toBeTruthy()
   expect(buf2hex(createHash(ccode.code))).toEqual(buf2hex(createHash(code)))
+  // await core1.connect()
 
   const storage_prefix = Math.round(Math.random()*100000).toString()
   const core2 = await Core({
@@ -247,23 +250,24 @@ test('deploy app to core and get other cores to run it', async () => {
       address: '0x594a0EbDe3d9E52752040a676c978e076dA32F3D',
       encryption_key: 'foobar',
       storage_prefix,
-      storage: 'raf'
+      storage: 'raf',
+      // connect: { local_only: { initiator: false } }
     },
   })
 
-  const core1_keys = await core1.getKeys()
-  await core2.addPeer({ key: core1_keys.data.writers[0], partition: 'data' })
-  await core2.addPeer({ key: core1_keys.meta.writers[0], partition: 'meta' })
-  const core2_keys = await core2.getKeys()
-  await core1.addPeer({ key: core2_keys.data.writers[0], partition: 'data' })
-  await core1.addPeer({ key: core2_keys.meta.writers[0], partition: 'meta' })
+  // const core1_keys = await core1.getKeys()
+  // await core2.addPeer({ key: core1_keys.data.writers[0], partition: 'data' })
+  // await core2.addPeer({ key: core1_keys.meta.writers[0], partition: 'meta' })
+  // const core2_keys = await core2.getKeys()
+  // await core1.addPeer({ key: core2_keys.data.writers[0], partition: 'data' })
+  // await core1.addPeer({ key: core2_keys.meta.writers[0], partition: 'meta' })
 
+  // await core2.connect()
+  // console.log('asdf', await core1._allMeta())
   // connect and verify replication
-  const n1 = await core1.connect({ local_only: { initiator: true } })
-  const n2 = await core2.connect({ local_only: { initiator: false } })
-  const s = n1.pipe(n2).pipe(n1)
-
-  const code2 = await core2._getMeta('_/code')
+  // const s = n1.pipe(n2).pipe(n1)
+  // await core2._allMeta()
+  const code2 = await core2._getMeta('code')
   expect(buf2hex(createHash(code2.code))).toEqual(buf2hex(createHash(code)))
 
   const storage_prefix2 = Math.round(Math.random()*100000).toString()
@@ -272,19 +276,20 @@ test('deploy app to core and get other cores to run it', async () => {
       address: '0x594a0EbDe3d9E52752040a676c978e076dA32F3D',
       encryption_key: 'foobar',
       storage_prefix: storage_prefix2,
-      storage: 'raf'
+      storage: 'raf',
+      // connect: { local_only: { initiator: false } }
     },
   })
-  const core3_keys = await core3.getKeys()
-  await core3.addPeer({ key: core2_keys.data.writers[0], partition: 'data' })
-  await core3.addPeer({ key: core2_keys.meta.writers[0], partition: 'meta' })
-  await core3.addPeer({ key: core1_keys.data.writers[0], partition: 'data' })
-  await core3.addPeer({ key: core1_keys.meta.writers[0], partition: 'meta' })
+  // const core3_keys = await core3.getKeys()
+  // await core3.addPeer({ key: core2_keys.meta.writers[0], partition: 'meta' })
+  // await core3.addPeer({ key: core1_keys.meta.writers[0], partition: 'meta' })
+  // await core3.addPeer({ key: core2_keys.data.writers[0], partition: 'data' })
+  // await core3.addPeer({ key: core1_keys.data.writers[0], partition: 'data' })
 
   // connect and verify replication
-  const n3 = await core3.connect({ local_only: { initiator: false } })
-  const s3 = n2.pipe(n3).pipe(n2)
+  // const n3 = await core3.connect()
+  // const s3 = n2.pipe(n3).pipe(n2)
 
-  const code3 = await core3._getMeta('_/code')
+  const code3 = await core3._getMeta('code')
   expect(buf2hex(createHash(code3.code))).toEqual(buf2hex(createHash(code)))
 })

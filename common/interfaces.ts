@@ -32,6 +32,7 @@ export interface CoreConfig extends BackboneConfig {
       }
     }
   }
+  connect?: { local_only: { initiator: boolean }}
   storage_prefix?: string
   storage?: 'ram' | 'rai' | 'raf'
   firewall?: Function

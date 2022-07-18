@@ -1,13 +1,6 @@
 node_modules
 .vscode
 tmp
-.scripts
-core/core
-core/store
-core/rebase
-core/kv
-common/network/swarm
-common/network/dht*
-core/store/encrypt
+scripts
 archive
 _*

@@ -825,7 +825,7 @@ class CoreClass {
 
 async function Core(params: {
   config: CoreConfig
-  app?: { API: Function; Protocol: Function }
+  app?: { API: Function; Protocol: Function, ui?: Function }
 }): Promise<any> {
   const { config } = params
 
@@ -951,7 +951,7 @@ async function Core(params: {
   return new Promise(async (resolve, reject) => {
     try {
       // General function meant to be run after code has been found
-      async function startCore(Protocol, appAPI) {
+      async function startCore(Protocol, appAPI, UI) {
         // Add protocol to the core
         C.protocol = Protocol
         // Init the app code and create protocol bridge to data partition
@@ -969,23 +969,27 @@ async function Core(params: {
           )
 
         log(`Container initialized successfully`)
+        if(typeof window === 'object' && UI) {
+          API.UI = Function(UI + ';return app')()
+        }
         resolve(API)
       }
       if (params.app?.Protocol && params.app?.API) {
         // Meant mostly for testing purposes
         log(`App provided as argument, loading...`)
-        await startCore(params.app.Protocol, params.app.API)
+        await startCore(params.app.Protocol, params.app.API, params?.app?.ui)
       } else {
         if(params.config.private) return reject('Private mode is on, but no code was found. Please start core with app when using private mode.')
         log(`Loading app...`)
         // Check if we have already downloaded the code
         const code = await API['_getMeta']('code')
-        if (code?.code) {
+        console.log(code)
+        if (code?.app) {
           // Code was found locally, so let's try to eval it
-          const app = Function(code.code + ';return app')()
+          const app = Function(code.app + ';return app')()
           if (!app.Protocol) return reject('app loading failed')
-          // All good, so start container with the eval'ed app
-          await startCore(app.Protocol, app.API)
+          // All good, so start container with the eval'ed app and add UI to API
+          await startCore(app.Protocol, app.API, code?.ui)
         } else {
           // Code was not found locally, so we need to connect to peers and get the code...
           log(`No code found, querying peers for code, standby...`)
@@ -1004,14 +1008,14 @@ async function Core(params: {
               // Peers found, so try to download the code
               log(`Got peers, loading code...`)
               const code = await API['_getMeta']('code')
-              if (code?.code) {
+              if (code?.app) {
                 // Code found, so clean up and try to eval it
                 clearInterval(interval)
-                const app = Function(code.code + ';return app')()
+                const app = Function(code.app + ';return app')()
                 if (!app.Protocol) return reject('app loading failed')
 
                 // All good, so start container with the eval'ed app
-                await startCore(app.Protocol, app.API)
+                await startCore(app.Protocol, app.API, code?.ui)
               } else {
                 log(`No code found, trying again...`)
               }

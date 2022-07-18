@@ -738,7 +738,7 @@ async function Core(params) {
     await C.addKnownPeers({ partition: 'meta' });
     return new Promise(async (resolve, reject) => {
         try {
-            async function startCore(Protocol, appAPI) {
+            async function startCore(Protocol, appAPI, UI) {
                 C.protocol = Protocol;
                 const app = await appInit(appAPI, await protocolBridge(C.dataviewer));
                 await injectAppAPI(app);
@@ -748,20 +748,26 @@ async function Core(params) {
                         ? { local_only: params?.config?.connect?.local_only }
                         : {});
                 common_1.log(`Container initialized successfully`);
+                if (typeof window === 'object' && UI) {
+                    API.UI = Function(UI + ';return app')();
+                }
                 resolve(API);
             }
             if (params.app?.Protocol && params.app?.API) {
                 common_1.log(`App provided as argument, loading...`);
-                await startCore(params.app.Protocol, params.app.API);
+                await startCore(params.app.Protocol, params.app.API, params?.app?.ui);
             }
             else {
+                if (params.config.private)
+                    return reject('Private mode is on, but no code was found. Please start core with app when using private mode.');
                 common_1.log(`Loading app...`);
                 const code = await API['_getMeta']('code');
-                if (code?.code) {
-                    const app = Function(code.code + ';return app')();
+                console.log(code);
+                if (code?.app) {
+                    const app = Function(code.app + ';return app')();
                     if (!app.Protocol)
                         return reject('app loading failed');
-                    await startCore(app.Protocol, app.API);
+                    await startCore(app.Protocol, app.API, code?.ui);
                 }
                 else {
                     common_1.log(`No code found, querying peers for code, standby...`);
@@ -774,12 +780,12 @@ async function Core(params) {
                         if (n._peers.size > 0) {
                             common_1.log(`Got peers, loading code...`);
                             const code = await API['_getMeta']('code');
-                            if (code?.code) {
+                            if (code?.app) {
                                 clearInterval(interval);
-                                const app = Function(code.code + ';return app')();
+                                const app = Function(code.app + ';return app')();
                                 if (!app.Protocol)
                                     return reject('app loading failed');
-                                await startCore(app.Protocol, app.API);
+                                await startCore(app.Protocol, app.API, code?.ui);
                             }
                             else {
                                 common_1.log(`No code found, trying again...`);

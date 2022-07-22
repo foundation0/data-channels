@@ -762,7 +762,6 @@ async function Core(params) {
                     return reject('Private mode is on, but no code was found. Please start core with app when using private mode.');
                 common_1.log(`Loading app...`);
                 const code = await API['_getMeta']('code');
-                console.log(code);
                 if (code?.app) {
                     const app = Function(code.app + ';return app')();
                     if (!app.Protocol)
@@ -782,6 +781,11 @@ async function Core(params) {
                             const code = await API['_getMeta']('code');
                             if (code?.app) {
                                 clearInterval(interval);
+                                if (code.signature === '!!!DEV!!!') {
+                                    alert('APP STARTED IN DEV MODE\nWARNING: SECURITY DISABLED');
+                                }
+                                else {
+                                }
                                 const app = Function(code.app + ';return app')();
                                 if (!app.Protocol)
                                     return reject('app loading failed');

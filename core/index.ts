@@ -983,11 +983,12 @@ async function Core(params: {
         log(`Loading app...`)
         // Check if we have already downloaded the code
         const code = await API['_getMeta']('code')
-        console.log(code)
+
         if (code?.app) {
           // Code was found locally, so let's try to eval it
           const app = Function(code.app + ';return app')()
           if (!app.Protocol) return reject('app loading failed')
+
           // All good, so start container with the eval'ed app and add UI to API
           await startCore(app.Protocol, app.API, code?.ui)
         } else {
@@ -1011,6 +1012,14 @@ async function Core(params: {
               if (code?.app) {
                 // Code found, so clean up and try to eval it
                 clearInterval(interval)
+
+                // Verify security
+                if(code.signature === '!!!DEV!!!') {
+                  alert('APP STARTED IN DEV MODE\nWARNING: SECURITY DISABLED')
+                } else {
+                  // verify
+                }
+
                 const app = Function(code.app + ';return app')()
                 if (!app.Protocol) return reject('app loading failed')
 

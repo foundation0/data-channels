@@ -225,18 +225,21 @@ test('deploy app to core and get other cores to run it', async () => {
       },
     },
   })
-  const code = `!function(f){"object"==typeof exports&&"undefined"!=typeof module?module.exports=f():"function"==typeof define&&define.amd?define([],f):("undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:this).app=f()}(function(){return function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);throw(f=new Error("Cannot find module '"+i+"'")).code="MODULE_NOT_FOUND",f}c=n[i]={exports:{}},e[i][0].call(c.exports,function(r){return o(e[i][1][r]||r)},c,c.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}({1:[function(require,module,exports){module.exports=async function(Core,Protocol){return{async all(stream){return await Core.query({lt:"~"},stream)},async get(key){return await Core.get(key)||null},async del(key){await Protocol({type:"del",key:key})},async set(params={key:"",value:""}){await Protocol({type:"set",key:params.key,value:params.value})}}}},{}],2:[function(require,module,exports){var Protocol=require("./protocol"),require=require("./api");module.exports={Protocol:Protocol,API:require}},{"./api":1,"./protocol":3}],3:[function(require,module,exports){module.exports=async function(op,Core,Id){if("object"!=typeof op||!op?.type)return error("UNKNOWN OP");switch(op.type){case"set":await Core.put({key:op.key,value:op.value});break;case"del":if(!await Core.get(op.key,{update:!1}))break;await Core.del(op.key);break;default:return error("UNKNOWN OP")}}},{}]},{},[2])(2)});`
+  const app = `!function(f){"object"==typeof exports&&"undefined"!=typeof module?module.exports=f():"function"==typeof define&&define.amd?define([],f):("undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:this).app=f()}(function(){return function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);throw(f=new Error("Cannot find module '"+i+"'")).code="MODULE_NOT_FOUND",f}c=n[i]={exports:{}},e[i][0].call(c.exports,function(r){return o(e[i][1][r]||r)},c,c.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}({1:[function(require,module,exports){module.exports=async function(Core,Protocol){return{async all(stream){return await Core.query({lt:"~"},stream)},async get(key){return await Core.get(key)||null},async del(key){await Protocol({type:"del",key:key})},async set(params={key:"",value:""}){await Protocol({type:"set",key:params.key,value:params.value})}}}},{}],2:[function(require,module,exports){var Protocol=require("./protocol"),require=require("./api");module.exports={Protocol:Protocol,API:require}},{"./api":1,"./protocol":3}],3:[function(require,module,exports){module.exports=async function(op,Core,Id){if("object"!=typeof op||!op?.type)return error("UNKNOWN OP");switch(op.type){case"set":await Core.put({key:op.key,value:op.value});break;case"del":if(!await Core.get(op.key,{update:!1}))break;await Core.del(op.key);break;default:return error("UNKNOWN OP")}}},{}]},{},[2])(2)});`
+  const ui = `!function(e){"object"==typeof exports&&"undefined"!=typeof module?module.exports=e():"function"==typeof define&&define.amd?define([],e):("undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:this).app=e()}(function(){return function t(r,f,i){function u(n,e){if(!f[n]){if(!r[n]){var o="function"==typeof require&&require;if(!e&&o)return o(n,!0);if(d)return d(n,!0);throw(e=new Error("Cannot find module '"+n+"'")).code="MODULE_NOT_FOUND",e}o=f[n]={exports:{}},r[n][0].call(o.exports,function(e){return u(r[n][1][e]||e)},o,o.exports,t,r,f,i)}return f[n].exports}for(var d="function"==typeof require&&require,e=0;e<i.length;e++)u(i[e]);return u}({1:[function(e,n,o){n.exports=async()=>{}},{}]},{},[1])(1)});`
   await core1._setMeta({
     key: 'code',
     value: {
-      code,
+      app,
+      ui,
       signature:
         '835fe61c320a7e92797b4ddc90d7e92139b5546885a79c5d5262f9ffe5b9eb5d65c998552708fb3e01efc9d943dc9ed815dd2b5ddba67dc264dad8662eec0e641c',
     },
   })
   const ccode = await core1._getMeta('code')
   expect(ccode).toBeTruthy()
-  expect(buf2hex(createHash(ccode.code))).toEqual(buf2hex(createHash(code)))
+  expect(buf2hex(createHash(ccode.app))).toEqual(buf2hex(createHash(app)))
+  expect(buf2hex(createHash(ccode.ui))).toEqual(buf2hex(createHash(ui)))
 
   const storage_prefix = Math.round(Math.random() * 100000).toString()
   const core2 = await Core({
@@ -249,7 +252,8 @@ test('deploy app to core and get other cores to run it', async () => {
   })
 
   const code2 = await core2._getMeta('code')
-  expect(buf2hex(createHash(code2.code))).toEqual(buf2hex(createHash(code)))
+  expect(buf2hex(createHash(code2.app))).toEqual(buf2hex(createHash(app)))
+  expect(buf2hex(createHash(code2.ui))).toEqual(buf2hex(createHash(ui)))
 
   const storage_prefix2 = Math.round(Math.random() * 100000).toString()
   const core3 = await Core({
@@ -262,5 +266,6 @@ test('deploy app to core and get other cores to run it', async () => {
   })
 
   const code3 = await core3._getMeta('code')
-  expect(buf2hex(createHash(code3.code))).toEqual(buf2hex(createHash(code)))
+  expect(buf2hex(createHash(code3.app))).toEqual(buf2hex(createHash(app)))
+  expect(buf2hex(createHash(code3.ui))).toEqual(buf2hex(createHash(ui)))
 })

@@ -341,11 +341,15 @@ class CoreClass {
             });
             this.network = this.datamanager.replicate(opts?.local_only?.initiator, { live: true });
         }
-        this.dataviewer.view.update();
+        await this._updatePartitions();
         process.once('SIGINT', () => {
             this.network.destroy();
         });
         return this.network;
+    }
+    async _updatePartitions() {
+        await this.dataviewer.view.update();
+        await this.metaviewer.view.update();
     }
     async disconnect() {
         if (this.network)
@@ -528,6 +532,7 @@ class CoreClass {
             default:
                 return common_1.error('partition not specified');
         }
+        await this._updatePartitions();
         common_1.emit({ ch: 'network', msg: `Added peer ${partition}/${key} to ${this.connection_id || 'n/a'}` });
     }
     async removePeer(opts) {

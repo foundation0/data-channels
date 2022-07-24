@@ -469,7 +469,8 @@ class CoreClass {
       })
       this.network = this.datamanager.replicate(opts?.local_only?.initiator, { live: true })
     }
-    this.dataviewer.view.update()
+    
+    await this._updatePartitions()
 
     // for faster restarts
     process.once('SIGINT', () => {
@@ -477,6 +478,11 @@ class CoreClass {
     })
 
     return this.network
+  }
+
+  async _updatePartitions(this: CoreClass) {
+    await this.dataviewer.view.update()
+    await this.metaviewer.view.update()
   }
 
   async disconnect(this: CoreClass) {
@@ -691,6 +697,7 @@ class CoreClass {
       default:
         return error('partition not specified')
     }
+    await this._updatePartitions()
     emit({ ch: 'network', msg: `Added peer ${partition}/${key} to ${this.connection_id || 'n/a'}` })
   }
 

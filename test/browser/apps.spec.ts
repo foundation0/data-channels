@@ -8,7 +8,7 @@ import KeyValue from './keyvalue'
 
 const config_kv: CoreConfig = {
   address: 'protocol-kv',
-  encryption_key: default_config.keys.index,
+  encryption_key: default_config.keys.test,
   writers: [],
   trusted_peers: [],
   storage: 'ram',

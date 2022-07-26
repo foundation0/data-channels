@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sleep = exports.registerMethods = exports.fetchPeers = exports.createCache = exports.hash = exports.getHomedir = exports.unique = exports.shuffle = exports.getRandomInt = exports.flatten = exports.JSONparse = exports.decodeCoreData = exports.encodeCoreData = exports.subscribe = exports.emit = exports.buf2hex = exports.error = exports.log = void 0;
+exports.sleep = exports.registerMethods = exports.fetchPeers = exports.createCache = exports.hash = exports.getHomedir = exports.unique = exports.shuffle = exports.getRandomInt = exports.flatten = exports.JSONparse = exports.decodeCoreData = exports.encodeCoreData = exports.subscribeToEvent = exports.subscribeToChannel = exports.emit = exports.buf2hex = exports.error = exports.log = void 0;
 const crypto_1 = require("crypto");
 const os_1 = require("os");
 const bbconfig_1 = require("../bbconfig");
@@ -33,14 +33,20 @@ function emit(params) {
     if (params.verbose && !process.env.VERBOSE)
         return;
     EE.emit(params.ch, params.msg);
+    if (params.event)
+        EE.emit(params.event);
     if (!params?.no_log)
         log(`${params.ch} > ${params.msg}`);
 }
 exports.emit = emit;
-function subscribe(params) {
+function subscribeToChannel(params) {
     return EE.on(params.ch, params.cb, { objectify: true });
 }
-exports.subscribe = subscribe;
+exports.subscribeToChannel = subscribeToChannel;
+function subscribeToEvent(params) {
+    return EE.on(params.id, params.cb, { objectify: true });
+}
+exports.subscribeToEvent = subscribeToEvent;
 function encodeCoreData(data) {
     return msgpackr_1.pack(data);
 }

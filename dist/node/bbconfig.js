@@ -2,17 +2,12 @@ module.exports = {
     user: {
         home_dir: '~',
         auth_app_url: typeof window !== 'undefined'
-            ? window.localStorage.getItem('bb.auth_app_url') || 'https://auth.backbonedao.com'
+            ? window.localStorage.getItem('bb.id_url') || 'https://auth.backbonedao.com'
             : 'https://auth.backbonedao.com',
     },
     addresses: {},
     keys: {
-        index: '6261636b626f6e653a2f2f696e646578',
-    },
-    contracts: {
-        alchemy_api_key: process.env.ALCHEMY_API_KEY || '',
-        blockchain_id: !process.env.TEST ? 'maticmum' : 'matic',
-        nodes_registry: !process.env.TEST ? '0xeB1984B5139A5d1d4CC081f4338926e544857046' : '',
+        test: '6261636b626f6e653a2f2f696e646578',
     },
     network: {
         bootstrap_servers: process.env.BOOTSTRAP

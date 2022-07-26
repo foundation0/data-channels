@@ -5,7 +5,7 @@ module.exports = {
     home_dir: '~',
     auth_app_url:
       typeof window !== 'undefined'
-        ? window.localStorage.getItem('bb.auth_app_url') || 'https://auth.backbonedao.com'
+        ? window.localStorage.getItem('bb.id_url') || 'https://auth.backbonedao.com'
         : 'https://auth.backbonedao.com',
   },
   addresses: {},

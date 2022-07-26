@@ -23,14 +23,19 @@ export function buf2hex(buffer) { // buffer is an ArrayBuffer
   return Buffer.toString(buffer, 'hex')
 }
 
-export function emit(params: { ch: string; msg: string; verbose?: boolean; no_log?: boolean }) {
+export function emit(params: { ch: string; msg: string; event?: string; verbose?: boolean; no_log?: boolean }) {
   if (params.verbose && !process.env.VERBOSE) return
   EE.emit(params.ch, params.msg)
+  if(params.event) EE.emit(params.event)
   if (!params?.no_log) log(`${params.ch} > ${params.msg}`)
 }
 
-export function subscribe(params: { ch: string; cb: any }) {
+export function subscribeToChannel(params: { ch: string; cb: any }) {
   return EE.on(params.ch, params.cb, { objectify: true })
+}
+
+export function subscribeToEvent(params: { id: string; cb: any }) {
+  return EE.on(params.id, params.cb, { objectify: true })
 }
 
 export function encodeCoreData(data: string | Buffer | object | number) {

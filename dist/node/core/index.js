@@ -216,7 +216,7 @@ class CoreClass {
         });
         this.datadb = this.dataviewer.view;
         await this.dataviewer.ready();
-        common_1.log(`initialized Core ${this.writer_key} / ${this.index_key}`);
+        common_1.emit({ ch: 'core', msg: `Initialized Core ${this.address}` });
         const kp = crypto_1.keyPair(this.address_hash);
         const root = this.datamanager.get(b4a_1.default.from(kp.publicKey, 'hex'));
         await root.ready();
@@ -272,10 +272,12 @@ class CoreClass {
         common_1.emit({
             ch: 'init',
             msg: `discovery keys:\nwriter: ${common_1.buf2hex(this.writer.discoveryKey)}\nindex: ${common_1.buf2hex(this.index.discoveryKey)}\nroot: ${common_1.buf2hex(root.discoveryKey)} \nmeta: ${common_1.buf2hex(this.meta.discoveryKey)}`,
+            verbose: true,
         });
         common_1.emit({
             ch: 'init',
             msg: `public keys:\nwriter: ${common_1.buf2hex(this.writer.key)}\nindex: ${common_1.buf2hex(this.index.key)}\nroot: ${common_1.buf2hex(root.key)} \nmeta: ${common_1.buf2hex(this.meta.key)}`,
+            verbose: true,
         });
     }
     async connect(opts) {
@@ -302,6 +304,7 @@ class CoreClass {
                 const network = network_node_1.default(network_config);
                 network.on('connection', async (socket, peer) => {
                     common_1.emit({
+                        event: 'network.new-connection',
                         ch: 'network',
                         msg: `nid: ${common_1.buf2hex(self.config.network_id?.publicKey).slice(0, 8)} | address: ${common_1.buf2hex(self.address_hash).slice(0, 8)}, peers: ${network.peers.size}, conns: ${network.ws.connections.size} - new connection from ${common_1.buf2hex(peer.peer.host).slice(0, 8)}`,
                     });
@@ -314,7 +317,8 @@ class CoreClass {
                 });
                 common_1.emit({
                     ch: 'network',
-                    msg: `Connecting to ${common_1.buf2hex(self.address_hash)} (backbone://${self.address}) with connection id ${common_1.buf2hex(self.config.network_id?.publicKey)}`,
+                    event: 'network.connecting',
+                    msg: `Connecting to backbone://${self.address}...`,
                 });
                 network.join(Buffer.isBuffer(self.address_hash)
                     ? self.address_hash
@@ -331,7 +335,8 @@ class CoreClass {
             this.connection_id = common_1.buf2hex(this.network.webrtc.id);
             common_1.emit({
                 ch: 'network',
-                msg: `Connection id: ${this.connection_id}`,
+                event: 'network.connected',
+                msg: `Connected to backbone://${self.address} with id ${this.connection_id}`,
             });
         }
         else {
@@ -495,6 +500,7 @@ class CoreClass {
         common_1.emit({
             ch: 'network',
             msg: `Trying to add peer ${partition}/${key} to ${this.connection_id || 'n/a'}`,
+            verbose: true,
         });
         if (key === (await this.writer_key) || key === (await this.meta_key))
             return null;
@@ -533,7 +539,11 @@ class CoreClass {
                 return common_1.error('partition not specified');
         }
         await this._updatePartitions();
-        common_1.emit({ ch: 'network', msg: `Added peer ${partition}/${key} to ${this.connection_id || 'n/a'}` });
+        common_1.emit({
+            ch: 'network',
+            msg: `Added peer ${partition}/${key} to ${this.connection_id || 'n/a'}`,
+            verbose: true,
+        });
     }
     async removePeer(opts) {
         const { key, destroy, partition } = opts;
@@ -652,6 +662,8 @@ async function Core(params) {
     const C = new CoreClass(config);
     await C.init();
     const API = {
+        on: async (id, cb) => () => common_1.subscribeToEvent({ id, cb }),
+        listenLog: async (ch, cb) => () => common_1.subscribeToChannel({ ch, cb }),
         connect: async (opts) => C.connect(opts),
         disconnect: async () => C.disconnect(),
         getKeys: async () => C.getKeys(),
@@ -752,20 +764,20 @@ async function Core(params) {
                     await C.connect(params?.config?.connect?.local_only
                         ? { local_only: params?.config?.connect?.local_only }
                         : {});
-                common_1.log(`Container initialized successfully`);
+                common_1.emit({ ch: 'core', msg: `Container initialized successfully` });
                 if (typeof window === 'object' && UI) {
                     API.UI = Function(UI + ';return app')();
                 }
                 resolve(API);
             }
             if (params.app?.Protocol && params.app?.API) {
-                common_1.log(`App provided as argument, loading...`);
+                common_1.emit({ ch: 'core', msg: `App provided as argument, loading...` });
                 await startCore(params.app.Protocol, params.app.API, params?.app?.ui);
             }
             else {
                 if (params.config.private)
                     return reject('Private mode is on, but no code was found. Please start core with app when using private mode.');
-                common_1.log(`Loading app...`);
+                common_1.emit({ ch: 'core', msg: `Loading app...` });
                 const code = await API['_getMeta']('code');
                 if (code?.app) {
                     const app = Function(code.app + ';return app')();
@@ -774,7 +786,7 @@ async function Core(params) {
                     await startCore(app.Protocol, app.API, code?.ui);
                 }
                 else {
-                    common_1.log(`No code found, querying peers for code, standby...`);
+                    common_1.emit({ ch: 'core', msg: `No code found, querying peers for code, standby...` });
                     await API.connect(params?.config?.connect?.local_only
                         ? { local_only: params?.config?.connect?.local_only }
                         : {});
@@ -782,7 +794,7 @@ async function Core(params) {
                     const interval = setInterval(async () => {
                         const n = await API.getNetwork();
                         if (n._peers.size > 0) {
-                            common_1.log(`Got peers, loading code...`);
+                            common_1.emit({ ch: 'network', msg: `Got peers, loading code...` });
                             const code = await API['_getMeta']('code');
                             if (code?.app) {
                                 clearInterval(interval);
@@ -797,7 +809,7 @@ async function Core(params) {
                                 await startCore(app.Protocol, app.API, code?.ui);
                             }
                             else {
-                                common_1.log(`No code found, trying again...`);
+                                common_1.emit({ ch: 'core', msg: `No code found, trying again...` });
                             }
                         }
                         timeout--;

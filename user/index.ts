@@ -3,7 +3,7 @@ import Config from '../bbconfig'
 import { registerMethods } from '../common'
 
 class IdManagerClass {
-  IdApp: { isAuthenticated: Function } | null = null
+  IdApp: { isAuthenticated: Function, registerApp: Function } | null = null
 
   constructor() {}
 
@@ -11,16 +11,16 @@ class IdManagerClass {
     const self = this
     let auth_app_e = document.getElementById('bb-auth-app')
 
-    // if auth app hasn't been initialized, init it
+    // if Id hasn't been initialized, init it
     if (!auth_app_e) {
       auth_app_e = document.createElement('iframe')
       auth_app_e.style.display = 'none'
       auth_app_e.setAttribute('id', 'bb-auth-app')
-      auth_app_e.setAttribute('src', Config.user.auth_app_url)
+      auth_app_e.setAttribute('src', Config.user.id_url)
       document.body.appendChild(auth_app_e)
     }
 
-    // establish connection to auth app
+    // establish connection to Id
     const ifr = document.getElementById('bb-auth-app')
     if (ifr) {
       await new Promise((resolve) => (ifr.onload = resolve))
@@ -28,8 +28,8 @@ class IdManagerClass {
       self.IdApp = Comlink.wrap(Comlink.windowEndpoint(ifr.contentWindow))
       // @ts-ignore - ts doesn't work well with Comlink
       const pong = await self.IdApp.ping()
-      if (!pong) throw new Error(`communication with auth app failed`)
-    } else throw new Error(`couldn't initialize auth app`)
+      if (!pong) throw new Error(`communication with Id failed`)
+    } else throw new Error(`couldn't initialize Id`)
   }
 
   async authenticate(this: IdManagerClass, params: {
@@ -38,7 +38,7 @@ class IdManagerClass {
   }) {
     const self = this
     const popup = window.open(
-      Config.user.auth_app_url,
+      Config.user.id_url,
       'auth-app',
       'width=500,height=500'
     )
@@ -54,14 +54,19 @@ class IdManagerClass {
         // @ts-ignore
         await self.IdApp.registerApp(params)
       })
-    } else throw new Error(`couldn't open auth app`)
+    } else throw new Error(`couldn't open Id`)
   }
 
   async isAuthenticated(this: IdManagerClass) {
-    const self = this
-    if (!self.IdApp) await self.init()
-    if (self.IdApp) return self.IdApp.isAuthenticated()
-    else throw new Error(`no auth app available`)
+    if (!this.IdApp) await this.init()
+    if (this.IdApp) return this.IdApp.isAuthenticated()
+    else throw new Error(`no Id available`)
+  }
+
+  async registerApp(this: IdManagerClass, manifest) {
+    await this.isAuthenticated()
+    if(this.IdApp) return this.IdApp.registerApp(manifest)
+    else throw new Error(`no Id available`)
   }
 }
 

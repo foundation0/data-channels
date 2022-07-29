@@ -2,7 +2,6 @@ import User from './user'
 import Core from './core'
 import platform from 'platform-detect'
 import * as Crypto from '@backbonedao/crypto'
-
 const Backbone = {
   User,
   Core,

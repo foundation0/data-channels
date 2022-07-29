@@ -35,7 +35,7 @@ class IdManagerClass {
             auth_app_e = document.createElement('iframe');
             auth_app_e.style.display = 'none';
             auth_app_e.setAttribute('id', 'bb-auth-app');
-            auth_app_e.setAttribute('src', bbconfig_1.default.user.auth_app_url);
+            auth_app_e.setAttribute('src', bbconfig_1.default.user.id_url);
             document.body.appendChild(auth_app_e);
         }
         const ifr = document.getElementById('bb-auth-app');
@@ -44,14 +44,14 @@ class IdManagerClass {
             self.IdApp = Comlink.wrap(Comlink.windowEndpoint(ifr.contentWindow));
             const pong = await self.IdApp.ping();
             if (!pong)
-                throw new Error(`communication with auth app failed`);
+                throw new Error(`communication with Id failed`);
         }
         else
-            throw new Error(`couldn't initialize auth app`);
+            throw new Error(`couldn't initialize Id`);
     }
     async authenticate(params) {
         const self = this;
-        const popup = window.open(bbconfig_1.default.user.auth_app_url, 'auth-app', 'width=500,height=500');
+        const popup = window.open(bbconfig_1.default.user.id_url, 'auth-app', 'width=500,height=500');
         if (popup) {
             return new Promise(async (resolve, reject) => {
                 function authenticated(is_authenticated) {
@@ -67,16 +67,22 @@ class IdManagerClass {
             });
         }
         else
-            throw new Error(`couldn't open auth app`);
+            throw new Error(`couldn't open Id`);
     }
     async isAuthenticated() {
-        const self = this;
-        if (!self.IdApp)
-            await self.init();
-        if (self.IdApp)
-            return self.IdApp.isAuthenticated();
+        if (!this.IdApp)
+            await this.init();
+        if (this.IdApp)
+            return this.IdApp.isAuthenticated();
         else
-            throw new Error(`no auth app available`);
+            throw new Error(`no Id available`);
+    }
+    async registerApp(manifest) {
+        await this.isAuthenticated();
+        if (this.IdApp)
+            return this.IdApp.registerApp(manifest);
+        else
+            throw new Error(`no Id available`);
     }
 }
 async function IdManager() {

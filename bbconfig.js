@@ -3,10 +3,10 @@
 module.exports = {
   user: {
     home_dir: '~',
-    auth_app_url:
+    id_url:
       typeof window !== 'undefined'
-        ? window.localStorage.getItem('bb.id_url') || 'https://auth.backbonedao.com'
-        : 'https://auth.backbonedao.com',
+        ? window.localStorage.getItem('bb.id_url') || 'https://id.backbonedao.com'
+        : 'https://id.backbonedao.com',
   },
   addresses: {},
   keys: {

@@ -1,7 +1,7 @@
 module.exports = {
     user: {
         home_dir: '~',
-        auth_app_url: typeof window !== 'undefined'
+        id_url: typeof window !== 'undefined'
             ? window.localStorage.getItem('bb.id_url') || 'https://auth.backbonedao.com'
             : 'https://auth.backbonedao.com',
     },

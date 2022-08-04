@@ -1,11 +1,12 @@
-import { ArrayModel, Any } from './base'
+import { Array } from './base'
+const { Any } = require('./objectmodel')
 import { createHash } from '@backbonedao/crypto'
 import b4a from 'b4a'
 
 const AppendOnly = function (model) {
   let size = 0
   let hash
-  return ArrayModel(model)
+  return Array(model)
     .assert((data) => {
       if (!data ) return true
       const new_size = data.length

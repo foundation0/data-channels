@@ -1,6 +1,6 @@
-import { ObjectModel } from './base'
+import { Object } from './base'
 
-const User = ObjectModel({
+const User = Object({
   username: String,
   public_key: String,
 })

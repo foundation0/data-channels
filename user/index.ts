@@ -3,7 +3,7 @@ import Config from '../bbconfig'
 import { registerMethods } from '../common'
 
 class IdManagerClass {
-  IdApp: { isAuthenticated: Function, registerApp: Function } | null = null
+  IdApp: any
 
   constructor() {}
 
@@ -66,6 +66,12 @@ class IdManagerClass {
   async registerApp(this: IdManagerClass, manifest) {
     await this.isAuthenticated()
     if(this.IdApp) return this.IdApp.registerApp(manifest)
+    else throw new Error(`no Id available`)
+  }
+
+  async signObject(this: IdManagerClass, hash) {
+    await this.isAuthenticated()
+    if(this.IdApp) return this.IdApp.signObject(hash)
     else throw new Error(`no Id available`)
   }
 }

@@ -1,6 +1,7 @@
-import { ObjectModel, Any } from './base'
+import { Object } from './base'
+const { Any } = require('./objectmodel')
 
-const Operation = ObjectModel({
+const Operation = Object({
   type: String,
   data: Any,
 })

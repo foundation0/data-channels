@@ -1,5 +1,4 @@
-// Examples of commonly used models
-import { BasicModel } from "./base"
+const { BasicModel } = require("./objectmodel")
 
 export const Primitive = BasicModel([Boolean, Number, String, Symbol]).as("Primitive");
 

@@ -676,6 +676,12 @@ async function Core(params) {
         getConnectionId: () => C.connection_id,
         metadb: C.metadb,
         getNetwork: () => C.network,
+        getAppVersion: async () => {
+            const manifest = await API['_getMeta']("manifest");
+            if (!manifest)
+                return common_1.error("no manifest found");
+            return manifest?.version;
+        },
         _: {
             getWriter: () => C.writer,
             getIndex: () => C.index,
@@ -686,6 +692,8 @@ async function Core(params) {
     };
     const protocolBridge = async function (viewer) {
         return async function (op) {
+            if (op?.value?._meta?.unsigned)
+                throw new Error('unsigned data detected');
             const o = new models_1.Operation(op);
             const op_buf = common_1.encodeCoreData(op);
             await viewer.append(op_buf);

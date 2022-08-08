@@ -21,7 +21,7 @@ import {
   createHash,
   getPublicKeyFromSig,
   getIdFromPublicKey,
-} from '../../crypto' // '@backbonedao/crypto'
+} from '@backbonedao/crypto'
 import b4a from 'b4a'
 import { pack, unpack } from 'msgpackr'
 
@@ -63,7 +63,11 @@ export default async function (
       (typeof global === 'object' && global.backbone),
   }
 
-  if (app_meta.backbone?.app?.version) app_meta.version = app_meta.backbone.app.version
+  if (typeof app_meta.backbone?.app?._getMeta === 'function') {
+    const manifest = await app_meta.backbone.app._getMeta('manifest')
+    if (!manifest) return error('no manifest found')
+    app_meta.version = manifest.version
+  }
 
   function getMetaDetails(meta) {
     const public_key = getPublicKeyFromSig({ message: meta.hash, signature: meta.signature })
@@ -75,7 +79,7 @@ export default async function (
     if (!ready) return true
     if (opts?.disable_owneronly) return true
 
-    if(data['_meta']['unsigned']) return true
+    if (data['_meta']['unsigned']) return true
 
     // verify signature to see if data has been changed
     const { signature, public_key } = getMetaDetails(data._meta)
@@ -158,8 +162,9 @@ export default async function (
 
       // sign the update
       const signature = await signObject(this)
-      const { unsigned, ...meta} = this._meta
-      this._meta = new Meta({ ...meta, ...signature })
+      const { unsigned, ...meta } = this._meta
+      const m = new Meta({ ...meta, ...signature })
+      this._meta = m
     }
   }
 

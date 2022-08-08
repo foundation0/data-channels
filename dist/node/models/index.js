@@ -22,20 +22,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Operation = exports.OwnerOnly = exports.AppendOnly = exports.User = exports.Commons = void 0;
+exports.DataModel = exports.Binary = exports.Operation = exports.OwnerOnly = exports.AppendOnly = exports.Commons = void 0;
 const Commons = __importStar(require("./common"));
 exports.Commons = Commons;
 const base_1 = __importDefault(require("./base"));
-const user_1 = __importDefault(require("./user"));
-exports.User = user_1.default;
 const append_only_1 = __importDefault(require("./append_only"));
 exports.AppendOnly = append_only_1.default;
 const owner_only_1 = __importDefault(require("./owner_only"));
 exports.OwnerOnly = owner_only_1.default;
 const operation_1 = __importDefault(require("./operation"));
 exports.Operation = operation_1.default;
-function create(core) {
-    return base_1.default(core || null);
+const binary_1 = __importDefault(require("./binary"));
+exports.Binary = binary_1.default;
+function create(data, opts, migrations) {
+    return base_1.default.apply(null, arguments);
 }
+exports.DataModel = create;
 exports.default = create;
 //# sourceMappingURL=index.js.map

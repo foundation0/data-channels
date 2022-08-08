@@ -4,12 +4,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const base_1 = require("./base");
+const { Any } = require('./objectmodel');
 const crypto_1 = require("@backbonedao/crypto");
 const b4a_1 = __importDefault(require("b4a"));
 const AppendOnly = function (model) {
     let size = 0;
     let hash;
-    return base_1.ArrayModel(model)
+    return base_1.Array(model)
         .assert((data) => {
         if (!data)
             return true;

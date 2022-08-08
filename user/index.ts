@@ -1,4 +1,5 @@
 import * as Comlink from 'comlink'
+import Backbone from '..'
 import Config from '../bbconfig'
 import { registerMethods } from '../common'
 
@@ -17,6 +18,7 @@ class IdManagerClass {
       auth_app_e.style.display = 'none'
       auth_app_e.setAttribute('id', 'bb-auth-app')
       auth_app_e.setAttribute('src', Config.user.id_url)
+      // auth_app_e.setAttribute('sandbox', 'allow-popups allow-scripts')
       document.body.appendChild(auth_app_e)
     }
 
@@ -32,16 +34,16 @@ class IdManagerClass {
     } else throw new Error(`couldn't initialize Id`)
   }
 
-  async authenticate(this: IdManagerClass, params: {
-    permissions: string[],
-    name: string
-  }) {
+  async authenticate(
+    this: IdManagerClass,
+    params: {
+      permissions: string[]
+      name: string,
+      address: string
+    }
+  ) {
     const self = this
-    const popup = window.open(
-      Config.user.id_url,
-      'auth-app',
-      'width=500,height=500'
-    )
+    const popup = window.open(Config.user.id_url, 'auth-app', 'width=500,height=500')
     if (popup) {
       return new Promise(async (resolve, reject) => {
         function authenticated(is_authenticated) {
@@ -57,21 +59,20 @@ class IdManagerClass {
     } else throw new Error(`couldn't open Id`)
   }
 
-  async isAuthenticated(this: IdManagerClass) {
+  async isAuthenticated(this: IdManagerClass, params: { address: string }) {
     if (!this.IdApp) await this.init()
-    if (this.IdApp) return this.IdApp.isAuthenticated()
+    if (this.IdApp) return this.IdApp.isAuthenticated(params)
     else throw new Error(`no Id available`)
   }
 
   async registerApp(this: IdManagerClass, manifest) {
-    await this.isAuthenticated()
-    if(this.IdApp) return this.IdApp.registerApp(manifest)
+    await this.isAuthenticated({ address: manifest.address })
+    if (this.IdApp) return this.IdApp.registerApp(manifest)
     else throw new Error(`no Id available`)
   }
 
-  async signObject(this: IdManagerClass, hash) {
-    await this.isAuthenticated()
-    if(this.IdApp) return this.IdApp.signObject(hash)
+  async signObject(this: IdManagerClass, params: { hash: string }) {
+    if (this.IdApp) return this.IdApp.signObject({ hash: params.hash, address: window['backbone'].app_profile?.address })
     else throw new Error(`no Id available`)
   }
 }

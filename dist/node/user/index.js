@@ -25,9 +25,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Comlink = __importStar(require("comlink"));
 const bbconfig_1 = __importDefault(require("../bbconfig"));
 class IdManagerClass {
-    constructor() {
-        this.IdApp = null;
-    }
+    constructor() { }
     async init() {
         const self = this;
         let auth_app_e = document.getElementById('bb-auth-app');
@@ -69,18 +67,24 @@ class IdManagerClass {
         else
             throw new Error(`couldn't open Id`);
     }
-    async isAuthenticated() {
+    async isAuthenticated(params) {
         if (!this.IdApp)
             await this.init();
         if (this.IdApp)
-            return this.IdApp.isAuthenticated();
+            return this.IdApp.isAuthenticated(params);
         else
             throw new Error(`no Id available`);
     }
     async registerApp(manifest) {
-        await this.isAuthenticated();
+        await this.isAuthenticated({ address: manifest.address });
         if (this.IdApp)
             return this.IdApp.registerApp(manifest);
+        else
+            throw new Error(`no Id available`);
+    }
+    async signObject(params) {
+        if (this.IdApp)
+            return this.IdApp.signObject({ hash: params.hash, address: window['backbone'].app_profile?.address });
         else
             throw new Error(`no Id available`);
     }

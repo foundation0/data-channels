@@ -23,7 +23,6 @@ import b4a from 'b4a'
 import { createHash, keyPair } from '@backbonedao/crypto'
 import { Operation } from '../models'
 import getStorage from './get_storage'
-// import { unpack } from 'msgpackr'
 
 const CORES = {}
 
@@ -878,6 +877,11 @@ async function Core(params: {
     getConnectionId: () => C.connection_id,
     metadb: C.metadb,
     getNetwork: () => C.network,
+    getAppVersion: async () => {
+      const manifest = await API['_getMeta']("manifest")
+      if(!manifest) return error("no manifest found")
+      return manifest?.version
+    },
     _: {
       // Sort of private functions for debugging, maybe remove these in the future?
       getWriter: () => C.writer,
@@ -892,6 +896,8 @@ async function Core(params: {
   const protocolBridge = async function (viewer) {
     // Bridge receives operation from API
     return async function (op) {
+      if(op?.value?._meta?.unsigned) throw new Error('unsigned data detected')
+
       const o = new Operation(op) // validate the op
       const op_buf = encodeCoreData(op)
       // Add operation to data viewer

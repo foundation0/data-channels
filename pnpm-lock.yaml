@@ -15,7 +15,7 @@ specifiers:
   '@milahu/patch-package': ^6.4.14
   '@noble/secp256k1': ^1.6.3
   '@playwright/test': ^1.24.2
-  '@types/chai': ^4.3.1
+  '@types/chai': ^4.3.3
   '@types/jest': ^27.5.2
   '@types/mocha': ^9.1.1
   '@types/node': ^16.11.47
@@ -49,7 +49,7 @@ specifiers:
   path-browserify: ^1.0.1
   platform-detect: ^3.0.1
   playwright: ^1.24.2
-  preact: ^10.10.0
+  preact: ^10.10.1
   process: ^0.11.10
   random-access-idb: ^1.2.2
   random-access-memory: ^4.1.0
@@ -72,7 +72,7 @@ specifiers:
   ws: ^8.8.1
 
 dependencies:
-  '@backbonedao/crypto': github.com/backbonedao/crypto/6d59f0bced0b17e787f439fc93005ada252a801c_22kvxa7zeyivx4jp72v2w3pkvy
+  '@backbonedao/crypto': github.com/backbonedao/crypto/ea57e60729f1031e3aa9357a12794b983c061ab9_22kvxa7zeyivx4jp72v2w3pkvy
   '@backbonedao/data-db': github.com/backbonedao/data-db/bddb926706c8bec9870c4408bcefedeb33a5fd32
   '@backbonedao/data-manager': github.com/backbonedao/data-manager/d84e018766b6423417f62cad601247e7660ff73d_22kvxa7zeyivx4jp72v2w3pkvy
   '@backbonedao/data-viewer': github.com/backbonedao/data-viewer/6d62c7fdfb3895ee829affa018ae5aca5866d4bc
@@ -95,7 +95,7 @@ dependencies:
   node: 16.16.0
   objectmodel: 4.3.0
   platform-detect: 3.0.1
-  preact: 10.10.0
+  preact: 10.10.1
   random-access-idb: 1.2.2
   random-access-memory: 4.1.0
   rimraf: 3.0.2
@@ -110,7 +110,7 @@ dependencies:
 
 devDependencies:
   '@playwright/test': 1.24.2
-  '@types/chai': 4.3.1
+  '@types/chai': 4.3.3
   '@types/jest': 27.5.2
   '@types/mocha': 9.1.1
   '@types/node': 16.11.47
@@ -166,13 +166,13 @@ packages:
     dependencies:
       '@ampproject/remapping': 2.2.0
       '@babel/code-frame': 7.18.6
-      '@babel/generator': 7.18.10
+      '@babel/generator': 7.18.12
       '@babel/helper-compilation-targets': 7.18.9_@babel+core@7.18.10
       '@babel/helper-module-transforms': 7.18.9
       '@babel/helpers': 7.18.9
-      '@babel/parser': 7.18.10
+      '@babel/parser': 7.18.11
       '@babel/template': 7.18.10
-      '@babel/traverse': 7.18.10
+      '@babel/traverse': 7.18.11
       '@babel/types': 7.18.10
       convert-source-map: 1.8.0
       debug: 4.3.4
@@ -183,8 +183,8 @@ packages:
       - supports-color
     dev: true
 
-  /@babel/generator/7.18.10:
-    resolution: {integrity: sha512-0+sW7e3HjQbiHbj1NeU/vN8ornohYlacAfZIaXhdoGweQqgcNy69COVciYYqEXJ/v+9OBA7Frxm4CVAuNqKeNA==}
+  /@babel/generator/7.18.12:
+    resolution: {integrity: sha512-dfQ8ebCN98SvyL7IxNMCUtZQSq5R7kxgN+r8qYTGDmmSion1hX2C0zq2yo1bsCDhXixokv1SAWTZUMYbO/V5zg==}
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/types': 7.18.10
@@ -242,7 +242,7 @@ packages:
       '@babel/helper-split-export-declaration': 7.18.6
       '@babel/helper-validator-identifier': 7.18.6
       '@babel/template': 7.18.10
-      '@babel/traverse': 7.18.10
+      '@babel/traverse': 7.18.11
       '@babel/types': 7.18.10
     transitivePeerDependencies:
       - supports-color
@@ -286,7 +286,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/template': 7.18.10
-      '@babel/traverse': 7.18.10
+      '@babel/traverse': 7.18.11
       '@babel/types': 7.18.10
     transitivePeerDependencies:
       - supports-color
@@ -300,8 +300,8 @@ packages:
       chalk: 2.4.2
       js-tokens: 4.0.0
 
-  /@babel/parser/7.18.10:
-    resolution: {integrity: sha512-TYk3OA0HKL6qNryUayb5UUEhM/rkOQozIBEA5ITXh5DWrSp0TlUQXMyZmnWxG/DizSWBeeQ0Zbc5z8UGaaqoeg==}
+  /@babel/parser/7.18.11:
+    resolution: {integrity: sha512-9JKn5vN+hDt0Hdqn1PiJ2guflwP+B6Ga8qbDuoF0PzzVhrzsKIJo8yGqVk6CmMHiMei9w1C1Bp9IMJSIK+HPIQ==}
     engines: {node: '>=6.0.0'}
     hasBin: true
     dependencies:
@@ -432,21 +432,21 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/code-frame': 7.18.6
-      '@babel/parser': 7.18.10
+      '@babel/parser': 7.18.11
       '@babel/types': 7.18.10
     dev: true
 
-  /@babel/traverse/7.18.10:
-    resolution: {integrity: sha512-J7ycxg0/K9XCtLyHf0cz2DqDihonJeIo+z+HEdRe9YuT8TY4A66i+Ab2/xZCEW7Ro60bPCBBfqqboHSamoV3+g==}
+  /@babel/traverse/7.18.11:
+    resolution: {integrity: sha512-TG9PiM2R/cWCAy6BPJKeHzNbu4lPzOSZpeMfeNErskGpTJx6trEvFaVCbDvpcxwy49BKWmEPwiW8mrysNiDvIQ==}
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/code-frame': 7.18.6
-      '@babel/generator': 7.18.10
+      '@babel/generator': 7.18.12
       '@babel/helper-environment-visitor': 7.18.9
       '@babel/helper-function-name': 7.18.9
       '@babel/helper-hoist-variables': 7.18.6
       '@babel/helper-split-export-declaration': 7.18.6
-      '@babel/parser': 7.18.10
+      '@babel/parser': 7.18.11
       '@babel/types': 7.18.10
       debug: 4.3.4
       globals: 11.12.0
@@ -844,9 +844,9 @@ packages:
       end-of-stream: 1.4.4
       guard-timeout: 2.0.0
       hashlru: 2.3.0
-      protocol-buffers-encodings: 1.1.1
+      protocol-buffers-encodings: 1.2.0
       record-cache: 1.2.0
-      sodium-native: 3.3.0
+      sodium-native: 3.4.0
     dev: false
 
   /@hyperswarm/discovery/2.0.1:
@@ -860,7 +860,7 @@ packages:
   /@hyperswarm/hypersign/2.1.1:
     resolution: {integrity: sha512-RcczqJsu2VScRoyJdLbxpYMBNq+73HJT3FVzDZXSOob/WqEeiN2WIvuDtvmFoufAuO/3YVfde/NpZFc/OPjmjw==}
     dependencies:
-      sodium-native: 3.3.0
+      sodium-native: 3.4.0
     dev: false
 
   /@hyperswarm/network/2.1.0:
@@ -1394,11 +1394,11 @@ packages:
   /@types/babel__core/7.1.19:
     resolution: {integrity: sha512-WEOTgRsbYkvA/KCsDwVEGkd7WAr1e3g31VHQ8zy5gul/V1qKullU/BU5I68X5v7V3GnB9eotmom4v5a5gjxorw==}
     dependencies:
-      '@babel/parser': 7.18.10
+      '@babel/parser': 7.18.11
       '@babel/types': 7.18.10
       '@types/babel__generator': 7.6.4
       '@types/babel__template': 7.4.1
-      '@types/babel__traverse': 7.17.1
+      '@types/babel__traverse': 7.18.0
     dev: true
 
   /@types/babel__generator/7.6.4:
@@ -1410,18 +1410,18 @@ packages:
   /@types/babel__template/7.4.1:
     resolution: {integrity: sha512-azBFKemX6kMg5Io+/rdGT0dkGreboUVR0Cdm3fz9QJWpaQGJRQXl7C+6hOTCZcMll7KFyEQpgbYI2lHdsS4U7g==}
     dependencies:
-      '@babel/parser': 7.18.10
+      '@babel/parser': 7.18.11
       '@babel/types': 7.18.10
     dev: true
 
-  /@types/babel__traverse/7.17.1:
-    resolution: {integrity: sha512-kVzjari1s2YVi77D3w1yuvohV2idweYXMCDzqBiVNN63TcDWrIlTVOYpqVrvbbyOE/IyzBoTKF0fdnLPEORFxA==}
+  /@types/babel__traverse/7.18.0:
+    resolution: {integrity: sha512-v4Vwdko+pgymgS+A2UIaJru93zQd85vIGWObM5ekZNdXCKtDYqATlEYnWgfo86Q6I1Lh0oXnksDnMU1cwmlPDw==}
     dependencies:
       '@babel/types': 7.18.10
     dev: true
 
-  /@types/chai/4.3.1:
-    resolution: {integrity: sha512-/zPMqDkzSZ8t3VtxOa4KPq7uzzW978M9Tvh+j7GHKuo6k6GTLxPJ4J5gE5cjfJ26pnXst0N5Hax8Sr0T2Mi9zQ==}
+  /@types/chai/4.3.3:
+    resolution: {integrity: sha512-hC7OMnszpxhZPduX+m+nrx+uFoLkWOMiR4oa/AZF3MuSETYTZmFfJAHqZEM8MVlvfG7BEUcgvtwoCTxBp6hm3g==}
     dev: true
 
   /@types/dashdash/1.14.1:
@@ -1471,8 +1471,8 @@ packages:
   /@types/node/16.11.47:
     resolution: {integrity: sha512-fpP+jk2zJ4VW66+wAMFoBJlx1bxmBKx4DUFf68UHgdGCOuyUTDlLWqsaNPJh7xhNDykyJ9eIzAygilP/4WoN8g==}
 
-  /@types/prettier/2.6.4:
-    resolution: {integrity: sha512-fOwvpvQYStpb/zHMx0Cauwywu9yLDmzWiiQBC7gJyq5tYLUXFZvDG7VK1B7WBxxjBJNKFOZ0zLoOQn8vmATbhw==}
+  /@types/prettier/2.7.0:
+    resolution: {integrity: sha512-RI1L7N4JnW5gQw2spvL7Sllfuf1SaHdrZpCHiBlCXjIlufi1SMNnbu2teze3/QE67Fg2tBlH7W+mi4hVNk4p0A==}
     dev: true
 
   /@types/responselike/1.0.0:
@@ -1956,7 +1956,7 @@ packages:
       '@babel/template': 7.18.10
       '@babel/types': 7.18.10
       '@types/babel__core': 7.1.19
-      '@types/babel__traverse': 7.17.1
+      '@types/babel__traverse': 7.18.0
     dev: true
 
   /babel-preset-current-node-syntax/1.0.1_@babel+core@7.18.10:
@@ -2043,7 +2043,7 @@ packages:
     resolution: {integrity: sha512-vmMqpF8E9RCde8/+Su/s2rZRxOBwAYQsTyCgok4kLWhWrzMrX0CzID6pVheNJSESY0S0FNTOG4QfRJqnSLOjFA==}
     dependencies:
       blake2b: 2.1.4
-      sodium-native: 3.3.0
+      sodium-native: 3.4.0
     dev: false
 
   /blake2b-wasm/2.4.0:
@@ -2275,7 +2275,7 @@ packages:
       timers-browserify: 1.4.2
       tty-browserify: 0.0.1
       url: 0.11.0
-      util: 0.10.3
+      util: 0.10.4
       vm-browserify: 1.1.2
       xtend: 4.0.2
     dev: true
@@ -2340,8 +2340,8 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001373
-      electron-to-chromium: 1.4.208
+      caniuse-lite: 1.0.30001374
+      electron-to-chromium: 1.4.211
       node-releases: 2.0.6
       update-browserslist-db: 1.0.5_browserslist@4.21.3
     dev: true
@@ -2538,8 +2538,8 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /caniuse-lite/1.0.30001373:
-    resolution: {integrity: sha512-pJYArGHrPp3TUqQzFYRmP/lwJlj8RCbVe3Gd3eJQkAV8SAC6b19XS9BjMvRdvaS8RMkaTN8ZhoHP6S1y8zzwEQ==}
+  /caniuse-lite/1.0.30001374:
+    resolution: {integrity: sha512-mWvzatRx3w+j5wx/mpFN5v5twlPrabG8NqX2c6e45LCpymdoGqNvRkRutFUqpRTXKFQFNQJasvK0YT7suW6/Hw==}
     dev: true
 
   /cert-info/1.5.1:
@@ -2749,10 +2749,10 @@ packages:
   /compact-encoding-net/1.2.0:
     resolution: {integrity: sha512-LVXpNpF7PGQeHRVVLGgYWzuVoYAaDZvKUsUxRioGfkotzvOh4AzoQF1HBH3zMNaSnx7gJXuUr3hkjnijaH/Eng==}
     dependencies:
-      compact-encoding: 2.7.0
+      compact-encoding: 2.11.0
 
-  /compact-encoding/2.7.0:
-    resolution: {integrity: sha512-2I0A+pYKXYwxewbLxj26tU4pJyKlFNjadzjZ+36xJ5HwTrnhD9KcMQk3McEQRl1at6jrwA8E7UjmBdsGhEAPMw==}
+  /compact-encoding/2.11.0:
+    resolution: {integrity: sha512-CRfTuyy9Tg7EwxNKvIq3yFIr2JnJLyVr9Yj234VsDCL59hdXcZH3TdzY/2kwbAqVogIoRBJjnNKCEnXbxTIEeg==}
     dependencies:
       b4a: 1.6.0
 
@@ -3089,7 +3089,7 @@ packages:
       isarray: 2.0.5
       object-is: 1.1.5
       object-keys: 1.1.1
-      object.assign: 4.1.2
+      object.assign: 4.1.3
       regexp.prototype.flags: 1.4.3
       side-channel: 1.0.4
       which-boxed-primitive: 1.0.2
@@ -3252,8 +3252,8 @@ packages:
       codecs: 2.2.0
       ipv4-peers: 2.0.0
       k-bucket: 5.1.0
-      protocol-buffers-encodings: 1.1.1
-      sodium-native: 3.3.0
+      protocol-buffers-encodings: 1.2.0
+      sodium-native: 3.4.0
       speedometer: 1.1.0
       stream-collector: 1.0.1
       time-ordered-set: 1.0.2
@@ -3265,7 +3265,7 @@ packages:
     dependencies:
       b4a: 1.6.0
       bind-easy: 1.1.2
-      compact-encoding: 2.7.0
+      compact-encoding: 2.11.0
       compact-encoding-net: 1.2.0
       fast-fifo: 1.1.0
       kademlia-routing-table: 1.0.1
@@ -3403,7 +3403,7 @@ packages:
     dependencies:
       debug: 4.3.4
       ecstatic: 4.1.4
-      electron: 20.0.0
+      electron: 20.0.1
       json-stringify-safe: 5.0.1
       stream-read: 1.1.2
       tempy: 0.1.0
@@ -3411,12 +3411,12 @@ packages:
       - supports-color
     dev: false
 
-  /electron-to-chromium/1.4.208:
-    resolution: {integrity: sha512-diMr4t69FigAGUk2KovP0bygEtN/9AkqEVkzjEp0cu+zFFbZMVvwACpTTfuj1mAmFR5kNoSW8wGKDFWIvmThiQ==}
+  /electron-to-chromium/1.4.211:
+    resolution: {integrity: sha512-BZSbMpyFQU0KBJ1JG26XGeFI3i4op+qOYGxftmZXFZoHkhLgsSv4DHDJfl8ogII3hIuzGt51PaZ195OVu0yJ9A==}
     dev: true
 
-  /electron/20.0.0:
-    resolution: {integrity: sha512-rPHTdjBKGSoLgGuJVsqDgmK9woDQxzlU18H+3cO4i+fNh29BMbFRwKKyit13lniO1hzRsEJDG5UKvFXs4vEpnA==}
+  /electron/20.0.1:
+    resolution: {integrity: sha512-5c7zr8oy1JsCV86BaoIPVLo4yevDfvPEsMQcGlgfJ5PS7ouAVvR1aHt0tjF65bL1vYdoQ1olvpextg2T8FyICA==}
     engines: {node: '>= 10.17.0'}
     hasBin: true
     requiresBuild: true
@@ -3514,7 +3514,7 @@ packages:
       is-weakref: 1.0.2
       object-inspect: 1.12.2
       object-keys: 1.1.1
-      object.assign: 4.1.2
+      object.assign: 4.1.3
       regexp.prototype.flags: 1.4.3
       string.prototype.trimend: 1.0.5
       string.prototype.trimstart: 1.0.5
@@ -4532,7 +4532,7 @@ packages:
     resolution: {integrity: sha512-JbGNtM1YRd8EQH/2vNTAP1oy5lJVPlBFYZfCJTu3k8sqOUm0rRIf/3+MCd5noVykETwTbun6jEOc+4Tu78ubHA==}
     dependencies:
       nanoassert: 1.1.0
-      sodium-native: 3.3.0
+      sodium-native: 3.4.0
       sodium-universal: 3.1.0
 
   /hmac-drbg/1.0.1:
@@ -4743,6 +4743,10 @@ packages:
     resolution: {integrity: sha512-8nWq2nLTAwd02jTqJExUYFSD/fKq6VH9Y/oG2accc/kdI0V98Bag8d5a4gi3XHz73rDWa2PvTtvcWYquKqSENA==}
     dev: true
 
+  /inherits/2.0.3:
+    resolution: {integrity: sha512-x00IRNXNy63jwGkJmzPigoySHbaqpNuzKbBOmzK+g2OdZpQ9w+sxCN+VSB3ja7IAge2OP2qpfxTjeNcyjmW1uw==}
+    dev: true
+
   /inherits/2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
 
@@ -4888,8 +4892,8 @@ packages:
       ci-info: 3.3.2
     dev: false
 
-  /is-core-module/2.9.0:
-    resolution: {integrity: sha512-+5FPy5PnwmO3lvfMb0AsoPaBG+5KHUI0wYFXOtYPnVVVspTFUuMZNfNaNVRt3FZadstu2c8x23vykRW/NBoU6A==}
+  /is-core-module/2.10.0:
+    resolution: {integrity: sha512-Erxj2n/LDAZ7H8WNJXd9tw38GYM3dv8rk8Zcs+jJuxYTW7sozH+SS8NtrSjVL1/vpLvWi1hxy96IzjJ3EHTJJg==}
     dependencies:
       has: 1.0.3
 
@@ -5179,7 +5183,7 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       '@babel/core': 7.18.10
-      '@babel/parser': 7.18.10
+      '@babel/parser': 7.18.11
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-coverage: 3.2.0
       semver: 6.3.0
@@ -5585,14 +5589,14 @@ packages:
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
     dependencies:
       '@babel/core': 7.18.10
-      '@babel/generator': 7.18.10
+      '@babel/generator': 7.18.12
       '@babel/plugin-syntax-typescript': 7.18.6_@babel+core@7.18.10
-      '@babel/traverse': 7.18.10
+      '@babel/traverse': 7.18.11
       '@babel/types': 7.18.10
       '@jest/transform': 27.5.1
       '@jest/types': 27.5.1
-      '@types/babel__traverse': 7.17.1
-      '@types/prettier': 2.6.4
+      '@types/babel__traverse': 7.18.0
+      '@types/prettier': 2.7.0
       babel-preset-current-node-syntax: 1.0.1_@babel+core@7.18.10
       chalk: 4.1.2
       expect: 27.5.1
@@ -6674,8 +6678,8 @@ packages:
       isobject: 3.0.1
     dev: true
 
-  /object.assign/4.1.2:
-    resolution: {integrity: sha512-ixT2L5THXsApyiUPYKmW+2EHpXXe5Ii3M+f4e+aJFAHao5amFRW6J0OO6c/LU8Be47utCx2GL89hxGB6XSmKuQ==}
+  /object.assign/4.1.3:
+    resolution: {integrity: sha512-ZFJnX3zltyjcYJL0RoCJuzb+11zWGyaDbjgxZbdV7rFEcHQuYxrZqhow67aA7xpes6LhojyFDaBKAFfogQrikA==}
     engines: {node: '>= 0.4'}
     dependencies:
       call-bind: 1.0.2
@@ -7157,8 +7161,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /preact/10.10.0:
-    resolution: {integrity: sha512-fszkg1iJJjq68I4lI8ZsmBiaoQiQHbxf1lNq+72EmC/mZOsFF5zn3k1yv9QGoFgIXzgsdSKtYymLJsrJPoamjQ==}
+  /preact/10.10.1:
+    resolution: {integrity: sha512-cXljG59ylGtSLismoLojXPAGvnh2ipQr3BYz9KZQr+1sdASCT+sR/v8dSMDS96xGCdtln2wHfAHCnLJK+XcBNg==}
     dev: false
 
   /prelude-ls/1.1.2:
@@ -7227,9 +7231,10 @@ packages:
     dev: false
     optional: true
 
-  /protocol-buffers-encodings/1.1.1:
-    resolution: {integrity: sha512-5aFshI9SbhtcMiDiZZu3g2tMlZeS5lhni//AGJ7V34PQLU5JA91Cva7TIs6inZhYikS3OpnUzAUuL6YtS0CyDA==}
+  /protocol-buffers-encodings/1.2.0:
+    resolution: {integrity: sha512-daeNPuKh1NlLD1uDfbLpD+xyUTc07nEtfHwmBZmt/vH0B7VOM+JOCOpDcx9ZRpqHjAiIkGqyTDi+wfGSl17R9w==}
     dependencies:
+      b4a: 1.6.0
       signed-varint: 2.0.1
       varint: 5.0.0
     dev: false
@@ -7246,7 +7251,7 @@ packages:
     resolution: {integrity: sha512-pndMq5g48JzcBkmknqToPPqo1w7npuKa+Fx1qCZ9DnEtustA2jStS2+WDu23DrPkOX7F0gZP3jt6m4CdJlOpPg==}
     dependencies:
       b4a: 1.6.0
-      compact-encoding: 2.7.0
+      compact-encoding: 2.11.0
       queue-tick: 1.0.0
       safety-catch: 1.0.2
     dev: false
@@ -7582,7 +7587,7 @@ packages:
     resolution: {integrity: sha512-nBpuuYuY5jFsli/JIs1oldw6fOQCBioohqWZg/2hiaOybXOft4lonv85uDOKXdf8rhyK159cxU5cDcK/NKk8zw==}
     hasBin: true
     dependencies:
-      is-core-module: 2.9.0
+      is-core-module: 2.10.0
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
 
@@ -7590,7 +7595,7 @@ packages:
     resolution: {integrity: sha512-iMDbmAWtfU+MHpxt/I5iWI7cY6YVEZUQ3MBgPQ++XD1PELuJHIl82xBmObyP2KyQmkNB2dsqF7seoQQiAn5yDQ==}
     hasBin: true
     dependencies:
-      is-core-module: 2.9.0
+      is-core-module: 2.10.0
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
 
@@ -8025,8 +8030,8 @@ packages:
       siphash24: 1.3.1
       xsalsa20: 1.2.0
 
-  /sodium-native/3.3.0:
-    resolution: {integrity: sha512-rg6lCDM/qa3p07YGqaVD+ciAbUqm6SoO4xmlcfkbU5r1zIGrguXztLiEtaLYTV5U6k8KSIUFmnU3yQUSKmf6DA==}
+  /sodium-native/3.4.0:
+    resolution: {integrity: sha512-eK6bZec++txj/VcLyMp98+UwqfZ8S8Mc8OSata1S31ZfbTFs61ulCaYQnlScxZsUxeq1A+xXLcVh3JX8Tr9k+A==}
     requiresBuild: true
     dependencies:
       node-gyp-build: 4.5.0
@@ -8048,7 +8053,7 @@ packages:
       sha512-universal: 1.2.1
       siphash24: 1.3.1
       sodium-javascript: 0.8.0
-      sodium-native: 3.3.0
+      sodium-native: 3.4.0
       xsalsa20: 1.2.0
 
   /source-map-resolve/0.5.3:
@@ -8530,7 +8535,7 @@ packages:
       object-inspect: 1.12.2
       object-is: 1.1.5
       object-keys: 1.1.1
-      object.assign: 4.1.2
+      object.assign: 4.1.3
       resolve: 2.0.0-next.4
       resumer: 0.0.0
       string.prototype.trim: 1.2.6
@@ -9096,6 +9101,12 @@ packages:
       inherits: 2.0.1
     dev: true
 
+  /util/0.10.4:
+    resolution: {integrity: sha512-0Pm9hTQ3se5ll1XihRic3FDIku70C+iHUdT/W926rSgHV5QgXsYbKZN8MSC3tJtSkhuROzvsQjAaFENRXr+19A==}
+    dependencies:
+      inherits: 2.0.3
+    dev: true
+
   /util/0.12.4:
     resolution: {integrity: sha512-bxZ9qtSlGUWSOy9Qa9Xgk11kSslpuZwaxCg4sNIDj6FLucDab2JxnHwyNTCpHMtK1MjoQiWQ6DiUMZYbSrO+Sw==}
     dependencies:
@@ -9526,16 +9537,16 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  github.com/backbonedao/crypto/6d59f0bced0b17e787f439fc93005ada252a801c_22kvxa7zeyivx4jp72v2w3pkvy:
-    resolution: {tarball: https://codeload.github.com/backbonedao/crypto/tar.gz/6d59f0bced0b17e787f439fc93005ada252a801c}
-    id: github.com/backbonedao/crypto/6d59f0bced0b17e787f439fc93005ada252a801c
+  github.com/backbonedao/crypto/ea57e60729f1031e3aa9357a12794b983c061ab9_22kvxa7zeyivx4jp72v2w3pkvy:
+    resolution: {commit: ea57e60729f1031e3aa9357a12794b983c061ab9, repo: git+ssh://git@github.com/backbonedao/crypto.git, type: git}
+    id: github.com/backbonedao/crypto/ea57e60729f1031e3aa9357a12794b983c061ab9
     name: '@backbonedao/crypto'
     version: 3.2.1
     dependencies:
       '@noble/hashes': 1.1.2
       '@noble/secp256k1': 1.6.3
       b4a: 1.6.0
-      compact-encoding: 2.7.0
+      compact-encoding: 2.11.0
       ethers: 5.6.9_22kvxa7zeyivx4jp72v2w3pkvy
       msgpackr: 1.6.2
       sodium-javascript: 0.8.0
@@ -9570,7 +9581,7 @@ packages:
       blake2b-universal: 1.0.1
       derive-key: 1.0.1
       hypercore: github.com/backbonedao/data/c7895d207cdeb09c08e60ed12bf871e411e65fb3_22kvxa7zeyivx4jp72v2w3pkvy
-      hypercore-crypto: github.com/backbonedao/crypto/6d59f0bced0b17e787f439fc93005ada252a801c_22kvxa7zeyivx4jp72v2w3pkvy
+      hypercore-crypto: github.com/backbonedao/crypto/ea57e60729f1031e3aa9357a12794b983c061ab9_22kvxa7zeyivx4jp72v2w3pkvy
       safety-catch: 1.0.2
       sodium-universal: 3.1.0
       xache: 1.1.0
@@ -9587,7 +9598,7 @@ packages:
     dependencies:
       b4a: 1.6.0
       codecs: 2.2.0
-      compact-encoding: 2.7.0
+      compact-encoding: 2.11.0
       debounceify: 1.0.0
       mutexify: 1.4.0
       patch-package: 6.4.7
@@ -9608,12 +9619,12 @@ packages:
       b4a: 1.6.0
       big-sparse-array: 1.0.2
       codecs: 3.0.0
-      compact-encoding: 2.7.0
+      compact-encoding: 2.11.0
       crc32-universal: 1.0.1
       ethers: 5.6.9_22kvxa7zeyivx4jp72v2w3pkvy
       events: 3.3.0
       flat-tree: 1.9.0
-      hypercore-crypto: github.com/backbonedao/crypto/6d59f0bced0b17e787f439fc93005ada252a801c_22kvxa7zeyivx4jp72v2w3pkvy
+      hypercore-crypto: github.com/backbonedao/crypto/ea57e60729f1031e3aa9357a12794b983c061ab9_22kvxa7zeyivx4jp72v2w3pkvy
       is-options: 1.0.2
       patch-package: 6.4.7
       protomux: 3.2.2
@@ -9638,14 +9649,14 @@ packages:
     name: '@backbonedao/dht'
     version: 5.0.17
     dependencies:
-      '@backbonedao/crypto': github.com/backbonedao/crypto/6d59f0bced0b17e787f439fc93005ada252a801c_22kvxa7zeyivx4jp72v2w3pkvy
+      '@backbonedao/crypto': github.com/backbonedao/crypto/ea57e60729f1031e3aa9357a12794b983c061ab9_22kvxa7zeyivx4jp72v2w3pkvy
       '@backbonedao/noise-handshake': github.com/backbonedao/noise-handshake/4f27d3ea1b7e4fd7601163d38847f9067d98b6d2_22kvxa7zeyivx4jp72v2w3pkvy
       '@backbonedao/secret-stream': github.com/backbonedao/secret-stream/319f94acca4ba61f1c8d73db41aa96beeef58fab_22kvxa7zeyivx4jp72v2w3pkvy
       '@hyperswarm/secret-stream': 5.2.0
       b4a: 1.6.0
       bind-easy: 1.1.2
       bogon: 1.0.0
-      compact-encoding: 2.7.0
+      compact-encoding: 2.11.0
       compact-encoding-net: 1.2.0
       dht-rpc: 5.0.6
       noise-curve-ed: 1.0.4
@@ -9696,7 +9707,7 @@ packages:
     name: '@backbonedao/noise-curve-secp256k1'
     version: 1.0.0
     dependencies:
-      '@backbonedao/crypto': github.com/backbonedao/crypto/6d59f0bced0b17e787f439fc93005ada252a801c_22kvxa7zeyivx4jp72v2w3pkvy
+      '@backbonedao/crypto': github.com/backbonedao/crypto/ea57e60729f1031e3aa9357a12794b983c061ab9_22kvxa7zeyivx4jp72v2w3pkvy
       '@noble/secp256k1': 1.6.3
       b4a: 1.6.0
     transitivePeerDependencies:
@@ -9734,7 +9745,7 @@ packages:
     name: '@backbonedao/secret-stream'
     version: 1.0.0
     dependencies:
-      '@backbonedao/crypto': github.com/backbonedao/crypto/6d59f0bced0b17e787f439fc93005ada252a801c_22kvxa7zeyivx4jp72v2w3pkvy
+      '@backbonedao/crypto': github.com/backbonedao/crypto/ea57e60729f1031e3aa9357a12794b983c061ab9_22kvxa7zeyivx4jp72v2w3pkvy
       '@backbonedao/noise-curve-secp256k1': github.com/backbonedao/noise-curve-secp256k1/a6b059710825967f95677c5bd9223fb58caa3671_22kvxa7zeyivx4jp72v2w3pkvy
       '@backbonedao/noise-handshake': github.com/backbonedao/noise-handshake/4f27d3ea1b7e4fd7601163d38847f9067d98b6d2_22kvxa7zeyivx4jp72v2w3pkvy
       b4a: 1.6.0

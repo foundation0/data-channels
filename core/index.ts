@@ -443,7 +443,6 @@ class CoreClass {
 
           const split = new Split({ chunkSize: 1024 })
           const merge = new Merge()
-          // const r = socket.pipe(self.datamanager.replicate(peer.client)).pipe(socket)
           const merged = pipeline(socket, merge, self.datamanager.replicate(peer.client))
           const r = pipeline(merged, split, socket)
           r.on('error', (err) => {

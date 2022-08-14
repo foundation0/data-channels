@@ -22,7 +22,7 @@ import _ from 'lodash'
 import b4a from 'b4a'
 import { createHash, keyPair } from '@backbonedao/crypto'
 import { Operation } from '../models'
-import Storage from './get_storage'
+import Storage from './storage'
 import { Split, Merge } from './chunker'
 import { pipeline } from 'streamx'
 

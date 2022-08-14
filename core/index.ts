@@ -22,7 +22,7 @@ import _ from 'lodash'
 import b4a from 'b4a'
 import { createHash, keyPair } from '@backbonedao/crypto'
 import { Operation } from '../models'
-import getStorage from './get_storage'
+import Storage from './get_storage'
 import { Split, Merge } from './chunker'
 import { pipeline } from 'streamx'
 
@@ -77,7 +77,7 @@ class CoreClass {
     this.protocol = protocol || async function () {}
 
     // Get storage medium and create new Data Manager
-    const { storage, storage_id } = getStorage(config)
+    const { storage, storage_id } = Storage(config)
     this.datamanager = CORES[storage_id] || new DataManager(storage)
 
     // Simple in-memory cache to avoid duplicate Data Managers

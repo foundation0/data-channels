@@ -12,17 +12,17 @@ specifiers:
   '@backbonedao/data-viewer': github:backbonedao/data-viewer
   '@backbonedao/network-node': github:backbonedao/network-node
   '@jest/globals': ^27.5.1
-  '@milahu/patch-package': ^6.4.14
-  '@noble/secp256k1': ^1.6.3
-  '@playwright/test': ^1.24.2
-  '@types/chai': ^4.3.3
-  '@types/jest': ^27.5.2
+  '@milahu/patch-package': ^6.4.11
+  '@noble/secp256k1': ^1.5.5
+  '@playwright/test': ^1.21.1
+  '@types/chai': ^4.3.1
+  '@types/jest': ^27.4.1
   '@types/mocha': ^9.1.1
-  '@types/node': ^16.11.47
-  '@typescript-eslint/eslint-plugin': ^5.32.0
-  '@typescript-eslint/parser': ^5.32.0
-  async: ^3.2.4
-  b4a: ^1.6.0
+  '@types/node': ^16.11.33
+  '@typescript-eslint/eslint-plugin': ^5.21.0
+  '@typescript-eslint/parser': ^5.21.0
+  async: ^3.2.3
+  b4a: ^1.5.3
   babelify: ^10.0.0
   browserify: ^17.0.0
   budo: ^11.7.0
@@ -32,24 +32,24 @@ specifiers:
   cross-env: ^7.0.3
   crypto-browserify: ^3.12.0
   dht: github:backbonedao/dht
-  eslint: ^8.21.0
-  ethers: ^5.6.9
-  eventemitter2: ^6.4.7
-  idb-keyval: ^6.2.0
+  eslint: ^8.14.0
+  ethers: ^5.6.4
+  eventemitter2: ^6.4.5
+  idb-keyval: ^6.1.0
   isomorphic-ws: ^4.0.1
   jest: ^27.5.1
   lexicographic-integer: ^1.1.0
   lodash: ^4.17.21
   mocha: ^9.2.2
   mocha-steps: ^1.3.0
-  msgpackr: ^1.6.2
-  node: ^16.16.0
+  msgpackr: ^1.5.6
+  node: ^16.14.2
   objectmodel: ^4.3.0
   os-browserify: ^0.3.0
   path-browserify: ^1.0.1
   platform-detect: ^3.0.1
-  playwright: ^1.24.2
-  preact: ^10.10.1
+  playwright: ^1.21.1
+  preact: ^10.7.1
   process: ^0.11.10
   random-access-idb: ^1.2.2
   random-access-memory: ^4.1.0
@@ -58,24 +58,26 @@ specifiers:
   sha256: ^0.2.0
   sodium-javascript: ^0.8.0
   stream-browserify: ^3.0.0
-  ts-jest: ^27.1.5
-  ts-node: ^10.9.1
+  streamx: ^2.12.4
+  ts-jest: ^27.1.4
+  ts-node: ^10.7.0
   tsify: ^5.0.4
   ttl: ^1.3.1
   typescript: ^3.9.10
-  uglify-js: ^3.16.3
+  uglify-js: ^3.15.4
   utf-8-validate: ^5.0.9
   util: ^0.12.4
   uuid: ^8.3.2
+  varint: ^6.0.0
   watchify: ^4.0.0
   wrtc: ^0.4.7
-  ws: ^8.8.1
+  ws: ^8.8.0
 
 dependencies:
-  '@backbonedao/crypto': github.com/backbonedao/crypto/ea57e60729f1031e3aa9357a12794b983c061ab9_22kvxa7zeyivx4jp72v2w3pkvy
-  '@backbonedao/data-db': github.com/backbonedao/data-db/bddb926706c8bec9870c4408bcefedeb33a5fd32
-  '@backbonedao/data-manager': github.com/backbonedao/data-manager/d84e018766b6423417f62cad601247e7660ff73d_22kvxa7zeyivx4jp72v2w3pkvy
-  '@backbonedao/data-viewer': github.com/backbonedao/data-viewer/6d62c7fdfb3895ee829affa018ae5aca5866d4bc
+  '@backbonedao/crypto': github.com/backbonedao/crypto/57e3fe08917a74669dbf34dba40d1ba87b789e50_22kvxa7zeyivx4jp72v2w3pkvy
+  '@backbonedao/data-db': github.com/backbonedao/data-db/24c699503ee0dfa713c5a8ecbd42bf69698ac1d0
+  '@backbonedao/data-manager': github.com/backbonedao/data-manager/36a369cd6935d5d4b944efddab72c1f491005201_22kvxa7zeyivx4jp72v2w3pkvy
+  '@backbonedao/data-viewer': github.com/backbonedao/data-viewer/889a034ffeecb98bedc74954159616a9aa4bc3d3
   '@backbonedao/network-node': github.com/backbonedao/network-node/31a8c2a8ad36be32a89675669e36043c18c28c24_22kvxa7zeyivx4jp72v2w3pkvy
   '@jest/globals': 27.5.1
   '@milahu/patch-package': 6.4.14
@@ -95,27 +97,29 @@ dependencies:
   node: 16.16.0
   objectmodel: 4.3.0
   platform-detect: 3.0.1
-  preact: 10.10.1
+  preact: 10.10.2
   random-access-idb: 1.2.2
   random-access-memory: 4.1.0
   rimraf: 3.0.2
   semver: 7.3.7
   sha256: 0.2.0
   sodium-javascript: 0.8.0
+  streamx: 2.12.4
   ttl: 1.3.1
   utf-8-validate: 5.0.9
   util: 0.12.4
   uuid: 8.3.2
+  varint: 6.0.0
   ws: 8.8.1_22kvxa7zeyivx4jp72v2w3pkvy
 
 devDependencies:
-  '@playwright/test': 1.24.2
+  '@playwright/test': 1.25.0
   '@types/chai': 4.3.3
   '@types/jest': 27.5.2
   '@types/mocha': 9.1.1
   '@types/node': 16.11.47
-  '@typescript-eslint/eslint-plugin': 5.32.0_ga56ooj2gmjlwb5b54gwf77g2m
-  '@typescript-eslint/parser': 5.32.0_koiiq4k4oiguvdpp6lnti6t3uy
+  '@typescript-eslint/eslint-plugin': 5.33.0_q5vuve65cejfaoqoujfyhidngm
+  '@typescript-eslint/parser': 5.33.0_koiiq4k4oiguvdpp6lnti6t3uy
   babelify: 10.0.0
   browserify: 17.0.0
   budo: 11.7.0_22kvxa7zeyivx4jp72v2w3pkvy
@@ -128,7 +132,7 @@ devDependencies:
   mocha-steps: 1.3.0
   os-browserify: 0.3.0
   path-browserify: 1.0.1
-  playwright: 1.24.2
+  playwright: 1.25.0
   process: 0.11.10
   stream-browserify: 3.0.0
   ts-jest: 27.1.5_d2mmrsvyyvbldr7nqg6fthb2py
@@ -846,7 +850,7 @@ packages:
       hashlru: 2.3.0
       protocol-buffers-encodings: 1.2.0
       record-cache: 1.2.0
-      sodium-native: 3.4.0
+      sodium-native: 3.4.1
     dev: false
 
   /@hyperswarm/discovery/2.0.1:
@@ -860,7 +864,7 @@ packages:
   /@hyperswarm/hypersign/2.1.1:
     resolution: {integrity: sha512-RcczqJsu2VScRoyJdLbxpYMBNq+73HJT3FVzDZXSOob/WqEeiN2WIvuDtvmFoufAuO/3YVfde/NpZFc/OPjmjw==}
     dependencies:
-      sodium-native: 3.4.0
+      sodium-native: 3.4.1
     dev: false
 
   /@hyperswarm/network/2.1.0:
@@ -1251,13 +1255,13 @@ packages:
       fastq: 1.13.0
     dev: true
 
-  /@playwright/test/1.24.2:
-    resolution: {integrity: sha512-Q4X224pRHw4Dtkk5PoNJplZCokLNvVbXD9wDQEMrHcEuvWpJWEQDeJ9gEwkZ3iCWSFSWBshIX177B231XW4wOQ==}
+  /@playwright/test/1.25.0:
+    resolution: {integrity: sha512-j4EZhTTQI3dBeWblE21EV//swwmBtOpIrLdOIJIRv4uqsLdHgBg1z+JtTg+AeC5o2bAXIE26kDNW5A0TimG8Bg==}
     engines: {node: '>=14'}
     hasBin: true
     dependencies:
       '@types/node': 16.11.47
-      playwright-core: 1.24.2
+      playwright-core: 1.25.0
     dev: true
 
   /@root/acme/3.1.0:
@@ -1500,8 +1504,8 @@ packages:
     dev: false
     optional: true
 
-  /@typescript-eslint/eslint-plugin/5.32.0_ga56ooj2gmjlwb5b54gwf77g2m:
-    resolution: {integrity: sha512-CHLuz5Uz7bHP2WgVlvoZGhf0BvFakBJKAD/43Ty0emn4wXWv5k01ND0C0fHcl/Im8Td2y/7h44E9pca9qAu2ew==}
+  /@typescript-eslint/eslint-plugin/5.33.0_q5vuve65cejfaoqoujfyhidngm:
+    resolution: {integrity: sha512-jHvZNSW2WZ31OPJ3enhLrEKvAZNyAFWZ6rx9tUwaessTc4sx9KmgMNhVcqVAl1ETnT5rU5fpXTLmY9YvC1DCNg==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       '@typescript-eslint/parser': ^5.0.0
@@ -1511,10 +1515,10 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.32.0_koiiq4k4oiguvdpp6lnti6t3uy
-      '@typescript-eslint/scope-manager': 5.32.0
-      '@typescript-eslint/type-utils': 5.32.0_koiiq4k4oiguvdpp6lnti6t3uy
-      '@typescript-eslint/utils': 5.32.0_koiiq4k4oiguvdpp6lnti6t3uy
+      '@typescript-eslint/parser': 5.33.0_koiiq4k4oiguvdpp6lnti6t3uy
+      '@typescript-eslint/scope-manager': 5.33.0
+      '@typescript-eslint/type-utils': 5.33.0_koiiq4k4oiguvdpp6lnti6t3uy
+      '@typescript-eslint/utils': 5.33.0_koiiq4k4oiguvdpp6lnti6t3uy
       debug: 4.3.4
       eslint: 8.21.0
       functional-red-black-tree: 1.0.1
@@ -1527,8 +1531,8 @@ packages:
       - supports-color
     dev: true
 
-  /@typescript-eslint/parser/5.32.0_koiiq4k4oiguvdpp6lnti6t3uy:
-    resolution: {integrity: sha512-IxRtsehdGV9GFQ35IGm5oKKR2OGcazUoiNBxhRV160iF9FoyuXxjY+rIqs1gfnd+4eL98OjeGnMpE7RF/NBb3A==}
+  /@typescript-eslint/parser/5.33.0_koiiq4k4oiguvdpp6lnti6t3uy:
+    resolution: {integrity: sha512-cgM5cJrWmrDV2KpvlcSkelTBASAs1mgqq+IUGKJvFxWrapHpaRy5EXPQz9YaKF3nZ8KY18ILTiVpUtbIac86/w==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
@@ -1537,9 +1541,9 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/scope-manager': 5.32.0
-      '@typescript-eslint/types': 5.32.0
-      '@typescript-eslint/typescript-estree': 5.32.0_typescript@3.9.10
+      '@typescript-eslint/scope-manager': 5.33.0
+      '@typescript-eslint/types': 5.33.0
+      '@typescript-eslint/typescript-estree': 5.33.0_typescript@3.9.10
       debug: 4.3.4
       eslint: 8.21.0
       typescript: 3.9.10
@@ -1547,16 +1551,16 @@ packages:
       - supports-color
     dev: true
 
-  /@typescript-eslint/scope-manager/5.32.0:
-    resolution: {integrity: sha512-KyAE+tUON0D7tNz92p1uetRqVJiiAkeluvwvZOqBmW9z2XApmk5WSMV9FrzOroAcVxJZB3GfUwVKr98Dr/OjOg==}
+  /@typescript-eslint/scope-manager/5.33.0:
+    resolution: {integrity: sha512-/Jta8yMNpXYpRDl8EwF/M8It2A9sFJTubDo0ATZefGXmOqlaBffEw0ZbkbQ7TNDK6q55NPHFshGBPAZvZkE8Pw==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dependencies:
-      '@typescript-eslint/types': 5.32.0
-      '@typescript-eslint/visitor-keys': 5.32.0
+      '@typescript-eslint/types': 5.33.0
+      '@typescript-eslint/visitor-keys': 5.33.0
     dev: true
 
-  /@typescript-eslint/type-utils/5.32.0_koiiq4k4oiguvdpp6lnti6t3uy:
-    resolution: {integrity: sha512-0gSsIhFDduBz3QcHJIp3qRCvVYbqzHg8D6bHFsDMrm0rURYDj+skBK2zmYebdCp+4nrd9VWd13egvhYFJj/wZg==}
+  /@typescript-eslint/type-utils/5.33.0_koiiq4k4oiguvdpp6lnti6t3uy:
+    resolution: {integrity: sha512-2zB8uEn7hEH2pBeyk3NpzX1p3lF9dKrEbnXq1F7YkpZ6hlyqb2yZujqgRGqXgRBTHWIUG3NGx/WeZk224UKlIA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       eslint: '*'
@@ -1565,7 +1569,7 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/utils': 5.32.0_koiiq4k4oiguvdpp6lnti6t3uy
+      '@typescript-eslint/utils': 5.33.0_koiiq4k4oiguvdpp6lnti6t3uy
       debug: 4.3.4
       eslint: 8.21.0
       tsutils: 3.21.0_typescript@3.9.10
@@ -1574,13 +1578,13 @@ packages:
       - supports-color
     dev: true
 
-  /@typescript-eslint/types/5.32.0:
-    resolution: {integrity: sha512-EBUKs68DOcT/EjGfzywp+f8wG9Zw6gj6BjWu7KV/IYllqKJFPlZlLSYw/PTvVyiRw50t6wVbgv4p9uE2h6sZrQ==}
+  /@typescript-eslint/types/5.33.0:
+    resolution: {integrity: sha512-nIMt96JngB4MYFYXpZ/3ZNU4GWPNdBbcB5w2rDOCpXOVUkhtNlG2mmm8uXhubhidRZdwMaMBap7Uk8SZMU/ppw==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
-  /@typescript-eslint/typescript-estree/5.32.0_typescript@3.9.10:
-    resolution: {integrity: sha512-ZVAUkvPk3ITGtCLU5J4atCw9RTxK+SRc6hXqLtllC2sGSeMFWN+YwbiJR9CFrSFJ3w4SJfcWtDwNb/DmUIHdhg==}
+  /@typescript-eslint/typescript-estree/5.33.0_typescript@3.9.10:
+    resolution: {integrity: sha512-tqq3MRLlggkJKJUrzM6wltk8NckKyyorCSGMq4eVkyL5sDYzJJcMgZATqmF8fLdsWrW7OjjIZ1m9v81vKcaqwQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       typescript: '*'
@@ -1588,8 +1592,8 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/types': 5.32.0
-      '@typescript-eslint/visitor-keys': 5.32.0
+      '@typescript-eslint/types': 5.33.0
+      '@typescript-eslint/visitor-keys': 5.33.0
       debug: 4.3.4
       globby: 11.1.0
       is-glob: 4.0.3
@@ -1600,16 +1604,16 @@ packages:
       - supports-color
     dev: true
 
-  /@typescript-eslint/utils/5.32.0_koiiq4k4oiguvdpp6lnti6t3uy:
-    resolution: {integrity: sha512-W7lYIAI5Zlc5K082dGR27Fczjb3Q57ECcXefKU/f0ajM5ToM0P+N9NmJWip8GmGu/g6QISNT+K6KYB+iSHjXCQ==}
+  /@typescript-eslint/utils/5.33.0_koiiq4k4oiguvdpp6lnti6t3uy:
+    resolution: {integrity: sha512-JxOAnXt9oZjXLIiXb5ZIcZXiwVHCkqZgof0O8KPgz7C7y0HS42gi75PdPlqh1Tf109M0fyUw45Ao6JLo7S5AHw==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
       '@types/json-schema': 7.0.11
-      '@typescript-eslint/scope-manager': 5.32.0
-      '@typescript-eslint/types': 5.32.0
-      '@typescript-eslint/typescript-estree': 5.32.0_typescript@3.9.10
+      '@typescript-eslint/scope-manager': 5.33.0
+      '@typescript-eslint/types': 5.33.0
+      '@typescript-eslint/typescript-estree': 5.33.0_typescript@3.9.10
       eslint: 8.21.0
       eslint-scope: 5.1.1
       eslint-utils: 3.0.0_eslint@8.21.0
@@ -1618,11 +1622,11 @@ packages:
       - typescript
     dev: true
 
-  /@typescript-eslint/visitor-keys/5.32.0:
-    resolution: {integrity: sha512-S54xOHZgfThiZ38/ZGTgB2rqx51CMJ5MCfVT2IplK4Q7hgzGfe0nLzLCcenDnc/cSjP568hdeKfeDcBgqNHD/g==}
+  /@typescript-eslint/visitor-keys/5.33.0:
+    resolution: {integrity: sha512-/XsqCzD4t+Y9p5wd9HZiptuGKBlaZO5showwqODii5C0nZawxWLF+Q6k5wYHBrQv96h6GYKyqqMHCSTqta8Kiw==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dependencies:
-      '@typescript-eslint/types': 5.32.0
+      '@typescript-eslint/types': 5.33.0
       eslint-visitor-keys: 3.3.0
     dev: true
 
@@ -2039,11 +2043,17 @@ packages:
   /bind-easy/1.1.2:
     resolution: {integrity: sha512-2+VjZ87WFdOFnsH4tHnmtf0HF6D2T3ZNdU1t1FYIz2jt4N3tyqbg2J0bYbflXdBkVi3xfVc8Pm8NB062SPvVVA==}
 
+  /bits-to-bytes/1.3.0:
+    resolution: {integrity: sha512-OJoHTpFXS9bXHBCekGTByf3MqM8CGblBDIduKQeeVVeiU9dDWywSSirXIBYGgg3d1zbVuvnMa1vD4r6PA0kOKg==}
+    dependencies:
+      b4a: 1.6.0
+    dev: false
+
   /blake2b-universal/1.0.1:
     resolution: {integrity: sha512-vmMqpF8E9RCde8/+Su/s2rZRxOBwAYQsTyCgok4kLWhWrzMrX0CzID6pVheNJSESY0S0FNTOG4QfRJqnSLOjFA==}
     dependencies:
       blake2b: 2.1.4
-      sodium-native: 3.4.0
+      sodium-native: 3.4.1
     dev: false
 
   /blake2b-wasm/2.4.0:
@@ -2340,8 +2350,8 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001374
-      electron-to-chromium: 1.4.211
+      caniuse-lite: 1.0.30001375
+      electron-to-chromium: 1.4.215
       node-releases: 2.0.6
       update-browserslist-db: 1.0.5_browserslist@4.21.3
     dev: true
@@ -2538,8 +2548,8 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /caniuse-lite/1.0.30001374:
-    resolution: {integrity: sha512-mWvzatRx3w+j5wx/mpFN5v5twlPrabG8NqX2c6e45LCpymdoGqNvRkRutFUqpRTXKFQFNQJasvK0YT7suW6/Hw==}
+  /caniuse-lite/1.0.30001375:
+    resolution: {integrity: sha512-kWIMkNzLYxSvnjy0hL8w1NOaWNr2rn39RTAVyIwcw8juu60bZDWiF1/loOYANzjtJmy6qPgNmn38ro5Pygagdw==}
     dev: true
 
   /cert-info/1.5.1:
@@ -3253,7 +3263,7 @@ packages:
       ipv4-peers: 2.0.0
       k-bucket: 5.1.0
       protocol-buffers-encodings: 1.2.0
-      sodium-native: 3.4.0
+      sodium-native: 3.4.1
       speedometer: 1.1.0
       stream-collector: 1.0.1
       time-ordered-set: 1.0.2
@@ -3403,7 +3413,7 @@ packages:
     dependencies:
       debug: 4.3.4
       ecstatic: 4.1.4
-      electron: 20.0.1
+      electron: 20.0.2
       json-stringify-safe: 5.0.1
       stream-read: 1.1.2
       tempy: 0.1.0
@@ -3411,12 +3421,12 @@ packages:
       - supports-color
     dev: false
 
-  /electron-to-chromium/1.4.211:
-    resolution: {integrity: sha512-BZSbMpyFQU0KBJ1JG26XGeFI3i4op+qOYGxftmZXFZoHkhLgsSv4DHDJfl8ogII3hIuzGt51PaZ195OVu0yJ9A==}
+  /electron-to-chromium/1.4.215:
+    resolution: {integrity: sha512-vqZxT8C5mlDZ//hQFhneHmOLnj1LhbzxV0+I1yqHV8SB1Oo4Y5Ne9+qQhwHl7O1s9s9cRuo2l5CoLEHdhMTwZg==}
     dev: true
 
-  /electron/20.0.1:
-    resolution: {integrity: sha512-5c7zr8oy1JsCV86BaoIPVLo4yevDfvPEsMQcGlgfJ5PS7ouAVvR1aHt0tjF65bL1vYdoQ1olvpextg2T8FyICA==}
+  /electron/20.0.2:
+    resolution: {integrity: sha512-Op4nxSyXH0tXjhvWC+WDn9EI0gep5etPccainxu1A4wes+ZFQBMCBXxibotanJfG+WNW4RaOv88NArwHIsSmPw==}
     engines: {node: '>= 10.17.0'}
     hasBin: true
     requiresBuild: true
@@ -4091,6 +4101,15 @@ packages:
       minipass: 3.3.4
     dev: false
 
+  /fs-native-extensions/1.1.0:
+    resolution: {integrity: sha512-9gLlh5J2EJIoyb5F+UMcVo9Nd1XZo1ha48gqhrYybsl3ve1zcyLZ5irL5f4DAoOWRQobs5nkNdlGhwgI21K+eg==}
+    requiresBuild: true
+    dependencies:
+      napi-macros: 2.0.0
+      node-gyp-build: 4.5.0
+    dev: false
+    optional: true
+
   /fs.realpath/1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
@@ -4532,7 +4551,7 @@ packages:
     resolution: {integrity: sha512-JbGNtM1YRd8EQH/2vNTAP1oy5lJVPlBFYZfCJTu3k8sqOUm0rRIf/3+MCd5noVykETwTbun6jEOc+4Tu78ubHA==}
     dependencies:
       nanoassert: 1.1.0
-      sodium-native: 3.4.0
+      sodium-native: 3.4.1
       sodium-universal: 3.1.0
 
   /hmac-drbg/1.0.1:
@@ -6224,6 +6243,7 @@ packages:
 
   /mkdirp-classic/0.5.3:
     resolution: {integrity: sha512-gKLcREMhtuZRwRAfqP3RFW+TK4JqApVBtOIftVgjuABpAtpxhPGaDcfvbhNvD0B8iD1oUr/txX35NjcaY6Ns/A==}
+    dev: true
 
   /mkdirp/0.5.6:
     resolution: {integrity: sha512-FP+p8RB8OWpF3YZBCrP5gtADmtXApB5AMLn+vdyA+PyxCjrCs00mjyUozssO33cwDeT3wNGdLxJ5M//YqtHAJw==}
@@ -7128,19 +7148,19 @@ packages:
     resolution: {integrity: sha512-qAXFCIPz8Kd1b7RXuxsMNoZgLq+NR/fzJBFWpyUYARzh/ORG1xMG6suRLOFg/DkJXtS+pvsjawMfwq1htVBpUg==}
     dev: false
 
-  /playwright-core/1.24.2:
-    resolution: {integrity: sha512-zfAoDoPY/0sDLsgSgLZwWmSCevIg1ym7CppBwllguVBNiHeixZkc1AdMuYUPZC6AdEYc4CxWEyLMBTw2YcmRrA==}
+  /playwright-core/1.25.0:
+    resolution: {integrity: sha512-kZ3Jwaf3wlu0GgU0nB8UMQ+mXFTqBIFz9h1svTlNduNKjnbPXFxw7mJanLVjqxHJRn62uBfmgBj93YHidk2N5Q==}
     engines: {node: '>=14'}
     hasBin: true
     dev: true
 
-  /playwright/1.24.2:
-    resolution: {integrity: sha512-iMWDLgaFRT+7dXsNeYwgl8nhLHsUrzFyaRVC+ftr++P1dVs70mPrFKBZrGp1fOKigHV9d1syC03IpPbqLKlPsg==}
+  /playwright/1.25.0:
+    resolution: {integrity: sha512-Z+pQNWI17Qx/tHhnmgMmPsptsisXpKgAnUvYv98kctlHUJaqMt2400P8kTw9vEPoC0xdxqu0JhxO7pDTmaaIKw==}
     engines: {node: '>=14'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      playwright-core: 1.24.2
+      playwright-core: 1.25.0
     dev: true
 
   /plist/3.0.6:
@@ -7161,8 +7181,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /preact/10.10.1:
-    resolution: {integrity: sha512-cXljG59ylGtSLismoLojXPAGvnh2ipQr3BYz9KZQr+1sdASCT+sR/v8dSMDS96xGCdtln2wHfAHCnLJK+XcBNg==}
+  /preact/10.10.2:
+    resolution: {integrity: sha512-GUXSsfwq4NKhlLYY5ctfNE0IjFk7Xo4952yPI8yMkXdhzeQmQ+FahZITe7CeHXMPyKBVQ8SoCmGNIy9TSOdhgQ==}
     dev: false
 
   /prelude-ls/1.1.2:
@@ -7349,11 +7369,12 @@ packages:
     engines: {node: '>=4'}
     dev: false
 
-  /random-access-file/2.2.1:
-    resolution: {integrity: sha512-RGU0xmDqdOyEiynob1KYSeh8+9c9Td1MJ74GT1viMEYAn8SJ9oBtWCXLsYZukCF46yududHOdM449uRYbzBrZQ==}
+  /random-access-file/3.1.0:
+    resolution: {integrity: sha512-JHQZPJMUWt29d9DbsD4WT3Fj4q2vIqVKK0TqZuEvkpSc50Kgu7Nct1ydXR8qpPibFAXyByPcgTk+Er0Lc4lmkw==}
     dependencies:
-      mkdirp-classic: 0.5.3
-      random-access-storage: 1.4.3
+      random-access-storage: 2.1.0
+    optionalDependencies:
+      fs-native-extensions: 1.1.0
     dev: false
 
   /random-access-idb/1.2.2:
@@ -7381,6 +7402,13 @@ packages:
     dependencies:
       events: 3.3.0
       inherits: 2.0.4
+      queue-tick: 1.0.0
+    dev: false
+
+  /random-access-storage/2.1.0:
+    resolution: {integrity: sha512-A22mR03SHfD3+n3sd9oayV/tsFC1AuhctFkSJvGTxCwroNQJy666wOIspzhWp/R0x6l6Kes7xGyP8Y1atEVHFA==}
+    dependencies:
+      events: 3.3.0
       queue-tick: 1.0.0
     dev: false
 
@@ -7893,7 +7921,7 @@ packages:
   /signed-varint/2.0.1:
     resolution: {integrity: sha512-abgDPg1106vuZZOvw7cFwdCABddfJRz5akcCcchzTbhyhYnsG31y4AlZEgp315T7W3nQq5P4xeOm186ZiPVFzw==}
     dependencies:
-      varint: 5.0.0
+      varint: 5.0.2
     dev: false
 
   /simple-concat/1.0.1:
@@ -8030,8 +8058,8 @@ packages:
       siphash24: 1.3.1
       xsalsa20: 1.2.0
 
-  /sodium-native/3.4.0:
-    resolution: {integrity: sha512-eK6bZec++txj/VcLyMp98+UwqfZ8S8Mc8OSata1S31ZfbTFs61ulCaYQnlScxZsUxeq1A+xXLcVh3JX8Tr9k+A==}
+  /sodium-native/3.4.1:
+    resolution: {integrity: sha512-PaNN/roiFWzVVTL6OqjzYct38NSXewdl2wz8SRB51Br/MLIJPrbM3XexhVWkq7D3UWMysfrhKVf1v1phZq6MeQ==}
     requiresBuild: true
     dependencies:
       node-gyp-build: 4.5.0
@@ -8053,7 +8081,7 @@ packages:
       sha512-universal: 1.2.1
       siphash24: 1.3.1
       sodium-javascript: 0.8.0
-      sodium-native: 3.4.0
+      sodium-native: 3.4.1
       xsalsa20: 1.2.0
 
   /source-map-resolve/0.5.3:
@@ -9166,6 +9194,10 @@ packages:
     resolution: {integrity: sha512-lKxKYG6H03yCZUpAGOPOsMcGxd1RHCu1iKvEHYDPmTyq2HueGhD73ssNBqqQWfvYs04G9iUFRvmAVLW20Jw6ow==}
     dev: false
 
+  /varint/6.0.0:
+    resolution: {integrity: sha512-cXEIW6cfr15lFv563k4GuVuW/fiwjknytD37jIOLSdSWuOI6WnO/oKwmP2FQTU2l01LP8/M5TSAJpzUaGe3uWg==}
+    dev: false
+
   /vm-browserify/1.1.2:
     resolution: {integrity: sha512-2ham8XPWTONajOR0ohOKOHXkm3+gaBmGut3SRuu75xLd/RRaY6vqgh8NBYYk7+RW3u5AtzPQZG8F10LHkl0lAQ==}
     dev: true
@@ -9360,6 +9392,8 @@ packages:
       node-pre-gyp: 0.13.0
     optionalDependencies:
       domexception: 1.0.1
+    transitivePeerDependencies:
+      - supports-color
     bundledDependencies:
       - node-pre-gyp
 
@@ -9537,11 +9571,11 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  github.com/backbonedao/crypto/ea57e60729f1031e3aa9357a12794b983c061ab9_22kvxa7zeyivx4jp72v2w3pkvy:
-    resolution: {commit: ea57e60729f1031e3aa9357a12794b983c061ab9, repo: git+ssh://git@github.com/backbonedao/crypto.git, type: git}
-    id: github.com/backbonedao/crypto/ea57e60729f1031e3aa9357a12794b983c061ab9
+  github.com/backbonedao/crypto/57e3fe08917a74669dbf34dba40d1ba87b789e50_22kvxa7zeyivx4jp72v2w3pkvy:
+    resolution: {tarball: https://codeload.github.com/backbonedao/crypto/tar.gz/57e3fe08917a74669dbf34dba40d1ba87b789e50}
+    id: github.com/backbonedao/crypto/57e3fe08917a74669dbf34dba40d1ba87b789e50
     name: '@backbonedao/crypto'
-    version: 3.2.1
+    version: 1.0.0
     dependencies:
       '@noble/hashes': 1.1.2
       '@noble/secp256k1': 1.6.3
@@ -9555,10 +9589,10 @@ packages:
       - bufferutil
       - utf-8-validate
 
-  github.com/backbonedao/data-db/bddb926706c8bec9870c4408bcefedeb33a5fd32:
-    resolution: {tarball: https://codeload.github.com/backbonedao/data-db/tar.gz/bddb926706c8bec9870c4408bcefedeb33a5fd32}
+  github.com/backbonedao/data-db/24c699503ee0dfa713c5a8ecbd42bf69698ac1d0:
+    resolution: {tarball: https://codeload.github.com/backbonedao/data-db/tar.gz/24c699503ee0dfa713c5a8ecbd42bf69698ac1d0}
     name: '@backbonedao/data-db'
-    version: 1.8.0
+    version: 1.0.0
     requiresBuild: true
     dependencies:
       b4a: 1.6.0
@@ -9571,17 +9605,17 @@ packages:
       streamx: 2.12.4
     dev: false
 
-  github.com/backbonedao/data-manager/d84e018766b6423417f62cad601247e7660ff73d_22kvxa7zeyivx4jp72v2w3pkvy:
-    resolution: {tarball: https://codeload.github.com/backbonedao/data-manager/tar.gz/d84e018766b6423417f62cad601247e7660ff73d}
-    id: github.com/backbonedao/data-manager/d84e018766b6423417f62cad601247e7660ff73d
+  github.com/backbonedao/data-manager/36a369cd6935d5d4b944efddab72c1f491005201_22kvxa7zeyivx4jp72v2w3pkvy:
+    resolution: {tarball: https://codeload.github.com/backbonedao/data-manager/tar.gz/36a369cd6935d5d4b944efddab72c1f491005201}
+    id: github.com/backbonedao/data-manager/36a369cd6935d5d4b944efddab72c1f491005201
     name: '@backbonedao/data-manager'
-    version: 6.0.1-alpha.19
+    version: 1.0.0
     dependencies:
       b4a: 1.6.0
       blake2b-universal: 1.0.1
       derive-key: 1.0.1
-      hypercore: github.com/backbonedao/data/c7895d207cdeb09c08e60ed12bf871e411e65fb3_22kvxa7zeyivx4jp72v2w3pkvy
-      hypercore-crypto: github.com/backbonedao/crypto/ea57e60729f1031e3aa9357a12794b983c061ab9_22kvxa7zeyivx4jp72v2w3pkvy
+      hypercore: github.com/backbonedao/data/bebbe70ecaaddac72a087020e556a248d06c9a8b_22kvxa7zeyivx4jp72v2w3pkvy
+      hypercore-crypto: github.com/backbonedao/crypto/57e3fe08917a74669dbf34dba40d1ba87b789e50_22kvxa7zeyivx4jp72v2w3pkvy
       safety-catch: 1.0.2
       sodium-universal: 3.1.0
       xache: 1.1.0
@@ -9590,10 +9624,10 @@ packages:
       - utf-8-validate
     dev: false
 
-  github.com/backbonedao/data-viewer/6d62c7fdfb3895ee829affa018ae5aca5866d4bc:
-    resolution: {tarball: https://codeload.github.com/backbonedao/data-viewer/tar.gz/6d62c7fdfb3895ee829affa018ae5aca5866d4bc}
+  github.com/backbonedao/data-viewer/889a034ffeecb98bedc74954159616a9aa4bc3d3:
+    resolution: {tarball: https://codeload.github.com/backbonedao/data-viewer/tar.gz/889a034ffeecb98bedc74954159616a9aa4bc3d3}
     name: '@backbonedao/data-viewer'
-    version: 1.0.0-alpha.8
+    version: 1.0.0
     requiresBuild: true
     dependencies:
       b4a: 1.6.0
@@ -9609,27 +9643,28 @@ packages:
       - supports-color
     dev: false
 
-  github.com/backbonedao/data/c7895d207cdeb09c08e60ed12bf871e411e65fb3_22kvxa7zeyivx4jp72v2w3pkvy:
-    resolution: {tarball: https://codeload.github.com/backbonedao/data/tar.gz/c7895d207cdeb09c08e60ed12bf871e411e65fb3}
-    id: github.com/backbonedao/data/c7895d207cdeb09c08e60ed12bf871e411e65fb3
+  github.com/backbonedao/data/bebbe70ecaaddac72a087020e556a248d06c9a8b_22kvxa7zeyivx4jp72v2w3pkvy:
+    resolution: {tarball: https://codeload.github.com/backbonedao/data/tar.gz/bebbe70ecaaddac72a087020e556a248d06c9a8b}
+    id: github.com/backbonedao/data/bebbe70ecaaddac72a087020e556a248d06c9a8b
     name: '@backbonedao/data'
-    version: 10.0.0-alpha.34
+    version: 1.0.1
     dependencies:
       '@backbonedao/secret-stream': github.com/backbonedao/secret-stream/319f94acca4ba61f1c8d73db41aa96beeef58fab_22kvxa7zeyivx4jp72v2w3pkvy
       b4a: 1.6.0
       big-sparse-array: 1.0.2
+      bits-to-bytes: 1.3.0
       codecs: 3.0.0
       compact-encoding: 2.11.0
       crc32-universal: 1.0.1
       ethers: 5.6.9_22kvxa7zeyivx4jp72v2w3pkvy
       events: 3.3.0
       flat-tree: 1.9.0
-      hypercore-crypto: github.com/backbonedao/crypto/ea57e60729f1031e3aa9357a12794b983c061ab9_22kvxa7zeyivx4jp72v2w3pkvy
+      hypercore-crypto: github.com/backbonedao/crypto/57e3fe08917a74669dbf34dba40d1ba87b789e50_22kvxa7zeyivx4jp72v2w3pkvy
       is-options: 1.0.2
       patch-package: 6.4.7
       protomux: 3.2.2
       purple-tape: 3.9.2
-      random-access-file: 2.2.1
+      random-access-file: 3.1.0
       random-array-iterator: 1.0.0
       safety-catch: 1.0.2
       sodium-javascript: 0.8.0
@@ -9649,7 +9684,7 @@ packages:
     name: '@backbonedao/dht'
     version: 5.0.17
     dependencies:
-      '@backbonedao/crypto': github.com/backbonedao/crypto/ea57e60729f1031e3aa9357a12794b983c061ab9_22kvxa7zeyivx4jp72v2w3pkvy
+      '@backbonedao/crypto': github.com/backbonedao/crypto/57e3fe08917a74669dbf34dba40d1ba87b789e50_22kvxa7zeyivx4jp72v2w3pkvy
       '@backbonedao/noise-handshake': github.com/backbonedao/noise-handshake/4f27d3ea1b7e4fd7601163d38847f9067d98b6d2_22kvxa7zeyivx4jp72v2w3pkvy
       '@backbonedao/secret-stream': github.com/backbonedao/secret-stream/319f94acca4ba61f1c8d73db41aa96beeef58fab_22kvxa7zeyivx4jp72v2w3pkvy
       '@hyperswarm/secret-stream': 5.2.0
@@ -9707,7 +9742,7 @@ packages:
     name: '@backbonedao/noise-curve-secp256k1'
     version: 1.0.0
     dependencies:
-      '@backbonedao/crypto': github.com/backbonedao/crypto/ea57e60729f1031e3aa9357a12794b983c061ab9_22kvxa7zeyivx4jp72v2w3pkvy
+      '@backbonedao/crypto': github.com/backbonedao/crypto/57e3fe08917a74669dbf34dba40d1ba87b789e50_22kvxa7zeyivx4jp72v2w3pkvy
       '@noble/secp256k1': 1.6.3
       b4a: 1.6.0
     transitivePeerDependencies:
@@ -9745,7 +9780,7 @@ packages:
     name: '@backbonedao/secret-stream'
     version: 1.0.0
     dependencies:
-      '@backbonedao/crypto': github.com/backbonedao/crypto/ea57e60729f1031e3aa9357a12794b983c061ab9_22kvxa7zeyivx4jp72v2w3pkvy
+      '@backbonedao/crypto': github.com/backbonedao/crypto/57e3fe08917a74669dbf34dba40d1ba87b789e50_22kvxa7zeyivx4jp72v2w3pkvy
       '@backbonedao/noise-curve-secp256k1': github.com/backbonedao/noise-curve-secp256k1/a6b059710825967f95677c5bd9223fb58caa3671_22kvxa7zeyivx4jp72v2w3pkvy
       '@backbonedao/noise-handshake': github.com/backbonedao/noise-handshake/4f27d3ea1b7e4fd7601163d38847f9067d98b6d2_22kvxa7zeyivx4jp72v2w3pkvy
       b4a: 1.6.0

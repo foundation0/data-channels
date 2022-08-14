@@ -23,6 +23,8 @@ import b4a from 'b4a'
 import { createHash, keyPair } from '@backbonedao/crypto'
 import { Operation } from '../models'
 import getStorage from './get_storage'
+import { Split, Merge } from './chunker'
+import { pipeline } from 'streamx'
 
 const CORES = {}
 
@@ -400,7 +402,7 @@ class CoreClass {
 
     const network_config: {
       bootstrap?: string[]
-      simplePeer?: { config: { iceServers: [{ urls: string[] }] } }
+      // simplePeer?: { config: { iceServers: [{ urls: string[] }] } }
       firewall?: Function
       keyPair?: { publicKey: b4a; secretKey: b4a }
       dht?: Function
@@ -439,7 +441,11 @@ class CoreClass {
             ).slice(0, 8)}`,
           })
 
-          const r = socket.pipe(self.datamanager.replicate(peer.client)).pipe(socket)
+          const split = new Split({ chunkSize: 1024 })
+          const merge = new Merge()
+          // const r = socket.pipe(self.datamanager.replicate(peer.client)).pipe(socket)
+          const merged = pipeline(socket, merge, self.datamanager.replicate(peer.client))
+          const r = pipeline(merged, split, socket)
           r.on('error', (err) => {
             if (err.message !== 'UTP_ETIMEOUT' || err.message !== 'Duplicate connection')
               error(err.message)

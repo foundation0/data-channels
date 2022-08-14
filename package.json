@@ -58,10 +58,12 @@
     "semver": "^7.3.7",
     "sha256": "^0.2.0",
     "sodium-javascript": "^0.8.0",
+    "streamx": "^2.12.4",
     "ttl": "^1.3.1",
     "utf-8-validate": "^5.0.9",
     "util": "^0.12.4",
     "uuid": "^8.3.2",
+    "varint": "^6.0.0",
     "ws": "^8.8.0"
   },
   "devDependencies": {

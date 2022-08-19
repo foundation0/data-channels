@@ -251,6 +251,7 @@ export default async function (
       // id is not present, so let's see if we can trigger authentication
       if (typeof app_meta.backbone()?.user === 'function') {
         await app_meta.backbone().user()
+        await checkUser()
       } else {
         return error('authentication required but no authentication method found')
       }
@@ -261,6 +262,7 @@ export default async function (
         if(!current_id) return error('error in getting user id')
       } else {
         await app_meta.backbone().user()
+        await checkUser()
       }
     }
   }

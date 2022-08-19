@@ -46,8 +46,8 @@ async function default_1(data, opts, migrations) {
         backbone: () => (typeof window === 'object' && window.backbone) ||
             (typeof global === 'object' && global.backbone),
     };
-    if (typeof app_meta.backbone()?.app?._getMeta === 'function') {
-        const manifest = await app_meta.backbone().app._getMeta('manifest');
+    if (typeof app_meta.backbone()?.app?.meta?._getMeta === 'function') {
+        const manifest = await app_meta.backbone().app.meta?._getMeta('manifest');
         if (!manifest)
             return common_1.error('no manifest found');
         app_meta.version = manifest.version;
@@ -203,6 +203,7 @@ async function default_1(data, opts, migrations) {
         if (!app_meta.backbone()?.id) {
             if (typeof app_meta.backbone()?.user === 'function') {
                 await app_meta.backbone().user();
+                await checkUser();
             }
             else {
                 return common_1.error('authentication required but no authentication method found');
@@ -217,6 +218,7 @@ async function default_1(data, opts, migrations) {
             }
             else {
                 await app_meta.backbone().user();
+                await checkUser();
             }
         }
     }

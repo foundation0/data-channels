@@ -16,12 +16,27 @@ const users_1 = require("../network/users");
 const network_1 = require("../network");
 const idb_keyval_1 = require("idb-keyval");
 const msgpackr_1 = require("msgpackr");
+const fs_1 = __importDefault(require("fs"));
 let appsCache;
 let bypassCache = false;
 if (typeof window === 'object') {
     appsCache = idb_keyval_1.createStore('apps-cache', 'backbone');
     if (localStorage.getItem('DEV'))
         bypassCache = true;
+}
+else {
+    appsCache = {
+        get: async (key, store) => {
+            fs_1.default.mkdirSync(`${__dirname}/.cache/`);
+            const raw_data = fs_1.default.readFileSync(`${__dirname}/.cache/${key}`);
+            return msgpackr_1.unpack(raw_data);
+        },
+        set: async (key, value, store) => {
+            fs_1.default.mkdirSync(`${__dirname}/.cache/`);
+            fs_1.default.writeFileSync(`${__dirname}/.cache/${key}`, msgpackr_1.pack(value));
+            return true;
+        },
+    };
 }
 const CORES = {};
 class CoreClass {
@@ -591,6 +606,9 @@ async function Core(params) {
                         cached_manifest = await msgpackr_1.unpack(cached_manifest);
                 }
                 if (cached_code?.app) {
+                    common_1.emit({ ch: 'core', msg: `App found from cache` });
+                    if (logUI)
+                        logUI('App found from cache');
                     const app = Function(cached_code.app + ';return app')();
                     if (!app.Protocol) {
                         let err = 'Error in executing the app code';

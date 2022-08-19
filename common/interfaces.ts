@@ -18,30 +18,22 @@ export interface CoreConfig extends BackboneConfig {
   address: string
   encryption_key?: string | boolean
   writers?: string[]
-  trusted_peers?: string[]
+  trusted_users?: string[]
   private?: boolean
   network?: {
     bootstrap?: string[]
-    simplePeer?: {
-      config: {
-        iceServers: [
-          {
-            urls: string[]
-          }
-        ]
-      }
-    }
+    simplePeer?: any // {      config: any {       iceServers: { urls: string[]; username?: string; credential?: string }[] | string[]     }}
   }
-  connect?: { local_only: { initiator: boolean }}
+  connect?: { local_only: { initiator: boolean } }
   storage_prefix?: string
   storage?: 'ram' | 'rai' | 'raf'
   firewall?: Function
-  key?: string,
+  key?: string
   network_id?: {
     secretKey: string
     publicKey: string
-  },
-  id?: any,
+  }
+  id?: any
   disable_timeout?: boolean
 }
 

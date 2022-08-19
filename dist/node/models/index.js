@@ -34,8 +34,15 @@ const operation_1 = __importDefault(require("./operation"));
 exports.Operation = operation_1.default;
 const binary_1 = __importDefault(require("./binary"));
 exports.Binary = binary_1.default;
-function create(data, opts, migrations) {
-    return base_1.default.apply(null, arguments);
+const common_1 = require("../common");
+function create(model, opts, migrations) {
+    return async (data) => {
+        const m = await base_1.default(model, opts, migrations);
+        if (typeof m === 'function')
+            return m(data);
+        else
+            return common_1.error('error in creating data model');
+    };
 }
 exports.DataModel = create;
 exports.default = create;

@@ -1,19 +1,10 @@
 import { error } from '../common'
 
-const {
-  Model,
-  BasicModel,
-  ObjectModel,
-  ArrayModel,
-  FunctionModel,
-  MapModel,
-  SetModel,
-  Any,
-} = require('./objectmodel')
+const { Model, ObjectModel, ArrayModel, MapModel, SetModel } = require('./objectmodel')
 const semverSort = require('semver/functions/sort')
 const semverGtr = require('semver/ranges/gtr')
 const { ethers } = require('ethers')
-import Binary from './binary'
+// import Binary from './binary'
 import {
   buf2hex,
   hex2buf,
@@ -23,80 +14,117 @@ import {
   getIdFromPublicKey,
 } from '@backbonedao/crypto'
 import b4a from 'b4a'
-import { pack, unpack } from 'msgpackr'
+import { pack } from 'msgpackr'
 
+// Model for meta data
 const Meta = Model({
   version: String,
-  hash: [Binary],
-  signature: [Binary],
-  id: [Binary],
+  hash: [String],
+  signature: [String],
+  id: [String],
   unsigned: [Boolean],
 })
   .assert((data) => {
-    if (data?.signature) return data.signature.byteLength === 65
+    // Make sure signature is the right length
+    if (data?.signature) return data.signature.length === 130
     else return true
-  }, 'signature should have lenght of 65')
+  }, 'signature should have lenght of 130')
   .assert((data) => {
-    if (data?.id) return ethers.utils.isAddress(buf2hex(data.id))
+    // Make sure id is valid 0x address
+    if (data?.id) return ethers.utils.isAddress(data.id)
     else return true
   }, 'Id should be valid 0x address')
 
 export default async function (
   data: Object | String,
-
   opts?: {
     disable_owneronly?: boolean
     _debug?: { app_version: string; meta?: { signature: string; id: string } }
   },
   migrations?
 ) {
+  // if we are running tests, disable owneronly
   if (process.env['TEST'] && opts?.disable_owneronly !== false)
     opts = { ...opts, disable_owneronly: true }
 
   let ready = false
-  let current_id = null
+  let current_id = ''
+
+  // gather meta data about the app that's using the datamodel
   const app_meta = {
     version: opts?._debug?.app_version || '0',
-    backbone:
+    backbone: () => 
       // @ts-ignore
       (typeof window === 'object' && window.backbone) ||
       (typeof global === 'object' && global.backbone),
   }
 
-  if (typeof app_meta.backbone?.app?._getMeta === 'function') {
-    const manifest = await app_meta.backbone.app._getMeta('manifest')
+  // if _getMeta is a function, get manifest and fill in the version
+  if (typeof app_meta.backbone()?.app?._getMeta === 'function') {
+    const manifest = await app_meta.backbone().app._getMeta('manifest')
     if (!manifest) return error('no manifest found')
     app_meta.version = manifest.version
   }
 
+  // a helper method to fill out data object's meta data
   function getMetaDetails(meta) {
-    const public_key = getPublicKeyFromSig({ message: meta.hash, signature: meta.signature })
+    const public_key = getPublicKeyFromSig({
+      message: hex2buf(meta.hash),
+      signature: hex2buf(meta.signature),
+    })
     return { ...meta, public_key }
   }
+
   class datamodel extends Model(data).assert((data) => {
-    // Check that signature matches the data
     // continue only after everything is ready
     if (!ready) return true
     if (opts?.disable_owneronly) return true
 
-    if (data['_meta']['unsigned']) return true
+    // if there's no _meta, this check makes no sense
+    if (!data?._meta) return true
+
+    // if this is unsigned data, we need to sign it first for this check to make sense
+    if (data?._meta?.unsigned) return true
+
+    // if user hasn't authenticated, mark unsigned to force signing
+    if (!current_id) {
+      data['_meta']['unsigned'] = true
+      return true
+    }
 
     // verify signature to see if data has been changed
     const { signature, public_key } = getMetaDetails(data._meta)
     const { _meta, ...signable_data } = data
     const hash = createHash(pack(signable_data))
-    if (!verify(hash, signature, public_key)) {
-      data['_meta']['unsigned'] = true
+
+    // how do I signal if this is the creation point and we should sign it instead of waiting for manual?
+    if(data._initial) {
+      return true
+    } else if (!verify(hash, signature, public_key)) {
+      // if it's the same author, mark this unsigned
+      const og_id = getIdFromPublicKey(hex2buf(public_key))
+      if(b4a.equals(og_id, current_id)) {
+        data['_meta']['unsigned'] = true
+        return true
+      } 
+      else return false
+    } else {
+      return true
     }
-    return true
   }, 'signature must verify against data') {
     _meta
 
     constructor(data) {
-      if (typeof data === 'string') data = JSON.parse(data)
+      // if data is a string, it's probably stringified JSON
+      try {
+        if (typeof data === 'string') data = JSON.parse(data)
+      } catch (error) {
+        // it wasn't...
+        error('input data must be an object or stringified JSON')
+      }
 
       // Check if data needs migrating
-      if (data?._meta?.version && data?._meta?.version !== app_meta.version) {
+      if (Object.keys(migrations || {}).length > 0 && data?._meta?.version && data?._meta?.version !== app_meta.version) {
         // are we going up or down?
         const direction = semverGtr(data._meta.version, app_meta.version) ? 'down' : 'up'
 
@@ -131,33 +159,56 @@ export default async function (
       }
 
       let tmp_meta
-      // if _meta is included, it's serialized
+      // if _meta is included, it's an existing object
       if (data?._meta) {
+        // check _meta complies with the spec
         tmp_meta = new Meta(data._meta)
+
+        // remove _meta until we have created a model
         delete data._meta
-      }
-      // no _meta means the wrapper didn't do its job
-      else {
+      } else {
+        // no _meta means the wrapper didn't do its job
         error('_meta missing')
       }
-      if (data._meta?.unsigned === true) error("can't create object with unsigned data")
+      // if data is unsigned, we can't use it for object
+      if (!opts?.disable_owneronly && data._meta?.unsigned === true)
+        error("can't create object with unsigned data")
+
+      // create model from data
       super(data)
+
+      // add _meta back in
       this._meta = tmp_meta
+
+      // remove _initial
+      delete this._initial
+
       ready = true
     }
-    toJSON() {
+    flatten() {
+      // this could be better...
       const data = {}
-      const keys = Object.keys(this)
-      keys.forEach((k) => (data[k] = this[k]))
-      data['_meta'] = this._meta
+      Object.keys(this).forEach((k) => (data[k] = this[k]))
+      data['_meta'] = {}
+      Object.keys(this._meta).forEach((k) => (data['_meta'][k] = this['_meta'][k]))
+      return data
+    }
+    toJSON() {
+      const data = this.flatten()
       return JSON.stringify(data)
     }
     async sign() {
       if (typeof this['_meta']?.unsigned === undefined) return error('data is already signed')
-      await checkUser(data)
+
+      await checkUser()
+      if (!current_id) return error('tried to sign without being authenticated')
+      
       // check signer matches the author
-      const { public_key } = getMetaDetails(this['_meta'])
-      const pid = getIdFromPublicKey(hex2buf(public_key))
+      let { public_key } = getMetaDetails(this['_meta'])
+      let pid = getIdFromPublicKey(hex2buf(public_key))
+      if (!b4a.isBuffer(public_key)) public_key = hex2buf(public_key)
+      if (!b4a.isBuffer(current_id))
+        current_id = hex2buf(current_id.match(/^0x/) ? current_id : '0x' + current_id)
       if (!b4a.equals(current_id, pid)) return error("current id doesn't match the author")
 
       // sign the update
@@ -165,13 +216,27 @@ export default async function (
       const { unsigned, ...meta } = this._meta
       const m = new Meta({ ...meta, ...signature })
       this._meta = m
+
+      return true
     }
   }
 
   async function signObject(data) {
-    const { _meta, ...signable_data } = data
-    const hash = createHash(pack(signable_data))
-    const signature = await app_meta.backbone.id.signObject({ hash })
+    if(!current_id) {
+      return checkUser()
+    }
+    let signable_data
+    if (data?._meta) {
+      let { _meta, ..._signable_data } = data
+      signable_data = _signable_data
+      if (_meta?.signature && _meta?.hash && !_meta?.unsigned) return _meta
+    } else {
+      signable_data = data
+    }
+    let hash = createHash(pack(signable_data))
+    let signature = await app_meta.backbone().id.signObject({ hash })
+    if (b4a.isBuffer(hash)) hash = buf2hex(hash)
+    if (b4a.isBuffer(signature)) signature = buf2hex(signature)
 
     if (!signature) {
       return error(`signing object failed`)
@@ -180,17 +245,24 @@ export default async function (
     }
   }
 
-  async function checkUser(data) {
+  async function checkUser() {
     // check if id is present
-    if (!app_meta.backbone?.id) {
+    if (!app_meta.backbone()?.id) {
       // id is not present, so let's see if we can trigger authentication
-      if (typeof app_meta.backbone?.user?.authenticate === 'function') {
-        await app_meta.backbone.user.authenticate()
+      if (typeof app_meta.backbone()?.user === 'function') {
+        await app_meta.backbone().user()
       } else {
         return error('authentication required but no authentication method found')
       }
+    } else {
+      const is_authenticated = await app_meta.backbone().id.isAuthenticated()
+      if(is_authenticated) {
+        current_id = await app_meta.backbone().id.getId()
+        if(!current_id) return error('error in getting user id')
+      } else {
+        await app_meta.backbone().user()
+      }
     }
-    current_id = await app_meta.backbone.id.getId()
   }
 
   return async (data) => {
@@ -207,15 +279,16 @@ export default async function (
       if (!opts?.disable_owneronly && !data._meta.signature) {
         return error('signature and id required')
       }
-      await checkUser(data)
+      // await checkUser(data)
     }
     // no _meta means it's a new object
     else {
       // unless owner_only is disabled, we'll try to sign the data
       if (!opts?.disable_owneronly) {
-        await checkUser(data)
+        await checkUser()
         const signature = await signObject(data)
         data['_meta'] = new Meta({ ...signature, version: app_meta.version })
+        data['_initial'] = true
         // return data
       } else {
         data._meta = new Meta({ version: app_meta.version })

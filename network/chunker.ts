@@ -1,4 +1,7 @@
 // @ts-nocheck
+
+// MIT license (c) GEUT
+
 import varint from 'varint'
 import { Transform } from 'streamx'
 

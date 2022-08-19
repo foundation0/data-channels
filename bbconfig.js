@@ -1,5 +1,7 @@
 // process.setMaxListeners(1000)
 
+const { getRandomInt } = require("./common")
+
 module.exports = {
   user: {
     home_dir: '~',
@@ -16,10 +18,31 @@ module.exports = {
     bootstrap_servers: process.env.BOOTSTRAP
       ? ['127.0.0.1:60000', '127.0.0.1:60001', '127.0.0.1:60002']
       : ['wss://node1.network.backbonedao.com:1337'],
-    bootstrap_servers_ws: process.env.BOOTSTRAP
-      ? 'ws://127.0.0.1:50000'
-      : 'wss://network.backbonedao.com:50000',
-    stunturn_servers: ['stun:node1.network.backbonedao.com:19302'],
-    swarm_refresh_frequency: 15 * 60 * 1000, // 15 mins
+    stunturn_servers: function () {
+      const stuns = [
+        'stun:node1.network.backbonedao.com:19302',
+        'stun:openrelay.metered.ca:80',
+        'stun:global.stun.twilio.com:3478',
+      ]
+      const turns = [
+        {
+          urls: [
+            // 'turn:openrelay.metered.ca:80',
+            // 'turn:openrelay.metered.ca:443',
+            'turn:openrelay.metered.ca:443?transport=tcp',
+          ],
+          username: 'openrelayproject',
+          credential: 'openrelayproject',
+        },
+      ]
+      return [
+        // NOTE: Using more than two STUN/TURN servers slows down discovery
+        // TODO: Add randomizing function to distribute which servers users connect to
+        {
+          urls: [stuns[getRandomInt(0, stuns.length-1)]],
+        },
+        turns[getRandomInt(0, turns.length-1)]
+      ]
+    },
   },
 }

@@ -1,1 +1,1 @@
-{"version":3,"file":"operation.js","sourceRoot":"","sources":["../../../models/operation.ts"],"names":[],"mappings":";;AAAA,iCAA+B;AAC/B,MAAM,EAAE,GAAG,EAAE,GAAG,OAAO,CAAC,eAAe,CAAC,CAAA;AAExC,MAAM,SAAS,GAAG,aAAM,CAAC;IACvB,IAAI,EAAE,MAAM;IACZ,IAAI,EAAE,GAAG;CACV,CAAC,CAAA;AAEF,kBAAe,SAAS,CAAA"}
+{"version":3,"file":"operation.js","sourceRoot":"","sources":["../../../models/operation.ts"],"names":[],"mappings":";;AAAA,iCAA+B;AAC/B,MAAM,EAAE,GAAG,EAAE,GAAG,OAAO,CAAC,eAAe,CAAC,CAAA;AAExC,kBAAe,aAAM,CAAC;IACpB,IAAI,EAAE,MAAM;IACZ,IAAI,EAAE,GAAG;CACV,CAAC,CAAA"}

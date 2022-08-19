@@ -23,6 +23,8 @@ function randomStr(len = 32) {
 exports.randomStr = randomStr;
 function encrypt(params) {
     let d = _1.encodeCoreData(params.data);
+    if (!d)
+        return _1.error('encrypt needs data');
     const secret = Buffer.from(exports.sha256(params.key), 'hex').slice(0, 32);
     const nonce = Buffer.alloc(sodium_javascript_1.default.crypto_secretbox_NONCEBYTES);
     sodium_javascript_1.default.randombytes_buf(nonce);

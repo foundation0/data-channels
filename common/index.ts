@@ -2,7 +2,6 @@ import { createHash } from 'crypto'
 import { homedir } from 'os'
 import { user } from '../bbconfig'
 import ttl from 'ttl'
-import { verifySignature } from './crypto'
 import { EventEmitter2 } from 'eventemitter2'
 import platform from 'platform-detect'
 import Buffer from 'b4a'
@@ -14,9 +13,10 @@ export function log(message: string, ...data: any) {
   if (process.env['LOG'] || (platform.browser && window?.localStorage.getItem('LOG'))) console.log(message, ...data)
 }
 export function error(message: string, ...data: any) {
-  if (process.env['LOG'] || (platform.browser && window?.localStorage.getItem('LOG'))) console.log(`ERROR: ${message}`, ...data)
-  throw new Error(message)
-  // EE.emit('error', `${message} - ${JSON.stringify(data)}`)
+  if (process.env['LOG'] || (platform.browser && window?.localStorage.getItem('LOG'))) console.error(new Error(message), ...data)
+  EE.emit('err', `${message} - ${JSON.stringify(data)}`)
+  return
+  // console.error(message)
 }
 
 export function buf2hex(buffer) { // buffer is an ArrayBuffer
@@ -39,10 +39,12 @@ export function subscribeToEvent(params: { id: string; cb: any }) {
 }
 
 export function encodeCoreData(data: string | Buffer | object | number) {
+  if(!data) return error('empty data')
   return pack(data)
 }
 
 export function decodeCoreData(data: Buffer) {
+  if(!data) return error('empty data')
   return unpack(data)
 }
 
@@ -85,9 +87,9 @@ export function unique(array: string[]) {
 }
 
 export function getHomedir() {
-  if (user.home_dir === '~')
+  if (user?.home_dir === '~')
     return process.env.TEST ? `${homedir()}/.backbone-test` : `${homedir()}/.backbone`
-  else return user.home_dir
+  else return user?.home_dir
 }
 
 export function hash(params: { type: string; data: any }) {
@@ -104,11 +106,6 @@ export function createCache(params: { ttlsec?: number; capacity?: number }) {
   })
 }
 
-export async function fetchPeers(type: string) {
-  if (process.env.TEST) return []
-  return []
-}
-
 export function registerMethods(params: { source: object; methods: string[] }) {
   const API: any = {}
   for (let m in params.methods) {
@@ -116,16 +113,6 @@ export function registerMethods(params: { source: object; methods: string[] }) {
   }
   return API
 }
-
-async function verifySign(payload) {
-  const data = JSON.stringify(payload.meta) + JSON.stringify(payload.object)
-  return await verifySignature({
-    public_key: payload.owner,
-    data,
-    signature: payload.signature,
-  })
-}
-
 export function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }

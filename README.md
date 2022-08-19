@@ -1,6 +1,6 @@
 # backbone://core
 
-Backbone Core is an unstoppable, infinitely scalable dapp platform for self-sovereign internet.
+Backbone Core is an unstoppable, infinitely scalable dapp platform for the self-sovereign internet.
 
 - **Standalone**: Self-contained dapps that work without external services, like blockchains
 - **Batteries included**: World-class P2P infrastructure built-in in every Core
@@ -17,12 +17,23 @@ Backbone Core is an unstoppable, infinitely scalable dapp platform for self-sove
 $ npx pnpm i
 ```
 
+## Major features roadmap
+- [x] End-to-end encryption
+- [x] Uses Backbone Id to authenticate and sign data objects
+- [x] Works on browsers and NodeJs
+- [x] Fetches application from other users
+- [x] Executes application and renders optional frontend
+- [x] Single user apps
+
+- [ ] Multi-user apps
+  - Waits for Id to have syncing ability between instances
+- [ ] Notifies about updates on applications
+
 ## Development
 
 **Start live-reload server (development):**
 ```bash
 npm run build:browser:watch
-# open http://localhost:9966 in your browser
 ```
 
 ## Building

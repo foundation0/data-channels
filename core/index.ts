@@ -1,11 +1,6 @@
-// import DataManager from '../../data-manager'
-// import DataViewer from '../../data-viewer'
-// import DataDB from '../../data-db'
-// import Network from '../../network-node'
 import DataManager from '@backbonedao/data-manager'
 import DataViewer from '@backbonedao/data-viewer'
 import DataDB from '@backbonedao/data-db'
-import Network from '@backbonedao/network-node'
 import { CoreConfig } from '../common/interfaces'
 import {
   buf2hex,
@@ -23,8 +18,23 @@ import b4a from 'b4a'
 import { createHash, keyPair } from '@backbonedao/crypto'
 import { Operation } from '../models'
 import Storage from './storage'
-import { Split, Merge } from './chunker'
-import { pipeline } from 'streamx'
+import {
+  addKnownUsers,
+  addUser,
+  addTrustedUser,
+  removeUser,
+  removeTrustedUser,
+} from '../network/users'
+import { connect } from '../network'
+import { get, set, createStore } from 'idb-keyval'
+import { pack, unpack } from 'msgpackr'
+
+let appsCache
+let bypassCache = false
+if (typeof window === 'object') {
+  appsCache = createStore('apps-cache', 'backbone')
+  if (localStorage.getItem('DEV')) bypassCache = true
+}
 
 const CORES = {}
 
@@ -50,12 +60,11 @@ class CoreClass {
   metadb: any
   metaprotocol: any
   network_refresh_timer: any
-  mode: 'read' | 'write'
-  connected_peers: number = 0
-  peers_cache: {
-    peers: any
-    trusted_peers: any
-  } = { peers: {}, trusted_peers: {} }
+  connected_users: number = 0
+  users_cache: {
+    users: any
+    trusted_users: any
+  } = { users: {}, trusted_users: {} }
 
   constructor(config: CoreConfig, protocol?: any) {
     // Set the config and protocol
@@ -64,12 +73,11 @@ class CoreClass {
         bootstrap: default_config.network.bootstrap_servers,
         simplePeer: {
           config: {
-            iceServers: [
-              {
-                urls: default_config.network.stunturn_servers,
-              },
-            ],
+            iceServers: default_config.network.stunturn_servers(),
           },
+          sdpSemantics: 'unified-plan',
+          bundlePolicy: 'max-bundle',
+          iceCandidatePoolsize: 1,
         },
       },
       ...config,
@@ -92,19 +100,6 @@ class CoreClass {
     if (!this.address.match('backbone://'))
       this.address_hash = createHash(`backbone://${this.config.address}`)
     else this.address_hash = createHash(this.config.address)
-
-    // if id wasn't supplied, this is read-only Core
-    if (!this.config.id) this.mode = 'read'
-    else {
-      if (!this.config.key) return error(`Core key needs to be supplied if opened in write mode`)
-
-      // mix key with address_hash to create unique combination
-      // this way Backbone app can have multiple Cores with same key
-      this.config.key = this.config.key + this.address_hash
-
-      // set mode to write
-      this.mode = 'write'
-    }
 
     // Setup encryption
     let encryptionKey
@@ -147,51 +142,6 @@ class CoreClass {
     this.index_key = buf2hex(this.index.key)
     this.meta_key = buf2hex(this.meta.key)
 
-    async function getDataAPI(data) {
-      return {
-        put: async (params: { key: string; value: any }) => {
-          if (typeof params === 'string' || !params?.key || !params?.value)
-            return error('INVALID PARAMS')
-          const encoded_data = encodeCoreData(params.value)
-          await data.put(params.key, encoded_data)
-          const value = await data.get(params.key)
-          if (value?.value.toString() === encoded_data.toString()) return
-          console.log('FAIL', params.key, value, encoded_data)
-          return error('PUT FAILED')
-        },
-        del: async (key: string) => {
-          return data.del(key)
-        },
-        get: async (key: string) => {
-          const dat = await data.get(key)
-          if (!dat) return null
-          return decodeCoreData(dat.value)
-        },
-        query: async function (params: {
-          gte: string
-          lte: string
-          gt: string
-          lt: string
-          limit?: number
-          stream?: boolean
-          reverse?: boolean
-        }) {
-          if (!params?.limit) params.limit = 100
-          const stream = data.createReadStream(params)
-          if (params?.stream) return stream
-          return new Promise((resolve, reject) => {
-            const bundle: string[] = []
-            stream.on('data', (data) => {
-              bundle.push(decodeCoreData(data.value))
-            })
-            stream.on('end', () => {
-              resolve(bundle)
-            })
-          })
-        },
-      }
-    }
-
     // Initialize DataViewer for Meta
     // @ts-ignore
     this.metaviewer = new DataViewer({
@@ -212,7 +162,7 @@ class CoreClass {
       async apply(data, operations) {
         // Process incoming operations
         const dat = data.batch({ update: false })
-        const DataAPI = await getDataAPI(dat)
+        const DataAPI = await self.getDataAPI(dat)
         for (const { value } of operations) {
           const o = decodeCoreData(value)
           const op = new Operation(o)
@@ -242,70 +192,11 @@ class CoreClass {
       inputs: [this.writer],
       outputs: [],
       localOutput: this.index,
-      autostart: true,
-      unwrap: true,
-      eagerUpdate: true,
-      //sparse: true,
-      view: (core) =>
-        new DataDB(core.unwrap(), {
-          keyEncoding: 'utf-8',
-          valueEncoding: 'binary',
-          extension: false,
-        }),
-      async apply(data, operations) {
-        // Process incoming operations
-        const dat = data.batch({ update: false })
-        const DataAPI = await getDataAPI(dat)
-        for (const { value } of operations) {
-          const o = decodeCoreData(value)
-          const op = new Operation(o)
-          await self.protocol(
-            op,
-            // Data API
-            DataAPI,
-            // Id API
-            // Expose id functions only if in write mode
-            this.mode === 'write'
-              ? {
-                  sign: {},
-                }
-              : null,
-            // DataViewer view API
-            {
-              get: async (key: string) => {
-                const data = await self.datadb.get(key)
-                if (!data) return null
-                return decodeCoreData(data.value)
-              },
-              query: async function (params: {
-                gte: string
-                lte: string
-                limit?: number
-                stream?: boolean
-                reverse?: boolean
-              }) {
-                if (!params?.limit) params.limit = 100
-                const stream = self.datadb.createReadStream(params)
-                if (params?.stream) return stream
-                return new Promise((resolve, reject) => {
-                  const bundle: string[] = []
-                  stream.on('data', (data) => {
-                    bundle.push(decodeCoreData(data.value))
-                  })
-                  stream.on('end', () => {
-                    resolve(bundle)
-                  })
-                })
-              },
-            }
-          )
-        }
+      autostart: false,
 
-        // Update Dataviewer
-        await dat.flush()
-      },
+      //sparse: true,
     })
-    this.datadb = this.dataviewer.view
+
     await this.dataviewer.ready()
 
     emit({ ch: 'core', msg: `Initialized Core ${this.address}` })
@@ -315,66 +206,70 @@ class CoreClass {
     const root = this.datamanager.get(b4a.from(kp.publicKey, 'hex'))
     await root.ready()
 
-    function _addPeer(params: { key: string; partition: 'data' | 'meta' }) {
-      // Add peers to the Core
+    function _addUser(params: { key: string; partition: 'data' | 'meta' }) {
+      // Add users to the Core
       if (params.key !== self.writer_key && params.key !== self.meta_key) {
-        self.addPeer(params)
+        self.addUser(params)
       }
     }
 
-    function _addTrustedPeer(params: { key: string; partition: 'data' | 'meta' }) {
-      // Add trusted peers to the Core
-      // disabled because there needs to be a mechanism to approve trusted peers to be added
+    function _addTrustedUser(params: { key: string; partition: 'data' | 'meta' }) {
+      // Add trusted users to the Core
+      // disabled because there needs to be a mechanism to approve trusted users to be added
       return
       if (params.key !== self.index_key) {
         emit({
           ch: 'network',
-          msg: `Trusted peer: ${self.index_key.slice(0, 8)} got key ${params.key} from peer`,
+          msg: `Trusted user: ${self.index_key.slice(0, 8)} got key ${params.key} from user`,
         })
 
-        self.addTrustedPeer(params)
+        self.addTrustedUser(params)
       }
     }
-    const addPeersExt = root.registerExtension('key-exchange', {
+    const addPeersExtension = root.registerExtension('key-exchange', {
       encoding: 'json',
       onmessage: async (msg) => {
-        msg.data.peers.forEach((key) => {
-          _addPeer({ key, partition: 'data' })
+        const data_users = msg?.data?.users || msg?.data?.peers
+        data_users.forEach((key) => {
+          _addUser({ key, partition: 'data' })
         })
-        msg.meta.peers.forEach((key) => {
-          _addPeer({ key, partition: 'meta' })
+        const meta_users = msg?.meta?.users || msg?.meta?.peers
+        meta_users.forEach((key) => {
+          _addUser({ key, partition: 'meta' })
         })
-        msg.data.trusted_peers.forEach((key) => {
-          _addTrustedPeer({ key, partition: 'data' })
+        const data_trusted_users = msg?.data?.trusted_users || msg?.data?.trusted_peers
+        data_trusted_users.forEach((key) => {
+          _addTrustedUser({ key, partition: 'data' })
         })
-        msg.meta.trusted_peers.forEach((key) => {
-          _addTrustedPeer({ key, partition: 'meta' })
+        const meta_trusted_users = msg?.meta?.trusted_users || msg?.meta?.trusted_peers
+        meta_trusted_users.forEach((key) => {
+          _addTrustedUser({ key, partition: 'meta' })
         })
       },
     })
 
-    root.on('peer-add', (peer) => {
-      addPeersExt.send(
+    root.on('peer-add', (user) => {
+      addPeersExtension.send(
         {
           data: {
-            peers: this.dataviewer.inputs.map((core) => buf2hex(core.key)),
-            trusted_peers: this.dataviewer.outputs.map((core) => buf2hex(core.key)),
+            users: this.dataviewer.inputs.map((core) => buf2hex(core.key)),
+            trusted_users: this.dataviewer.outputs.map((core) => buf2hex(core.key)),
           },
           meta: {
-            peers: this.metaviewer.inputs.map((core) => buf2hex(core.key)),
-            trusted_peers: this.metaviewer.outputs.map((core) => buf2hex(core.key)),
+            users: this.metaviewer.inputs.map((core) => buf2hex(core.key)),
+            trusted_users: this.metaviewer.outputs.map((core) => buf2hex(core.key)),
           },
         },
-        peer
+        user
       )
       emit({
         ch: 'network',
-        msg: `${this.writer_key.slice(0, 8)} Added peer`,
+        msg: `New user detected, saying hello...`,
       })
     })
 
-    // Update known peers cache
-    await this._updatePeerCache()
+    // Update known users cache
+    await this._updateUserCache()
 
     // Debug log Core details
     emit({
@@ -392,113 +287,121 @@ class CoreClass {
       verbose: true,
     })
   }
-  async connect(
-    this: CoreClass,
-    opts?: { use_unique_swarm?: boolean; local_only?: { initiator: boolean } }
-  ) {
-    if (this.network) return error('NETWORK EXISTS')
-    if (!this.config?.network) return error('CONNECT NEEDS NETWORK CONFIG')
-    if (this.config.private) return error('ACCESS DENIED - PRIVATE CORE')
+  async getDataAPI(this: CoreClass, data) {
+    const API = {
+      put: async (params: { key: string; value: any }) => {
+        if (typeof params === 'string' || !params?.key || !params?.value)
+          return error('INVALID PARAMS')
 
-    const network_config: {
-      bootstrap?: string[]
-      // simplePeer?: { config: { iceServers: [{ urls: string[] }] } }
-      firewall?: Function
-      keyPair?: { publicKey: b4a; secretKey: b4a }
-      dht?: Function
-    } = this.config.network
-
-    emit({
-      ch: 'network',
-      msg: `Connect with conf: ${JSON.stringify(network_config)}`,
-    })
-
-    // add firewall
-    if (this.config.firewall) network_config.firewall = this.config.firewall
-
-    // add keypair for noise
-    if (!this.config.network_id) {
-      this.config.network_id = keyPair()
-    }
-
-    network_config.keyPair = this.config.network_id
-
-    let self = this
-    async function connectToNetwork() {
-      try {
-        const network = Network(network_config)
-        network.on('connection', async (socket, peer) => {
-          emit({
-            event: 'network.new-connection',
-            ch: 'network',
-            msg: `nid: ${buf2hex(self.config.network_id?.publicKey).slice(
-              0,
-              8
-            )} | address: ${buf2hex(self.address_hash).slice(0, 8)}, peers: ${
-              network.peers.size
-            }, conns: ${network.ws.connections.size} - new connection from ${buf2hex(
-              peer.peer.host
-            ).slice(0, 8)}`,
-          })
-
-          const split = new Split({ chunkSize: 1024 })
-          const merge = new Merge()
-          const merged = pipeline(socket, merge, self.datamanager.replicate(peer.client))
-          const r = pipeline(merged, split, socket)
-          r.on('error', (err) => {
-            if (err.message !== 'UTP_ETIMEOUT' || err.message !== 'Duplicate connection')
-              error(err.message)
-          })
-          self.connected_peers++
+        let unsigned = false
+        Object.keys(params).forEach((k) => {
+          // if item has _meta, we need to flatten it
+          if (params[k]._meta) {
+            if (params[k]._meta?.unsigned) unsigned = true
+            params[k] = params[k].flatten()
+          }
         })
-        emit({
-          ch: 'network',
-          event: 'network.connecting',
-          msg: `Connecting to backbone://${
-            self.address
-          }...`,
-        })
-        // @ts-ignore
-        network.join(
-          Buffer.isBuffer(self.address_hash)
-            ? self.address_hash
-            : Buffer.from(self.address_hash, 'hex')
+        if (unsigned) {
+          await data.del(params.key)
+          return error('unsigned data detected in protocol, discarding...')
+        }
+        const encoded_data = encodeCoreData(params.value)
+        if (!encoded_data) return error('put needs data')
+
+        await data.put(params.key, encoded_data)
+        const value = await data.get(params.key)
+        if (value?.value.toString() === encoded_data.toString()) return
+        console.log('FAIL', params.key, value, encoded_data)
+        return error('PUT FAILED')
+      },
+      del: async (key: string) => {
+        return data.del(key)
+      },
+      get: async (key: string) => {
+        try {
+          const dat = await data.get(key, { update: false })
+          if (!dat) return null
+          return decodeCoreData(dat.value)
+        } catch (error) {
+          return null
+        }
+      },
+      getAll: async () => {
+        return API.query({ lt: '~' })
+      },
+      discard: async (op: { type: string; data: any }, reason?: string) => {
+        await data.put('_trash', '1')
+        await data.del('_trash')
+        return error(
+          `protocol discarded an operation ${reason ? `(${reason})` : ''}: ${JSON.stringify(
+            op
+          ).slice(0, 200)}`
         )
-        // @ts-ignore
-        await network.flush(() => {})
-        return network
-      } catch (err) {
-        error(err)
-      }
+      },
+      query: async function (params: {
+        gte?: string
+        lte?: string
+        gt?: string
+        lt?: string
+        limit?: number
+        stream?: boolean
+        reverse?: boolean
+      }) {
+        if (!params?.limit) params.limit = 100
+        const stream = data.createReadStream(params)
+        if (params?.stream) return stream
+        return new Promise((resolve, reject) => {
+          const bundle: string[] = []
+          stream.on('data', (data) => {
+            bundle.push(decodeCoreData(data.value))
+          })
+          stream.on('end', () => {
+            resolve(bundle)
+          })
+        })
+      },
     }
-    if (!opts?.local_only) {
-      this.network = await connectToNetwork()
-      this.connection_id = buf2hex(this.network.webrtc.id)
-      emit({
-        ch: 'network',
-        event: 'network.connected',
-        msg: `Connected to backbone://${
-          self.address
-        } with id ${this.connection_id}`,
-      })
-    } else {
-      emit({
-        ch: 'network',
-        msg: `Using local connection`,
-      })
-      this.network = this.datamanager.replicate(opts?.local_only?.initiator, { live: true })
-    }
-
-    await this._updatePartitions()
-
-    // for faster restarts
-    process.once('SIGINT', () => {
-      this.network.destroy()
-    })
-
-    return this.network
+    return API
   }
+  async startDataViewer(this: CoreClass) {
+    const self = this
+    self.dataviewer.start({
+      view: (core) =>
+        new DataDB(core.unwrap(), {
+          keyEncoding: 'utf-8',
+          valueEncoding: 'binary',
+          extension: false,
+        }),
+      unwrap: true,
+      eagerUpdate: true,
+      async apply(datadb, operations) {
+        // Process incoming operations
+        const db = datadb.batch({ update: false })
 
+        // failsafe in case protocol crashes
+        const failsafe = setTimeout(async function () {
+          await db.flush()
+        }, 15000)
+
+        const DataAPI = await self.getDataAPI(db)
+        for (const { value } of operations) {
+          const o = decodeCoreData(value)
+          const op = new Operation(o)
+          await self.protocol(
+            op,
+            // Data API
+            DataAPI
+          )
+        }
+
+        // Update Dataviewer
+        await db.flush()
+
+        clearTimeout(failsafe)
+      },
+    })
+    self.datadb = self.dataviewer.view
+  }
   async _updatePartitions(this: CoreClass) {
     await this.dataviewer.view.update()
     await this.metaviewer.view.update()
@@ -528,328 +431,85 @@ class CoreClass {
     }
   }
 
-  async _updatePeerCache(this: CoreClass) {
-    const peers_val = await this.metadb.get('peers')
-    const trusted_peers_val = await this.metadb.get('trusted_peers')
-    if (peers_val?.value) {
-      this.peers_cache.peers = decodeCoreData(peers_val.value)
-    } else this.peers_cache.peers = {}
-    if (trusted_peers_val?.value) {
-      this.peers_cache.trusted_peers = decodeCoreData(trusted_peers_val.value)
-    } else this.peers_cache.trusted_peers = {}
+  async _updateUserCache(this: CoreClass) {
+    const users_val = await this.metadb.get('users')
+    const trusted_users_val = await this.metadb.get('trusted_users')
+    if (users_val?.value) {
+      this.users_cache.users = decodeCoreData(users_val.value)
+    } else this.users_cache.users = {}
+    if (trusted_users_val?.value) {
+      this.users_cache.trusted_users = decodeCoreData(trusted_users_val.value)
+    } else this.users_cache.trusted_users = {}
   }
 
-  async _changePeerStatus(
+  async _changeUserStatus(
     this: CoreClass,
     opts: {
       key: string
-      type?: 'peer' | 'trusted_peer'
+      type?: 'user' | 'trusted_user'
       partition: 'data' | 'meta'
       status: 'active' | 'frozen' | 'destroyed'
     }
   ) {
-    const { key, status, type = 'peer', partition } = opts
-    const peers = this.peers_cache[type + 's']
-    if (peers[key]) {
-      peers[key].status = status
+    const { key, status, type = 'user', partition } = opts
+    const users = this.users_cache[type + 's']
+    if (users[key]) {
+      users[key].status = status
     } else {
-      peers[key] = {
+      users[key] = {
         status,
         type,
         partition,
       }
     }
-    // await this.metadb.put(type + 's', encodeCoreData(peers))
-    this.peers_cache[type + 's'] = peers
+    // await this.metadb.put(type + 's', encodeCoreData(users))
+    this.users_cache[type + 's'] = users
     await this.metaprotocol({
       type: 'set',
       key: type + 's',
-      value: peers,
+      value: users,
     })
   }
 
-  async addKnownPeers(this: CoreClass, params: { partition: 'data' | 'meta' }) {
-    // If known peers exists, add them
-    const peers = this.peers_cache.peers
-    emit({
-      ch: 'network',
-      msg: `Adding ${
-        Object.keys(peers).filter((p) => peers[p].partition === params.partition).length
-      } known peers for ${params.partition} partition`,
-    })
-    for (const key in peers) {
-      if (
-        peers[key]?.partition === params.partition &&
-        key !== this.writer_key &&
-        key !== this.meta_key
-      ) {
-        if (peers[key].status === 'active' || peers[key].status === 'frozen') {
-          await this.addPeer({
-            key,
-            skip_status_change: true,
-            partition: peers[key].partition,
-          })
-        }
+  connect = connect
+  addKnownUsers = addKnownUsers
+  addUser = addUser
+  removeUser = removeUser
+  addTrustedUser = addTrustedUser
+  removeTrustedUser = removeTrustedUser
+}
 
-        if (peers[key].status === 'frozen') {
-          // replace core with snapshot
-          // NOTE: we are sort of trusting that core hasn't updated and eager isn't on
-          switch (peers[key].partition) {
-            case 'data':
-              const dataviewer_i = this.dataviewer.inputs.findIndex((core) =>
-                b4a.equals(core.key, key)
-              )
-              if (dataviewer_i >= 0) {
-                const snapshot = this.dataviewer.inputs[dataviewer_i].snapshot()
-                await snapshot.ready()
-                this.dataviewer._inputsByKey.set(key, snapshot)
-              } else {
-                return emit({ ch: 'error', msg: `couldn't snapshot dataviewer core ${key}` })
-              }
-              break
-            case 'meta':
-              const metaviewer_i = this.metaviewer.inputs.findIndex((core) =>
-                b4a.equals(core.key, key)
-              )
-              if (metaviewer_i >= 0) {
-                const snapshot = this.metaviewer.inputs[metaviewer_i].snapshot()
-                await snapshot.ready()
-                this.metaviewer._inputsByKey.set(key, snapshot)
-              } else {
-                return emit({ ch: 'error', msg: `couldn't snapshot metaviewer core ${key}` })
-              }
-              break
-            default:
-              error('unknown partition')
-              break
-          }
-        }
-      } else {
-        // console.log(peers.length)
-      }
-    }
-
-    // Add trusted peers (pre-computed views)
-    const trusted_peers = this.peers_cache.trusted_peers
-
-    for (const key in trusted_peers) {
-      if (key !== this.writer_key) {
-        if (trusted_peers[key].status === 'active' || trusted_peers[key].status === 'frozen') {
-          await this.addTrustedPeer({
-            key,
-            skip_status_change: true,
-            partition: trusted_peers[key].partition,
-          })
-        }
-
-        if (trusted_peers[key].status === 'frozen') {
-          // replace core with snapshot
-          // NOTE: we are sort of trusting that core hasn't updated and eager isn't on
-          const dataviewer_i = this.dataviewer.outputs.findIndex((core) =>
-            b4a.equals(core.key, key)
-          )
-          const metaviewer_i = this.metaviewer.outputs.findIndex((core) =>
-            b4a.equals(core.key, key)
-          )
-
-          if (dataviewer_i >= 0) {
-            const snapshot = this.dataviewer.outputs[dataviewer_i].snapshot()
-            await snapshot.ready()
-            this.dataviewer._outputsByKey.set(key, snapshot)
-          } else {
-            return emit({ ch: 'error', msg: `couldn't dataviewer snapshot core ${key}` })
-          }
-
-          if (metaviewer_i >= 0) {
-            const snapshot = this.metaviewer.outputs[metaviewer_i].snapshot()
-            await snapshot.ready()
-            this.metaviewer._outputsByKey.set(key, snapshot)
-          } else {
-            return emit({ ch: 'error', msg: `couldn't metaviewer snapshot core ${key}` })
-          }
-        }
-      }
-    }
+async function checkExistingInstance(config) {
+  if (typeof window === 'object' && localStorage.getItem(config.address)) {
+    if (
+      confirm(
+        `Detected potentially another instance of this app running.\n\nPlease close the instance and click ok.\n\nIf this is wrong, click cancel. Beware, running two instances in same browser can result to corrupt data.`
+      )
+    )
+      await checkExistingInstance(config)
+    else localStorage.removeItem(config.address)
   }
+}
 
-  async addPeer(
-    this: CoreClass,
-    opts: { key: string; partition: 'data' | 'meta'; skip_status_change?: boolean }
-  ) {
-    const { key, partition } = opts
-    emit({
-      ch: 'network',
-      msg: `Trying to add peer ${partition}/${key} to ${this.connection_id || 'n/a'}`,
-      verbose: true,
-    })
-
-    if (key === (await this.writer_key) || key === (await this.meta_key)) return null
-    const dataviewer_keys = this.dataviewer.inputs.map((core) => buf2hex(core.key))
-    const metaviewer_keys = this.metaviewer.inputs.map((core) => buf2hex(core.key))
-
-    if (dataviewer_keys.indexOf(key) != -1) return
-    if (metaviewer_keys.indexOf(key) != -1) return
-    if (!opts.skip_status_change)
-      await this._changePeerStatus({
-        key,
-        status: 'active',
-        type: 'peer',
-        partition: opts.partition,
-      })
-    const k = b4a.from(key, 'hex')
-    const c = await this.datamanager.get({
-      key: k,
-      publicKey: k,
-      encryptionKey: this.encryption_key,
-    })
-    await c.ready()
-    switch (partition) {
-      case 'data':
-        setTimeout(async () => {
-          await this.dataviewer.addInput(c)
-        }, 100)
-        break
-      case 'meta':
-        setTimeout(async () => {
-          await this.metaviewer.addInput(c)
-        }, 100)
-        break
-      default:
-        return error('partition not specified')
-    }
-    await this._updatePartitions()
-    emit({
-      ch: 'network',
-      msg: `Added peer ${partition}/${key} to ${this.connection_id || 'n/a'}`,
-      verbose: true,
-    })
-  }
-
-  async removePeer(
-    this: CoreClass,
-    opts: { key: string; partition: 'data' | 'meta'; destroy?: boolean }
-  ) {
-    const { key, destroy, partition } = opts
-    const k = b4a.from(key, 'hex')
-    if (destroy) {
-      const c = this.datamanager.get({ key: k, publicKey: k, encryptionKey: this.encryption_key })
-      switch (partition) {
-        case 'data':
-          this.dataviewer.removeInput(c)
-          break
-        case 'meta':
-          this.metaviewer.removeInput(c)
-          break
-        default:
-          return error('partition not specified')
-      }
-    } else {
-      // replace core with snapshot
-      const core_i = this.dataviewer.inputs.findIndex((core) => b4a.equals(core.key, k))
-
-      if (core_i >= 0) {
-        const snapshot = this.dataviewer.inputs[core_i].snapshot()
-        await snapshot.ready()
-        this.dataviewer._inputsByKey.set(key, snapshot)
-      } else {
-        return emit({ ch: 'error', msg: `couldn't snapshot core ${key}` })
-      }
-    }
-    // mark core as frozen or destroyed in the metadb
-    await this._changePeerStatus({ key, status: destroy ? 'destroyed' : 'frozen', partition })
-
-    emit({
-      ch: 'network',
-      msg: `removed peer ${partition}/${key} from ${this.connection_id || 'n/a'}`,
-    })
-  }
-
-  async addTrustedPeer(
-    this: CoreClass,
-    opts: { key: string; partition: 'data' | 'meta'; skip_status_change?: boolean }
-  ) {
-    const { key, partition } = opts
-    if (key === (await this.index_key)) return null
-    if (!opts.skip_status_change)
-      await this._changePeerStatus({ key, status: 'active', type: 'trusted_peer', partition })
-
-    const k = b4a.from(key, 'hex')
-    const c = this.datamanager.get({
-      key: k,
-      publicKey: k,
-      encryptionKey: this.encryption_key,
-    })
-    switch (partition) {
-      case 'data':
-        this.dataviewer.addOutput(c)
-        break
-      case 'meta':
-        this.metaviewer.addOutput(c)
-      default:
-        return error('unknown protocol')
-    }
-    emit({
-      ch: 'network',
-      msg: `added trusted peer ${partition}/${key} to ${this.connection_id || 'n/a'}`,
-    })
-  }
-
-  async removeTrustedPeer(
-    this: CoreClass,
-    opts: { key: string; partition: 'data' | 'meta'; destroy?: boolean }
-  ) {
-    const { key, destroy, partition } = opts
-    if (key === (await this.index_key)) return null
-    const k = b4a.from(key, 'hex')
-    if (destroy) {
-      // remove core from outputs (destroy history as well)
-      const c = this.datamanager.get({ key: k, publicKey: k, encryptionKey: this.encryption_key })
-      switch (partition) {
-        case 'data':
-          this.dataviewer.removeOutput(c)
-          break
-        case 'meta':
-          this.metaviewer.removeOutput(c)
-          break
-        default:
-          return error('unknown protocol')
-      }
-    } else {
-      // replace core with snapshot
-      switch (partition) {
-        case 'data':
-          const dataviewer_i = this.dataviewer.outputs.findIndex((core) => b4a.equals(core.key, k))
-
-          if (dataviewer_i >= 0) {
-            const snapshot = this.dataviewer.outputs[dataviewer_i].snapshot()
-            await snapshot.ready()
-            this.dataviewer._outputsByKey.set(key, snapshot)
-            // mark core as frozen in the metadb
-          } else {
-            return emit({ ch: 'error', msg: `couldn't snapshot core ${key}` })
-          }
-          break
-        case 'meta':
-          const metaviewer_i = this.metaviewer.outputs.findIndex((core) => b4a.equals(core.key, k))
-
-          if (metaviewer_i >= 0) {
-            const snapshot = this.metaviewer.outputs[metaviewer_i].snapshot()
-            await snapshot.ready()
-            this.metaviewer._outputsByKey.set(key, snapshot)
-            // mark core as frozen in the metadb
-          } else {
-            return emit({ ch: 'error', msg: `couldn't snapshot core ${partition}/${key}` })
-          }
-          break
-        default:
-          return error('unknown protocol')
-      }
-    }
-    await this._changePeerStatus({ key, status: destroy ? 'destroyed' : 'frozen', partition })
-
-    emit({
-      ch: 'network',
-      msg: `removed trusted peer ${partition}/${key} from ${this.connection_id || 'n/a'}`,
+function enableGracefulExit(C, config) {
+  // for faster restarts
+  if (typeof window === 'object') {
+    window.addEventListener(
+      'beforeunload',
+      async () => {
+        emit({
+          ch: 'network',
+          msg: 'beforeunload event received, cleaning up...',
+        })
+        localStorage.removeItem(config.address)
+        await C.network.destroy()
+      },
+      { capture: true }
+    )
+  } else if (typeof global === 'object') {
+    process.once('SIGINT', async () => {
+      emit({ ch: 'network', msg: 'SIGINT event received, cleaning up...' })
+      await C.network.destroy()
     })
   }
 }
@@ -860,40 +520,44 @@ async function Core(params: {
 }): Promise<any> {
   const { config } = params
 
+  // Make sure there's no other instance running on the same VM because that causes corruption in IndexedDB
+  await checkExistingInstance(config)
+
   // Create new Core
   const C = new CoreClass(config)
 
+  enableGracefulExit(C, config)
+
   // Run init function
   await C.init()
+  if (typeof window === 'object')
+    localStorage.setItem(config.address, new Date().getTime().toString())
 
   // Create default API for Core
   const API: any = {
-    on: async (id, cb) => () => subscribeToEvent({ id, cb }),
-    listenLog: async (ch, cb) => () => subscribeToChannel({ ch, cb }),
-    connect: async (opts: { local_only: { initiator: boolean } }) => C.connect(opts),
-    disconnect: async () => C.disconnect(),
-    getKeys: async () => C.getKeys(),
-    addPeer: async (opts) => C.addPeer(opts),
-    removePeer: async (opts) => C.removePeer(opts),
-    addTrustedPeer: async (opts) => C.addTrustedPeer(opts),
-    removeTrustedPeer: async (opts) => C.removeTrustedPeer(opts),
-    getWriterKey: () => C.writer_key,
-    getIndexKey: () => C.index_key,
-    getConnectionId: () => C.connection_id,
-    metadb: C.metadb,
-    getNetwork: () => C.network,
-    getAppVersion: async () => {
-      const manifest = await API['_getMeta']("manifest")
-      if(!manifest) return error("no manifest found")
-      return manifest?.version
+    users: {
+      addUser: async (opts) => C.addUser(opts),
+      removeUser: async (opts) => C.removeUser(opts),
+      addTrustedUser: async (opts) => C.addTrustedUser(opts),
+      removeTrustedUser: async (opts) => C.removeTrustedUser(opts),
+    },
+    meta: {
+      getAppVersion: async () => {
+        const manifest = await API.meta['_getMeta']('manifest')
+        if (!manifest) return error('no manifest found')
+        return manifest?.version
+      },
+      getKeys: async () => C.getKeys(),
+    },
+    network: {
+      getConnectionId: () => C.connection_id,
+      getNetwork: () => C.network,
+      connect: async (opts: { local_only: { initiator: boolean } }) => C.connect(opts),
+      disconnect: async () => C.disconnect(),
     },
     _: {
-      // Sort of private functions for debugging, maybe remove these in the future?
-      getWriter: () => C.writer,
-      getIndex: () => C.index,
-      getManager: () => C.datamanager,
-      getViewer: () => C.dataviewer,
-      getViewerView: () => C.dataviewer.view,
+      on: async (id, cb) => () => subscribeToEvent({ id, cb }),
+      listenLog: async (ch, cb) => () => subscribeToChannel({ ch, cb }),
     },
   }
 
@@ -901,8 +565,17 @@ async function Core(params: {
   const protocolBridge = async function (viewer) {
     // Bridge receives operation from API
     return async function (op) {
-      if(op?.value?._meta?.unsigned) throw new Error('unsigned data detected')
-
+      let unsigned = false
+      Object.keys(op).forEach((k) => {
+        // if item has _meta, we need to flatten it
+        if (op[k]?._meta) {
+          if (op[k]?._meta?.unsigned) unsigned = true
+          op[k] = op[k].flatten()
+        }
+      })
+      if (unsigned) {
+        return error('unsigned data detected in API')
+      }
       const o = new Operation(op) // validate the op
       const op_buf = encodeCoreData(op)
       // Add operation to data viewer
@@ -915,47 +588,85 @@ async function Core(params: {
   // Initializes app's API & protocol
   // Feeds arguments to API(Data, Protocol) in apps
   async function appInit(API, Protocol) {
-    return API(
-      {
-        get: async (key: string) => {
+    const bAPI = {
+      onAdd: async (cb) => {
+        let last_length = 0
+        const timer = setInterval(function () {
+          if (last_length < C.dataviewer.localOutput.length) {
+            cb(C.dataviewer.localOutput.length)
+            last_length = C.dataviewer.localOutput.length
+          }
+        }, 10)
+        return function stopListening() {
+          clearInterval(timer)
+        }
+      },
+      get: async (key: string) => {
+        try {
           const data = await C.datadb.get(key)
           if (!data) return null
           return decodeCoreData(data.value)
-        },
-        query: async function (params: {
-          gte: string
-          lte: string
-          limit?: number
-          stream?: boolean
-          reverse?: boolean
-          include_meta?: boolean
-        }) {
-          if (!params?.limit) params.limit = 100
-          const stream = C.datadb.createReadStream(params)
-          if (params?.stream) return stream
-          return new Promise((resolve, reject) => {
-            const bundle: object[] = []
-            stream.on('data', (data) => {
-              const val = decodeCoreData(data.value)
-              if (params.include_meta) {
-                bundle.push({ value: val, i: data.seq, key: data.key })
-              } else bundle.push(val)
-            })
-            stream.on('end', () => {
-              resolve(bundle)
-            })
-          })
-        },
+        } catch (error) {
+          return null
+        }
       },
-      Protocol
-    )
+      getAll: async (params?: { model: any }) => {
+        const raw_items = await bAPI.query({ lt: '~', include_meta: true })
+        let items
+        if (typeof params?.model === 'function') {
+          // Apply model to each
+          items = await Promise.all(
+            raw_items
+              .map((item) => {
+                if (!item.key.match(/^_/)) {
+                  try {
+                    return params.model(item.value)
+                  } catch (error) {
+                    console.log('invalid data', item, error)
+                  }
+                }
+              })
+              .filter((i) => i)
+          )
+        } else items = raw_items
+        return items
+      },
+      query: async function (params: {
+        gte?: string
+        gt?: string
+        lte?: string
+        lt?: string
+        limit?: number
+        stream?: boolean
+        reverse?: boolean
+        include_meta?: boolean
+      }) {
+        if (!params?.limit) params.limit = 100
+        const stream = C.datadb.createReadStream(params)
+        if (params?.stream) return stream
+        return new Promise((resolve, reject) => {
+          const bundle: object[] = []
+          stream.on('data', (data) => {
+            const val = decodeCoreData(data.value)
+            if (params.include_meta) {
+              bundle.push({ value: val, i: data.seq, key: data.key })
+            } else bundle.push(val)
+          })
+          stream.on('end', () => {
+            resolve(bundle)
+          })
+        })
+      },
+    }
+    return API(bAPI, Protocol)
   }
 
   // Extends container's default API with app's API methods
   async function injectAppAPI(appAPI) {
+    const reserved_words = ['users', 'meta', 'network', '_']
     for (const method in appAPI) {
       // Add methods from appAPI, unless prefixed with _ marking it private
-      if (method.charAt(0) !== '_') {
+      if (method.charAt(0) !== '_' && reserved_words.indexOf(method) === -1) {
         API[method] = async function (...args: any[]) {
           return appAPI[method](...args)
         }
@@ -967,25 +678,31 @@ async function Core(params: {
   C.metaprotocol = await protocolBridge(C.metaviewer)
 
   // Quick & dirty key/value app for meta partition
-  API['_getMeta'] = async (key: string) => {
+  API.meta['_getMeta'] = async (key: string) => {
     const data = await C.metadb.get(key)
     if (!data) return null
     return decodeCoreData(data.value)
   }
-  API['_allMeta'] = async () => {
+  API.meta['_allMeta'] = async () => {
     const data = await C.metadb.query({ lt: '~' })
     if (!data) return null
     return decodeCoreData(data)
   }
-  API['_setMeta'] = async (params: { key: string; value: string }) => {
+  API.meta['_setMeta'] = async (params: { key: string; value: string }) => {
     await C.metaprotocol({
       type: 'set',
       key: params.key,
       value: params.value,
     })
   }
-  // Add known peers to meta partition
-  await C.addKnownPeers({ partition: 'meta' })
+  // Add known users to meta partition
+  await C.addKnownUsers({ partition: 'meta' })
+
+  // For browser UI
+  let logUI
+  if (typeof window === 'object' && typeof window['appendMsgToUI'] === 'function') {
+    logUI = window['appendMsgToUI']
+  }
 
   // Return a promise while we try to get the container code
   return new Promise(async (resolve, reject) => {
@@ -996,24 +713,35 @@ async function Core(params: {
         C.protocol = Protocol
         // Init the app code and create protocol bridge to data partition
         const app = await appInit(appAPI, await protocolBridge(C.dataviewer))
+
         // Inject App API to container's default API
         await injectAppAPI(app)
-        // Add known peers for data partition
-        await C.addKnownPeers({ partition: 'data' })
-        // If we haven't connected to backbone:// yet, do it now
-        if (!(await API.getNetwork()))
-          await C.connect(
-            params?.config?.connect?.local_only
-              ? { local_only: params?.config?.connect?.local_only }
-              : {}
-          )
+        // Add known users for data partition
+        await C.addKnownUsers({ partition: 'data' })
 
-        emit({ ch: 'core', msg: `Container initialized successfully` })
+        await C.startDataViewer()
+        // Render UI if one is found
         if (typeof window === 'object' && UI) {
+          if (logUI) logUI('Rendering user interface...')
           API.UI = Function(UI + ';return app')()
         }
+
+        emit({ ch: 'core', msg: `Container initialized successfully` })
+        if (logUI) logUI('Container initialized')
+
+        // If we haven't connected to backbone:// yet, do it now
+        if (!(await API.network.getNetwork()))
+          setTimeout(function () {
+            C.connect(
+              params?.config?.connect?.local_only
+                ? { local_only: params?.config?.connect?.local_only }
+                : {}
+            )
+          }, 1000)
+
         resolve(API)
       }
+
       if (params.app?.Protocol && params.app?.API) {
         // Meant mostly for testing purposes
         emit({ ch: 'core', msg: `App provided as argument, loading...` })
@@ -1024,20 +752,38 @@ async function Core(params: {
             'Private mode is on, but no code was found. Please start core with app when using private mode.'
           )
         emit({ ch: 'core', msg: `Loading app...` })
-        // Check if we have already downloaded the code
-        const code = await API['_getMeta']('code')
+        if (logUI) logUI('Loading app...')
 
-        if (code?.app) {
+        // Check if we have already downloaded the code (only works on browsers for now)
+        let cached_code
+        if (appsCache && !bypassCache) {
+          cached_code = await get(`${config.address}/code`, appsCache)
+          if (cached_code) cached_code = await unpack(cached_code)
+          let cached_manifest = await get(`${config.address}/manifest`, appsCache)
+          if (cached_manifest) cached_manifest = await unpack(cached_manifest)
+        }
+
+        if (cached_code?.app) {
           // Code was found locally, so let's try to eval it
-          const app = Function(code.app + ';return app')()
-          if (!app.Protocol) return reject('app loading failed')
+          const app = Function(cached_code.app + ';return app')()
+          if (!app.Protocol) {
+            let err = 'Error in executing the app code'
+            // browser specific
+            if (logUI) logUI(err)
+            if (typeof window['reset']) window['reset']()
+
+            return reject(err)
+          }
 
           // All good, so start container with the eval'ed app and add UI to API
-          await startCore(app.Protocol, app.API, code?.ui)
+          await startCore(app.Protocol, app.API, cached_code?.ui)
         } else {
-          // Code was not found locally, so we need to connect to peers and get the code...
-          emit({ ch: 'core', msg: `No code found, querying peers for code, standby...` })
-          await API.connect(
+          // Code was not found locally, so we need to connect to users and get the code...
+          let msg = `No code found, querying users for code, standby...`
+          emit({ ch: 'core', msg })
+          if (logUI) logUI(msg)
+
+          await API.network.connect(
             params?.config?.connect?.local_only
               ? { local_only: params?.config?.connect?.local_only }
               : {}
@@ -1045,38 +791,96 @@ async function Core(params: {
 
           // 60sec timeout sounds reasonable for most network conditions
           let timeout = 60
+          let loading_code = false
           const interval = setInterval(async () => {
-            // Get the container's network and see if we have peers connected
-            const n = await API.getNetwork()
+            // Get the container's network and see if we have users connected
+            const n = await API.network.getNetwork()
             if (n._peers.size > 0) {
-              // Peers found, so try to download the code
-              emit({ ch: 'network', msg: `Got peers, loading code...` })
-              const code = await API['_getMeta']('code')
-              if (code?.app) {
-                // Code found, so clean up and try to eval it
-                clearInterval(interval)
+              // users found, so try to download the code
+              if (!loading_code) {
+                loading_code = true
 
-                // Verify security
-                if (code.signature === '!!!DEV!!!') {
-                  alert('APP STARTED IN DEV MODE\nWARNING: SECURITY DISABLED')
+                let msg = `Found other users, searching for app code...`
+                emit({ ch: 'network', msg })
+                if (logUI) logUI(msg)
+
+                const code = await API.meta['_getMeta']('code')
+                if (code?.app) {
+                  // Code found, so clean up and try to eval it
+                  clearInterval(interval)
+
+                  // Verify security
+                  if (code.signature === '!!!DEV!!!') {
+                    log('APP STARTED IN DEV MODE\nWARNING: SECURITY DISABLED')
+                  } else {
+                    // verify
+                  }
+
+                  const manifest = await API.meta['_getMeta']('manifest')
+                  if (!manifest) {
+                    let err = 'No manifest found, invalid container'
+                    if (logUI) logUI(err)
+                    if (typeof window === 'object' && typeof window['reset'] === 'function')
+                      window['reset']()
+                    return error(err)
+                  }
+                  if (appsCache) {
+                    await set(`${config.address}/code`, pack(code), appsCache)
+                    await set(`${config.address}/manifest`, pack(manifest), appsCache)
+                  }
+
+                  if (typeof window === 'object') {
+                    emit({ ch: 'core', msg: `Executing in browser environment...` })
+
+                    const app_script = document.getElementById('app')
+                    if (app_script) {
+                      app_script.innerHTML = code.app
+                      let timeout_timer
+                      const app_loader_timer = setInterval(async function () {
+                        if (window['app']?.Protocol && window['app']?.API) {
+                          clearInterval(app_loader_timer)
+                          clearTimeout(timeout_timer)
+                          await startCore(window['app'].Protocol, window['app'].API, code?.ui)
+                        }
+                      }, 5)
+
+                      // just in case
+                      timeout_timer = setTimeout(function () {
+                        clearInterval(app_loader_timer)
+                        let err = 'Unknown error in executing the app'
+                        if (logUI) logUI(err)
+                        if (typeof window['reset']) window['reset']()
+                        return error(err)
+                      }, 10000)
+                    } else {
+                      let err = 'Executing in browser but no app script element found'
+                      if (logUI) logUI(err)
+                      if (typeof window['reset']) window['reset']()
+                      return error(err)
+                    }
+                  } else {
+                    emit({ ch: 'core', msg: `Executing in NodeJS environment...` })
+                    const app = Function(code.app + ';return app')()
+                    if (!app.Protocol) return reject('app loading failed')
+                    // All good, so start container with the eval'ed app
+                    await startCore(app.Protocol, app.API, code?.ui)
+                  }
                 } else {
-                  // verify
+                  loading_code = false
+                  let msg = `No code found yet, searching more...`
+                  emit({ ch: 'core', msg })
+                  if (logUI) logUI(msg)
                 }
-
-                const app = Function(code.app + ';return app')()
-                if (!app.Protocol) return reject('app loading failed')
-
-                // All good, so start container with the eval'ed app
-                await startCore(app.Protocol, app.API, code?.ui)
-              } else {
-                emit({ ch: 'core', msg: `No code found, trying again...` })
               }
             }
             timeout--
             // Timeout hit, so clean up and stop trying :(
             if (timeout <= 0 && !params?.config?.disable_timeout) {
               clearInterval(interval)
-              return reject('no peers found')
+              let err = 'No other users found with code, are you sure the address is right?'
+              if (logUI) logUI(err)
+              if (typeof window['reset']) window['reset']()
+              return reject(err)
             }
           }, 5000)
         }

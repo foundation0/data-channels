@@ -4,16 +4,21 @@ import AppendOnly from './append_only'
 import OwnerOnly from './owner_only'
 import Operation from './operation'
 import Binary from './binary'
+import { error } from '../common'
 
 function create(
-  data: Object | String,
+  model: Object | String,
   opts?: {
     disable_owneronly?: boolean
     _debug?: { app_version: string; meta?: { signature: string; id: string } }
   },
   migrations?,
 ) {
-  return Base.apply(null, arguments)
+  return async (data) => {
+    const m = await Base(model, opts, migrations)
+    if(typeof m === 'function') return m(data)
+    else return error('error in creating data model')
+  }
 }
 
 export default create

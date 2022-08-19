@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 import sodium from 'sodium-javascript'
-import {  decodeCoreData, encodeCoreData, getRandomInt } from '.'
+import {  decodeCoreData, encodeCoreData, error, getRandomInt } from '.'
 import { Id } from './interfaces'
 import b4a from 'b4a'
 const Buffer = b4a
@@ -21,6 +21,7 @@ export function randomStr(len: number = 32) {
 
 export function encrypt(params: { key: string, data: string | Buffer | object }) {
   let d = encodeCoreData(params.data)
+  if(!d) return error('encrypt needs data')
 
   const secret = Buffer.from(sha256(params.key), 'hex').slice(0, 32)
   const nonce = Buffer.alloc(sodium.crypto_secretbox_NONCEBYTES)

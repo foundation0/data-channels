@@ -6,35 +6,50 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const data_manager_1 = __importDefault(require("@backbonedao/data-manager"));
 const data_viewer_1 = __importDefault(require("@backbonedao/data-viewer"));
 const data_db_1 = __importDefault(require("@backbonedao/data-db"));
-const network_node_1 = __importDefault(require("@backbonedao/network-node"));
 const common_1 = require("../common");
 const bbconfig_1 = __importDefault(require("../bbconfig"));
 const b4a_1 = __importDefault(require("b4a"));
 const crypto_1 = require("@backbonedao/crypto");
 const models_1 = require("../models");
-const get_storage_1 = __importDefault(require("./get_storage"));
+const storage_1 = __importDefault(require("./storage"));
+const users_1 = require("../network/users");
+const network_1 = require("../network");
+const idb_keyval_1 = require("idb-keyval");
+const msgpackr_1 = require("msgpackr");
+let appsCache;
+let bypassCache = false;
+if (typeof window === 'object') {
+    appsCache = idb_keyval_1.createStore('apps-cache', 'backbone');
+    if (localStorage.getItem('DEV'))
+        bypassCache = true;
+}
 const CORES = {};
 class CoreClass {
     constructor(config, protocol) {
-        this.connected_peers = 0;
-        this.peers_cache = { peers: {}, trusted_peers: {} };
+        this.connected_users = 0;
+        this.users_cache = { users: {}, trusted_users: {} };
+        this.connect = network_1.connect;
+        this.addKnownUsers = users_1.addKnownUsers;
+        this.addUser = users_1.addUser;
+        this.removeUser = users_1.removeUser;
+        this.addTrustedUser = users_1.addTrustedUser;
+        this.removeTrustedUser = users_1.removeTrustedUser;
         this.config = {
             network: {
                 bootstrap: bbconfig_1.default.network.bootstrap_servers,
                 simplePeer: {
                     config: {
-                        iceServers: [
-                            {
-                                urls: bbconfig_1.default.network.stunturn_servers,
-                            },
-                        ],
+                        iceServers: bbconfig_1.default.network.stunturn_servers(),
                     },
+                    sdpSemantics: 'unified-plan',
+                    bundlePolicy: 'max-bundle',
+                    iceCandidatePoolsize: 1,
                 },
             },
             ...config,
         };
         this.protocol = protocol || async function () { };
-        const { storage, storage_id } = get_storage_1.default(config);
+        const { storage, storage_id } = storage_1.default(config);
         this.datamanager = CORES[storage_id] || new data_manager_1.default(storage);
         if (!CORES[storage_id])
             CORES[storage_id] = this.datamanager;
@@ -46,14 +61,6 @@ class CoreClass {
             this.address_hash = crypto_1.createHash(`backbone://${this.config.address}`);
         else
             this.address_hash = crypto_1.createHash(this.config.address);
-        if (!this.config.id)
-            this.mode = 'read';
-        else {
-            if (!this.config.key)
-                return common_1.error(`Core key needs to be supplied if opened in write mode`);
-            this.config.key = this.config.key + this.address_hash;
-            this.mode = 'write';
-        }
         let encryptionKey;
         if (this.config?.encryption_key !== false && typeof this.config.encryption_key === 'string') {
             encryptionKey = b4a_1.default.from(crypto_1.createHash(this.config.encryption_key), 'hex');
@@ -88,46 +95,6 @@ class CoreClass {
         this.writer_key = common_1.buf2hex(this.writer.key);
         this.index_key = common_1.buf2hex(this.index.key);
         this.meta_key = common_1.buf2hex(this.meta.key);
-        async function getDataAPI(data) {
-            return {
-                put: async (params) => {
-                    if (typeof params === 'string' || !params?.key || !params?.value)
-                        return common_1.error('INVALID PARAMS');
-                    const encoded_data = common_1.encodeCoreData(params.value);
-                    await data.put(params.key, encoded_data);
-                    const value = await data.get(params.key);
-                    if (value?.value.toString() === encoded_data.toString())
-                        return;
-                    console.log('FAIL', params.key, value, encoded_data);
-                    return common_1.error('PUT FAILED');
-                },
-                del: async (key) => {
-                    return data.del(key);
-                },
-                get: async (key) => {
-                    const dat = await data.get(key);
-                    if (!dat)
-                        return null;
-                    return common_1.decodeCoreData(dat.value);
-                },
-                query: async function (params) {
-                    if (!params?.limit)
-                        params.limit = 100;
-                    const stream = data.createReadStream(params);
-                    if (params?.stream)
-                        return stream;
-                    return new Promise((resolve, reject) => {
-                        const bundle = [];
-                        stream.on('data', (data) => {
-                            bundle.push(common_1.decodeCoreData(data.value));
-                        });
-                        stream.on('end', () => {
-                            resolve(bundle);
-                        });
-                    });
-                },
-            };
-        }
         this.metaviewer = new data_viewer_1.default({
             localInput: this.meta,
             inputs: [this.meta],
@@ -143,7 +110,7 @@ class CoreClass {
             }),
             async apply(data, operations) {
                 const dat = data.batch({ update: false });
-                const DataAPI = await getDataAPI(dat);
+                const DataAPI = await self.getDataAPI(dat);
                 for (const { value } of operations) {
                     const o = common_1.decodeCoreData(value);
                     const op = new models_1.Operation(o);
@@ -168,107 +135,66 @@ class CoreClass {
             inputs: [this.writer],
             outputs: [],
             localOutput: this.index,
-            autostart: true,
-            unwrap: true,
-            eagerUpdate: true,
-            view: (core) => new data_db_1.default(core.unwrap(), {
-                keyEncoding: 'utf-8',
-                valueEncoding: 'binary',
-                extension: false,
-            }),
-            async apply(data, operations) {
-                const dat = data.batch({ update: false });
-                const DataAPI = await getDataAPI(dat);
-                for (const { value } of operations) {
-                    const o = common_1.decodeCoreData(value);
-                    const op = new models_1.Operation(o);
-                    await self.protocol(op, DataAPI, this.mode === 'write'
-                        ? {
-                            sign: {},
-                        }
-                        : null, {
-                        get: async (key) => {
-                            const data = await self.datadb.get(key);
-                            if (!data)
-                                return null;
-                            return common_1.decodeCoreData(data.value);
-                        },
-                        query: async function (params) {
-                            if (!params?.limit)
-                                params.limit = 100;
-                            const stream = self.datadb.createReadStream(params);
-                            if (params?.stream)
-                                return stream;
-                            return new Promise((resolve, reject) => {
-                                const bundle = [];
-                                stream.on('data', (data) => {
-                                    bundle.push(common_1.decodeCoreData(data.value));
-                                });
-                                stream.on('end', () => {
-                                    resolve(bundle);
-                                });
-                            });
-                        },
-                    });
-                }
-                await dat.flush();
-            },
+            autostart: false,
         });
-        this.datadb = this.dataviewer.view;
         await this.dataviewer.ready();
         common_1.emit({ ch: 'core', msg: `Initialized Core ${this.address}` });
         const kp = crypto_1.keyPair(this.address_hash);
         const root = this.datamanager.get(b4a_1.default.from(kp.publicKey, 'hex'));
         await root.ready();
-        function _addPeer(params) {
+        function _addUser(params) {
             if (params.key !== self.writer_key && params.key !== self.meta_key) {
-                self.addPeer(params);
+                self.addUser(params);
             }
         }
-        function _addTrustedPeer(params) {
+        function _addTrustedUser(params) {
             return;
             if (params.key !== self.index_key) {
                 common_1.emit({
                     ch: 'network',
-                    msg: `Trusted peer: ${self.index_key.slice(0, 8)} got key ${params.key} from peer`,
+                    msg: `Trusted user: ${self.index_key.slice(0, 8)} got key ${params.key} from user`,
                 });
-                self.addTrustedPeer(params);
+                self.addTrustedUser(params);
             }
         }
-        const addPeersExt = root.registerExtension('key-exchange', {
+        const addPeersExtension = root.registerExtension('key-exchange', {
             encoding: 'json',
             onmessage: async (msg) => {
-                msg.data.peers.forEach((key) => {
-                    _addPeer({ key, partition: 'data' });
+                const data_users = msg?.data?.users || msg?.data?.peers;
+                data_users.forEach((key) => {
+                    _addUser({ key, partition: 'data' });
                 });
-                msg.meta.peers.forEach((key) => {
-                    _addPeer({ key, partition: 'meta' });
+                const meta_users = msg?.meta?.users || msg?.meta?.peers;
+                meta_users.forEach((key) => {
+                    _addUser({ key, partition: 'meta' });
                 });
-                msg.data.trusted_peers.forEach((key) => {
-                    _addTrustedPeer({ key, partition: 'data' });
+                const data_trusted_users = msg?.data?.trusted_users || msg?.data?.trusted_peers;
+                data_trusted_users.forEach((key) => {
+                    _addTrustedUser({ key, partition: 'data' });
                 });
-                msg.meta.trusted_peers.forEach((key) => {
-                    _addTrustedPeer({ key, partition: 'meta' });
+                const meta_trusted_users = msg?.meta?.trusted_users || msg?.meta?.trusted_peers;
+                meta_trusted_users.forEach((key) => {
+                    _addTrustedUser({ key, partition: 'meta' });
                 });
             },
         });
-        root.on('peer-add', (peer) => {
-            addPeersExt.send({
+        root.on('peer-add', (user) => {
+            addPeersExtension.send({
                 data: {
-                    peers: this.dataviewer.inputs.map((core) => common_1.buf2hex(core.key)),
-                    trusted_peers: this.dataviewer.outputs.map((core) => common_1.buf2hex(core.key)),
+                    users: this.dataviewer.inputs.map((core) => common_1.buf2hex(core.key)),
+                    trusted_users: this.dataviewer.outputs.map((core) => common_1.buf2hex(core.key)),
                 },
                 meta: {
-                    peers: this.metaviewer.inputs.map((core) => common_1.buf2hex(core.key)),
-                    trusted_peers: this.metaviewer.outputs.map((core) => common_1.buf2hex(core.key)),
+                    users: this.metaviewer.inputs.map((core) => common_1.buf2hex(core.key)),
+                    trusted_users: this.metaviewer.outputs.map((core) => common_1.buf2hex(core.key)),
                 },
-            }, peer);
+            }, user);
             common_1.emit({
                 ch: 'network',
-                msg: `${this.writer_key.slice(0, 8)} Added peer`,
+                msg: `New user detected, saying hello...`,
             });
         });
-        await this._updatePeerCache();
+        await this._updateUserCache();
         common_1.emit({
             ch: 'init',
             msg: `discovery keys:\nwriter: ${common_1.buf2hex(this.writer.discoveryKey)}\nindex: ${common_1.buf2hex(this.index.discoveryKey)}\nroot: ${common_1.buf2hex(root.discoveryKey)} \nmeta: ${common_1.buf2hex(this.meta.discoveryKey)}`,
@@ -280,77 +206,100 @@ class CoreClass {
             verbose: true,
         });
     }
-    async connect(opts) {
-        if (this.network)
-            return common_1.error('NETWORK EXISTS');
-        if (!this.config?.network)
-            return common_1.error('CONNECT NEEDS NETWORK CONFIG');
-        if (this.config.private)
-            return common_1.error('ACCESS DENIED - PRIVATE CORE');
-        const network_config = this.config.network;
-        common_1.emit({
-            ch: 'network',
-            msg: `Connect with conf: ${JSON.stringify(network_config)}`,
-        });
-        if (this.config.firewall)
-            network_config.firewall = this.config.firewall;
-        if (!this.config.network_id) {
-            this.config.network_id = crypto_1.keyPair();
-        }
-        network_config.keyPair = this.config.network_id;
-        let self = this;
-        async function connectToNetwork() {
-            try {
-                const network = network_node_1.default(network_config);
-                network.on('connection', async (socket, peer) => {
-                    common_1.emit({
-                        event: 'network.new-connection',
-                        ch: 'network',
-                        msg: `nid: ${common_1.buf2hex(self.config.network_id?.publicKey).slice(0, 8)} | address: ${common_1.buf2hex(self.address_hash).slice(0, 8)}, peers: ${network.peers.size}, conns: ${network.ws.connections.size} - new connection from ${common_1.buf2hex(peer.peer.host).slice(0, 8)}`,
-                    });
-                    const r = socket.pipe(self.datamanager.replicate(peer.client)).pipe(socket);
-                    r.on('error', (err) => {
-                        if (err.message !== 'UTP_ETIMEOUT' || err.message !== 'Duplicate connection')
-                            common_1.error(err.message);
-                    });
-                    self.connected_peers++;
+    async getDataAPI(data) {
+        const API = {
+            put: async (params) => {
+                if (typeof params === 'string' || !params?.key || !params?.value)
+                    return common_1.error('INVALID PARAMS');
+                let unsigned = false;
+                Object.keys(params).forEach((k) => {
+                    if (params[k]._meta) {
+                        if (params[k]._meta?.unsigned)
+                            unsigned = true;
+                        params[k] = params[k].flatten();
+                    }
                 });
-                common_1.emit({
-                    ch: 'network',
-                    event: 'network.connecting',
-                    msg: `Connecting to backbone://${self.address}...`,
+                if (unsigned) {
+                    await data.del(params.key);
+                    return common_1.error('unsigned data detected in protocol, discarding...');
+                }
+                const encoded_data = common_1.encodeCoreData(params.value);
+                if (!encoded_data)
+                    return common_1.error('put needs data');
+                await data.put(params.key, encoded_data);
+                const value = await data.get(params.key);
+                if (value?.value.toString() === encoded_data.toString())
+                    return;
+                console.log('FAIL', params.key, value, encoded_data);
+                return common_1.error('PUT FAILED');
+            },
+            del: async (key) => {
+                return data.del(key);
+            },
+            get: async (key) => {
+                try {
+                    const dat = await data.get(key, { update: false });
+                    if (!dat)
+                        return null;
+                    return common_1.decodeCoreData(dat.value);
+                }
+                catch (error) {
+                    return null;
+                }
+            },
+            getAll: async () => {
+                return API.query({ lt: '~' });
+            },
+            discard: async (op, reason) => {
+                await data.put('_trash', '1');
+                await data.del('_trash');
+                return common_1.error(`protocol discarded an operation ${reason ? `(${reason})` : ''}: ${JSON.stringify(op).slice(0, 200)}`);
+            },
+            query: async function (params) {
+                if (!params?.limit)
+                    params.limit = 100;
+                const stream = data.createReadStream(params);
+                if (params?.stream)
+                    return stream;
+                return new Promise((resolve, reject) => {
+                    const bundle = [];
+                    stream.on('data', (data) => {
+                        bundle.push(common_1.decodeCoreData(data.value));
+                    });
+                    stream.on('end', () => {
+                        resolve(bundle);
+                    });
                 });
-                network.join(Buffer.isBuffer(self.address_hash)
-                    ? self.address_hash
-                    : Buffer.from(self.address_hash, 'hex'));
-                await network.flush(() => { });
-                return network;
-            }
-            catch (err) {
-                common_1.error(err);
-            }
-        }
-        if (!opts?.local_only) {
-            this.network = await connectToNetwork();
-            this.connection_id = common_1.buf2hex(this.network.webrtc.id);
-            common_1.emit({
-                ch: 'network',
-                event: 'network.connected',
-                msg: `Connected to backbone://${self.address} with id ${this.connection_id}`,
-            });
-        }
-        else {
-            common_1.emit({
-                ch: 'network',
-                msg: `Using local connection`,
-            });
-            this.network = this.datamanager.replicate(opts?.local_only?.initiator, { live: true });
-        }
-        await this._updatePartitions();
-        process.once('SIGINT', () => {
-            this.network.destroy();
+            },
+        };
+        return API;
+    }
+    async startDataViewer() {
+        const self = this;
+        self.dataviewer.start({
+            view: (core) => new data_db_1.default(core.unwrap(), {
+                keyEncoding: 'utf-8',
+                valueEncoding: 'binary',
+                extension: false,
+            }),
+            unwrap: true,
+            eagerUpdate: true,
+            async apply(datadb, operations) {
+                const db = datadb.batch({ update: false });
+                const failsafe = setTimeout(async function () {
+                    await db.flush();
+                }, 15000);
+                const DataAPI = await self.getDataAPI(db);
+                for (const { value } of operations) {
+                    const o = common_1.decodeCoreData(value);
+                    const op = new models_1.Operation(o);
+                    await self.protocol(op, DataAPI);
+                }
+                await db.flush();
+                clearTimeout(failsafe);
+            },
         });
-        return this.network;
+        self.datadb = self.dataviewer.view;
     }
     async _updatePartitions() {
         await this.dataviewer.view.update();
@@ -378,322 +327,115 @@ class CoreClass {
             },
         };
     }
-    async _updatePeerCache() {
-        const peers_val = await this.metadb.get('peers');
-        const trusted_peers_val = await this.metadb.get('trusted_peers');
-        if (peers_val?.value) {
-            this.peers_cache.peers = common_1.decodeCoreData(peers_val.value);
+    async _updateUserCache() {
+        const users_val = await this.metadb.get('users');
+        const trusted_users_val = await this.metadb.get('trusted_users');
+        if (users_val?.value) {
+            this.users_cache.users = common_1.decodeCoreData(users_val.value);
         }
         else
-            this.peers_cache.peers = {};
-        if (trusted_peers_val?.value) {
-            this.peers_cache.trusted_peers = common_1.decodeCoreData(trusted_peers_val.value);
+            this.users_cache.users = {};
+        if (trusted_users_val?.value) {
+            this.users_cache.trusted_users = common_1.decodeCoreData(trusted_users_val.value);
         }
         else
-            this.peers_cache.trusted_peers = {};
+            this.users_cache.trusted_users = {};
     }
-    async _changePeerStatus(opts) {
-        const { key, status, type = 'peer', partition } = opts;
-        const peers = this.peers_cache[type + 's'];
-        if (peers[key]) {
-            peers[key].status = status;
+    async _changeUserStatus(opts) {
+        const { key, status, type = 'user', partition } = opts;
+        const users = this.users_cache[type + 's'];
+        if (users[key]) {
+            users[key].status = status;
         }
         else {
-            peers[key] = {
+            users[key] = {
                 status,
                 type,
                 partition,
             };
         }
-        this.peers_cache[type + 's'] = peers;
+        this.users_cache[type + 's'] = users;
         await this.metaprotocol({
             type: 'set',
             key: type + 's',
-            value: peers,
+            value: users,
         });
     }
-    async addKnownPeers(params) {
-        const peers = this.peers_cache.peers;
-        common_1.emit({
-            ch: 'network',
-            msg: `Adding ${Object.keys(peers).filter((p) => peers[p].partition === params.partition).length} known peers for ${params.partition} partition`,
-        });
-        for (const key in peers) {
-            if (peers[key]?.partition === params.partition &&
-                key !== this.writer_key &&
-                key !== this.meta_key) {
-                if (peers[key].status === 'active' || peers[key].status === 'frozen') {
-                    await this.addPeer({
-                        key,
-                        skip_status_change: true,
-                        partition: peers[key].partition,
-                    });
-                }
-                if (peers[key].status === 'frozen') {
-                    switch (peers[key].partition) {
-                        case 'data':
-                            const dataviewer_i = this.dataviewer.inputs.findIndex((core) => b4a_1.default.equals(core.key, key));
-                            if (dataviewer_i >= 0) {
-                                const snapshot = this.dataviewer.inputs[dataviewer_i].snapshot();
-                                await snapshot.ready();
-                                this.dataviewer._inputsByKey.set(key, snapshot);
-                            }
-                            else {
-                                return common_1.emit({ ch: 'error', msg: `couldn't snapshot dataviewer core ${key}` });
-                            }
-                            break;
-                        case 'meta':
-                            const metaviewer_i = this.metaviewer.inputs.findIndex((core) => b4a_1.default.equals(core.key, key));
-                            if (metaviewer_i >= 0) {
-                                const snapshot = this.metaviewer.inputs[metaviewer_i].snapshot();
-                                await snapshot.ready();
-                                this.metaviewer._inputsByKey.set(key, snapshot);
-                            }
-                            else {
-                                return common_1.emit({ ch: 'error', msg: `couldn't snapshot metaviewer core ${key}` });
-                            }
-                            break;
-                        default:
-                            common_1.error('unknown partition');
-                            break;
-                    }
-                }
-            }
-            else {
-            }
-        }
-        const trusted_peers = this.peers_cache.trusted_peers;
-        for (const key in trusted_peers) {
-            if (key !== this.writer_key) {
-                if (trusted_peers[key].status === 'active' || trusted_peers[key].status === 'frozen') {
-                    await this.addTrustedPeer({
-                        key,
-                        skip_status_change: true,
-                        partition: trusted_peers[key].partition,
-                    });
-                }
-                if (trusted_peers[key].status === 'frozen') {
-                    const dataviewer_i = this.dataviewer.outputs.findIndex((core) => b4a_1.default.equals(core.key, key));
-                    const metaviewer_i = this.metaviewer.outputs.findIndex((core) => b4a_1.default.equals(core.key, key));
-                    if (dataviewer_i >= 0) {
-                        const snapshot = this.dataviewer.outputs[dataviewer_i].snapshot();
-                        await snapshot.ready();
-                        this.dataviewer._outputsByKey.set(key, snapshot);
-                    }
-                    else {
-                        return common_1.emit({ ch: 'error', msg: `couldn't dataviewer snapshot core ${key}` });
-                    }
-                    if (metaviewer_i >= 0) {
-                        const snapshot = this.metaviewer.outputs[metaviewer_i].snapshot();
-                        await snapshot.ready();
-                        this.metaviewer._outputsByKey.set(key, snapshot);
-                    }
-                    else {
-                        return common_1.emit({ ch: 'error', msg: `couldn't metaviewer snapshot core ${key}` });
-                    }
-                }
-            }
-        }
+}
+async function checkExistingInstance(config) {
+    if (typeof window === 'object' && localStorage.getItem(config.address)) {
+        if (confirm(`Detected potentially another instance of this app running.\n\nPlease close the instance and click ok.\n\nIf this is wrong, click cancel. Beware, running two instances in same browser can result to corrupt data.`))
+            await checkExistingInstance(config);
+        else
+            localStorage.removeItem(config.address);
     }
-    async addPeer(opts) {
-        const { key, partition } = opts;
-        common_1.emit({
-            ch: 'network',
-            msg: `Trying to add peer ${partition}/${key} to ${this.connection_id || 'n/a'}`,
-            verbose: true,
-        });
-        if (key === (await this.writer_key) || key === (await this.meta_key))
-            return null;
-        const dataviewer_keys = this.dataviewer.inputs.map((core) => common_1.buf2hex(core.key));
-        const metaviewer_keys = this.metaviewer.inputs.map((core) => common_1.buf2hex(core.key));
-        if (dataviewer_keys.indexOf(key) != -1)
-            return;
-        if (metaviewer_keys.indexOf(key) != -1)
-            return;
-        if (!opts.skip_status_change)
-            await this._changePeerStatus({
-                key,
-                status: 'active',
-                type: 'peer',
-                partition: opts.partition,
+}
+function enableGracefulExit(C, config) {
+    if (typeof window === 'object') {
+        window.addEventListener('beforeunload', async () => {
+            common_1.emit({
+                ch: 'network',
+                msg: 'beforeunload event received, cleaning up...',
             });
-        const k = b4a_1.default.from(key, 'hex');
-        const c = await this.datamanager.get({
-            key: k,
-            publicKey: k,
-            encryptionKey: this.encryption_key,
-        });
-        await c.ready();
-        switch (partition) {
-            case 'data':
-                setTimeout(async () => {
-                    await this.dataviewer.addInput(c);
-                }, 100);
-                break;
-            case 'meta':
-                setTimeout(async () => {
-                    await this.metaviewer.addInput(c);
-                }, 100);
-                break;
-            default:
-                return common_1.error('partition not specified');
-        }
-        await this._updatePartitions();
-        common_1.emit({
-            ch: 'network',
-            msg: `Added peer ${partition}/${key} to ${this.connection_id || 'n/a'}`,
-            verbose: true,
-        });
+            localStorage.removeItem(config.address);
+            await C.network.destroy();
+        }, { capture: true });
     }
-    async removePeer(opts) {
-        const { key, destroy, partition } = opts;
-        const k = b4a_1.default.from(key, 'hex');
-        if (destroy) {
-            const c = this.datamanager.get({ key: k, publicKey: k, encryptionKey: this.encryption_key });
-            switch (partition) {
-                case 'data':
-                    this.dataviewer.removeInput(c);
-                    break;
-                case 'meta':
-                    this.metaviewer.removeInput(c);
-                    break;
-                default:
-                    return common_1.error('partition not specified');
-            }
-        }
-        else {
-            const core_i = this.dataviewer.inputs.findIndex((core) => b4a_1.default.equals(core.key, k));
-            if (core_i >= 0) {
-                const snapshot = this.dataviewer.inputs[core_i].snapshot();
-                await snapshot.ready();
-                this.dataviewer._inputsByKey.set(key, snapshot);
-            }
-            else {
-                return common_1.emit({ ch: 'error', msg: `couldn't snapshot core ${key}` });
-            }
-        }
-        await this._changePeerStatus({ key, status: destroy ? 'destroyed' : 'frozen', partition });
-        common_1.emit({
-            ch: 'network',
-            msg: `removed peer ${partition}/${key} from ${this.connection_id || 'n/a'}`,
-        });
-    }
-    async addTrustedPeer(opts) {
-        const { key, partition } = opts;
-        if (key === (await this.index_key))
-            return null;
-        if (!opts.skip_status_change)
-            await this._changePeerStatus({ key, status: 'active', type: 'trusted_peer', partition });
-        const k = b4a_1.default.from(key, 'hex');
-        const c = this.datamanager.get({
-            key: k,
-            publicKey: k,
-            encryptionKey: this.encryption_key,
-        });
-        switch (partition) {
-            case 'data':
-                this.dataviewer.addOutput(c);
-                break;
-            case 'meta':
-                this.metaviewer.addOutput(c);
-            default:
-                return common_1.error('unknown protocol');
-        }
-        common_1.emit({
-            ch: 'network',
-            msg: `added trusted peer ${partition}/${key} to ${this.connection_id || 'n/a'}`,
-        });
-    }
-    async removeTrustedPeer(opts) {
-        const { key, destroy, partition } = opts;
-        if (key === (await this.index_key))
-            return null;
-        const k = b4a_1.default.from(key, 'hex');
-        if (destroy) {
-            const c = this.datamanager.get({ key: k, publicKey: k, encryptionKey: this.encryption_key });
-            switch (partition) {
-                case 'data':
-                    this.dataviewer.removeOutput(c);
-                    break;
-                case 'meta':
-                    this.metaviewer.removeOutput(c);
-                    break;
-                default:
-                    return common_1.error('unknown protocol');
-            }
-        }
-        else {
-            switch (partition) {
-                case 'data':
-                    const dataviewer_i = this.dataviewer.outputs.findIndex((core) => b4a_1.default.equals(core.key, k));
-                    if (dataviewer_i >= 0) {
-                        const snapshot = this.dataviewer.outputs[dataviewer_i].snapshot();
-                        await snapshot.ready();
-                        this.dataviewer._outputsByKey.set(key, snapshot);
-                    }
-                    else {
-                        return common_1.emit({ ch: 'error', msg: `couldn't snapshot core ${key}` });
-                    }
-                    break;
-                case 'meta':
-                    const metaviewer_i = this.metaviewer.outputs.findIndex((core) => b4a_1.default.equals(core.key, k));
-                    if (metaviewer_i >= 0) {
-                        const snapshot = this.metaviewer.outputs[metaviewer_i].snapshot();
-                        await snapshot.ready();
-                        this.metaviewer._outputsByKey.set(key, snapshot);
-                    }
-                    else {
-                        return common_1.emit({ ch: 'error', msg: `couldn't snapshot core ${partition}/${key}` });
-                    }
-                    break;
-                default:
-                    return common_1.error('unknown protocol');
-            }
-        }
-        await this._changePeerStatus({ key, status: destroy ? 'destroyed' : 'frozen', partition });
-        common_1.emit({
-            ch: 'network',
-            msg: `removed trusted peer ${partition}/${key} from ${this.connection_id || 'n/a'}`,
+    else if (typeof global === 'object') {
+        process.once('SIGINT', async () => {
+            common_1.emit({ ch: 'network', msg: 'SIGINT event received, cleaning up...' });
+            await C.network.destroy();
         });
     }
 }
 async function Core(params) {
     const { config } = params;
+    await checkExistingInstance(config);
     const C = new CoreClass(config);
+    enableGracefulExit(C, config);
     await C.init();
+    if (typeof window === 'object')
+        localStorage.setItem(config.address, new Date().getTime().toString());
     const API = {
-        on: async (id, cb) => () => common_1.subscribeToEvent({ id, cb }),
-        listenLog: async (ch, cb) => () => common_1.subscribeToChannel({ ch, cb }),
-        connect: async (opts) => C.connect(opts),
-        disconnect: async () => C.disconnect(),
-        getKeys: async () => C.getKeys(),
-        addPeer: async (opts) => C.addPeer(opts),
-        removePeer: async (opts) => C.removePeer(opts),
-        addTrustedPeer: async (opts) => C.addTrustedPeer(opts),
-        removeTrustedPeer: async (opts) => C.removeTrustedPeer(opts),
-        getWriterKey: () => C.writer_key,
-        getIndexKey: () => C.index_key,
-        getConnectionId: () => C.connection_id,
-        metadb: C.metadb,
-        getNetwork: () => C.network,
-        getAppVersion: async () => {
-            const manifest = await API['_getMeta']("manifest");
-            if (!manifest)
-                return common_1.error("no manifest found");
-            return manifest?.version;
+        users: {
+            addUser: async (opts) => C.addUser(opts),
+            removeUser: async (opts) => C.removeUser(opts),
+            addTrustedUser: async (opts) => C.addTrustedUser(opts),
+            removeTrustedUser: async (opts) => C.removeTrustedUser(opts),
+        },
+        meta: {
+            getAppVersion: async () => {
+                const manifest = await API.meta['_getMeta']('manifest');
+                if (!manifest)
+                    return common_1.error('no manifest found');
+                return manifest?.version;
+            },
+            getKeys: async () => C.getKeys(),
+        },
+        network: {
+            getConnectionId: () => C.connection_id,
+            getNetwork: () => C.network,
+            connect: async (opts) => C.connect(opts),
+            disconnect: async () => C.disconnect(),
         },
         _: {
-            getWriter: () => C.writer,
-            getIndex: () => C.index,
-            getManager: () => C.datamanager,
-            getViewer: () => C.dataviewer,
-            getViewerView: () => C.dataviewer.view,
+            on: async (id, cb) => () => common_1.subscribeToEvent({ id, cb }),
+            listenLog: async (ch, cb) => () => common_1.subscribeToChannel({ ch, cb }),
         },
     };
     const protocolBridge = async function (viewer) {
         return async function (op) {
-            if (op?.value?._meta?.unsigned)
-                throw new Error('unsigned data detected');
+            let unsigned = false;
+            Object.keys(op).forEach((k) => {
+                if (op[k]?._meta) {
+                    if (op[k]?._meta?.unsigned)
+                        unsigned = true;
+                    op[k] = op[k].flatten();
+                }
+            });
+            if (unsigned) {
+                return common_1.error('unsigned data detected in API');
+            }
             const o = new models_1.Operation(op);
             const op_buf = common_1.encodeCoreData(op);
             await viewer.append(op_buf);
@@ -701,12 +443,50 @@ async function Core(params) {
         };
     };
     async function appInit(API, Protocol) {
-        return API({
+        const bAPI = {
+            onAdd: async (cb) => {
+                let last_length = 0;
+                const timer = setInterval(function () {
+                    if (last_length < C.dataviewer.localOutput.length) {
+                        cb(C.dataviewer.localOutput.length);
+                        last_length = C.dataviewer.localOutput.length;
+                    }
+                }, 10);
+                return function stopListening() {
+                    clearInterval(timer);
+                };
+            },
             get: async (key) => {
-                const data = await C.datadb.get(key);
-                if (!data)
+                try {
+                    const data = await C.datadb.get(key);
+                    if (!data)
+                        return null;
+                    return common_1.decodeCoreData(data.value);
+                }
+                catch (error) {
                     return null;
-                return common_1.decodeCoreData(data.value);
+                }
+            },
+            getAll: async (params) => {
+                const raw_items = await bAPI.query({ lt: '~', include_meta: true });
+                let items;
+                if (typeof params?.model === 'function') {
+                    items = await Promise.all(raw_items
+                        .map((item) => {
+                        if (!item.key.match(/^_/)) {
+                            try {
+                                return params.model(item.value);
+                            }
+                            catch (error) {
+                                console.log('invalid data', item, error);
+                            }
+                        }
+                    })
+                        .filter((i) => i));
+                }
+                else
+                    items = raw_items;
+                return items;
             },
             query: async function (params) {
                 if (!params?.limit)
@@ -729,11 +509,13 @@ async function Core(params) {
                     });
                 });
             },
-        }, Protocol);
+        };
+        return API(bAPI, Protocol);
     }
     async function injectAppAPI(appAPI) {
+        const reserved_words = ['users', 'meta', 'network', '_'];
         for (const method in appAPI) {
-            if (method.charAt(0) !== '_') {
+            if (method.charAt(0) !== '_' && reserved_words.indexOf(method) === -1) {
                 API[method] = async function (...args) {
                     return appAPI[method](...args);
                 };
@@ -741,41 +523,52 @@ async function Core(params) {
         }
     }
     C.metaprotocol = await protocolBridge(C.metaviewer);
-    API['_getMeta'] = async (key) => {
+    API.meta['_getMeta'] = async (key) => {
         const data = await C.metadb.get(key);
         if (!data)
             return null;
         return common_1.decodeCoreData(data.value);
     };
-    API['_allMeta'] = async () => {
+    API.meta['_allMeta'] = async () => {
         const data = await C.metadb.query({ lt: '~' });
         if (!data)
             return null;
         return common_1.decodeCoreData(data);
     };
-    API['_setMeta'] = async (params) => {
+    API.meta['_setMeta'] = async (params) => {
         await C.metaprotocol({
             type: 'set',
             key: params.key,
             value: params.value,
         });
     };
-    await C.addKnownPeers({ partition: 'meta' });
+    await C.addKnownUsers({ partition: 'meta' });
+    let logUI;
+    if (typeof window === 'object' && typeof window['appendMsgToUI'] === 'function') {
+        logUI = window['appendMsgToUI'];
+    }
     return new Promise(async (resolve, reject) => {
         try {
             async function startCore(Protocol, appAPI, UI) {
                 C.protocol = Protocol;
                 const app = await appInit(appAPI, await protocolBridge(C.dataviewer));
                 await injectAppAPI(app);
-                await C.addKnownPeers({ partition: 'data' });
-                if (!(await API.getNetwork()))
-                    await C.connect(params?.config?.connect?.local_only
-                        ? { local_only: params?.config?.connect?.local_only }
-                        : {});
-                common_1.emit({ ch: 'core', msg: `Container initialized successfully` });
+                await C.addKnownUsers({ partition: 'data' });
+                await C.startDataViewer();
                 if (typeof window === 'object' && UI) {
+                    if (logUI)
+                        logUI('Rendering user interface...');
                     API.UI = Function(UI + ';return app')();
                 }
+                common_1.emit({ ch: 'core', msg: `Container initialized successfully` });
+                if (logUI)
+                    logUI('Container initialized');
+                if (!(await API.network.getNetwork()))
+                    setTimeout(function () {
+                        C.connect(params?.config?.connect?.local_only
+                            ? { local_only: params?.config?.connect?.local_only }
+                            : {});
+                    }, 1000);
                 resolve(API);
             }
             if (params.app?.Protocol && params.app?.API) {
@@ -786,44 +579,127 @@ async function Core(params) {
                 if (params.config.private)
                     return reject('Private mode is on, but no code was found. Please start core with app when using private mode.');
                 common_1.emit({ ch: 'core', msg: `Loading app...` });
-                const code = await API['_getMeta']('code');
-                if (code?.app) {
-                    const app = Function(code.app + ';return app')();
-                    if (!app.Protocol)
-                        return reject('app loading failed');
-                    await startCore(app.Protocol, app.API, code?.ui);
+                if (logUI)
+                    logUI('Loading app...');
+                let cached_code;
+                if (appsCache && !bypassCache) {
+                    cached_code = await idb_keyval_1.get(`${config.address}/code`, appsCache);
+                    if (cached_code)
+                        cached_code = await msgpackr_1.unpack(cached_code);
+                    let cached_manifest = await idb_keyval_1.get(`${config.address}/manifest`, appsCache);
+                    if (cached_manifest)
+                        cached_manifest = await msgpackr_1.unpack(cached_manifest);
+                }
+                if (cached_code?.app) {
+                    const app = Function(cached_code.app + ';return app')();
+                    if (!app.Protocol) {
+                        let err = 'Error in executing the app code';
+                        if (logUI)
+                            logUI(err);
+                        if (typeof window['reset'])
+                            window['reset']();
+                        return reject(err);
+                    }
+                    await startCore(app.Protocol, app.API, cached_code?.ui);
                 }
                 else {
-                    common_1.emit({ ch: 'core', msg: `No code found, querying peers for code, standby...` });
-                    await API.connect(params?.config?.connect?.local_only
+                    let msg = `No code found, querying users for code, standby...`;
+                    common_1.emit({ ch: 'core', msg });
+                    if (logUI)
+                        logUI(msg);
+                    await API.network.connect(params?.config?.connect?.local_only
                         ? { local_only: params?.config?.connect?.local_only }
                         : {});
                     let timeout = 60;
+                    let loading_code = false;
                     const interval = setInterval(async () => {
-                        const n = await API.getNetwork();
+                        const n = await API.network.getNetwork();
                         if (n._peers.size > 0) {
-                            common_1.emit({ ch: 'network', msg: `Got peers, loading code...` });
-                            const code = await API['_getMeta']('code');
-                            if (code?.app) {
-                                clearInterval(interval);
-                                if (code.signature === '!!!DEV!!!') {
-                                    alert('APP STARTED IN DEV MODE\nWARNING: SECURITY DISABLED');
+                            if (!loading_code) {
+                                loading_code = true;
+                                let msg = `Found other users, searching for app code...`;
+                                common_1.emit({ ch: 'network', msg });
+                                if (logUI)
+                                    logUI(msg);
+                                const code = await API.meta['_getMeta']('code');
+                                if (code?.app) {
+                                    clearInterval(interval);
+                                    if (code.signature === '!!!DEV!!!') {
+                                        common_1.log('APP STARTED IN DEV MODE\nWARNING: SECURITY DISABLED');
+                                    }
+                                    else {
+                                    }
+                                    const manifest = await API.meta['_getMeta']('manifest');
+                                    if (!manifest) {
+                                        let err = 'No manifest found, invalid container';
+                                        if (logUI)
+                                            logUI(err);
+                                        if (typeof window === 'object' && typeof window['reset'] === 'function')
+                                            window['reset']();
+                                        return common_1.error(err);
+                                    }
+                                    if (appsCache) {
+                                        await idb_keyval_1.set(`${config.address}/code`, msgpackr_1.pack(code), appsCache);
+                                        await idb_keyval_1.set(`${config.address}/manifest`, msgpackr_1.pack(manifest), appsCache);
+                                    }
+                                    if (typeof window === 'object') {
+                                        common_1.emit({ ch: 'core', msg: `Executing in browser environment...` });
+                                        const app_script = document.getElementById('app');
+                                        if (app_script) {
+                                            app_script.innerHTML = code.app;
+                                            let timeout_timer;
+                                            const app_loader_timer = setInterval(async function () {
+                                                if (window['app']?.Protocol && window['app']?.API) {
+                                                    clearInterval(app_loader_timer);
+                                                    clearTimeout(timeout_timer);
+                                                    await startCore(window['app'].Protocol, window['app'].API, code?.ui);
+                                                }
+                                            }, 5);
+                                            timeout_timer = setTimeout(function () {
+                                                clearInterval(app_loader_timer);
+                                                let err = 'Unknown error in executing the app';
+                                                if (logUI)
+                                                    logUI(err);
+                                                if (typeof window['reset'])
+                                                    window['reset']();
+                                                return common_1.error(err);
+                                            }, 10000);
+                                        }
+                                        else {
+                                            let err = 'Executing in browser but no app script element found';
+                                            if (logUI)
+                                                logUI(err);
+                                            if (typeof window['reset'])
+                                                window['reset']();
+                                            return common_1.error(err);
+                                        }
+                                    }
+                                    else {
+                                        common_1.emit({ ch: 'core', msg: `Executing in NodeJS environment...` });
+                                        const app = Function(code.app + ';return app')();
+                                        if (!app.Protocol)
+                                            return reject('app loading failed');
+                                        await startCore(app.Protocol, app.API, code?.ui);
+                                    }
                                 }
                                 else {
+                                    loading_code = false;
+                                    let msg = `No code found yet, searching more...`;
+                                    common_1.emit({ ch: 'core', msg });
+                                    if (logUI)
+                                        logUI(msg);
                                 }
-                                const app = Function(code.app + ';return app')();
-                                if (!app.Protocol)
-                                    return reject('app loading failed');
-                                await startCore(app.Protocol, app.API, code?.ui);
-                            }
-                            else {
-                                common_1.emit({ ch: 'core', msg: `No code found, trying again...` });
                             }
                         }
                         timeout--;
                         if (timeout <= 0 && !params?.config?.disable_timeout) {
                             clearInterval(interval);
-                            return reject('no peers found');
+                            let err = 'No other users found with code, are you sure the address is right?';
+                            if (logUI)
+                                logUI(err);
+                            if (typeof window['reset'])
+                                window['reset']();
+                            return reject(err);
                         }
                     }, 5000);
                 }

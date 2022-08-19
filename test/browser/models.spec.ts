@@ -3,10 +3,11 @@ import DataModel, { OwnerOnly, AppendOnly } from '../../models'
 import { sign, keyPair, buf2hex, getIdFromPublicKey, createHash } from '@backbonedao/crypto'
 import { pack } from 'msgpackr'
 // user.authenticate is available and adds id with mockup bridge methods
-const id = keyPair()
-global.backbone = {
-  user: {
-    authenticate: async () => {
+
+function createGlobalUser() {
+  const id = keyPair()
+  global.backbone = {
+    user: async () => {
       global.backbone.id = {
         signObject: async ({ hash }) => {
           const signature = sign(hash, id.secretKey)
@@ -15,14 +16,18 @@ global.backbone = {
         getId: async () => {
           return getIdFromPublicKey(id.publicKey)
         },
+        isAuthenticated: async () => {
+          return true
+        },
       }
     },
-  },
+  }
+  return id
 }
 
 test.describe('Models', async () => {
   test('Create new model from new and serialized data', async () => {
-    const M = await DataModel(
+    const M = DataModel(
       {
         username: String,
         password: String,
@@ -40,7 +45,7 @@ test.describe('Models', async () => {
     const id = keyPair()
     const data = { foo: 'bar' }
     const signature = sign(JSON.stringify(data), id.secretKey)
-    const M = await DataModel(
+    const M = DataModel(
       {
         text1: OwnerOnly,
         text2: String,
@@ -71,7 +76,7 @@ test.describe('Models', async () => {
   })
 
   test('AppendOnly', async () => {
-    const M = await DataModel(
+    const M = DataModel(
       {
         arr: AppendOnly([
           {
@@ -141,7 +146,7 @@ test.describe('Models', async () => {
       },
     }
 
-    const Mv010 = await DataModel(
+    const Mv010 = DataModel(
       {
         username: String,
         password: String,
@@ -155,7 +160,7 @@ test.describe('Models', async () => {
     expect(m010.password).toEqual(dat.password)
     expect(m010._meta.version).toEqual('0.1.0')
 
-    const Mv012 = await DataModel(
+    const Mv012 = DataModel(
       {
         user_name: String,
         password: String,
@@ -168,7 +173,7 @@ test.describe('Models', async () => {
     expect(m012.username).toBeFalsy()
     expect(m012._meta.version).toEqual('0.1.2')
 
-    const Mv011 = await DataModel(
+    const Mv011 = DataModel(
       {
         'user-name': String,
         password: String,
@@ -188,10 +193,11 @@ test.describe('Models', async () => {
   })
 
   test('Object signing and verification', async () => {
+    createGlobalUser()
     const dat = { username: 'jensen', password: 'decentralizationftw' }
 
     // user.authenticate is not available
-    const M1 = await DataModel(
+    const M1 = DataModel(
       {
         username: String,
         password: String,
@@ -207,7 +213,7 @@ test.describe('Models', async () => {
       expect(e).toBeTruthy()
     }
 
-    const M2 = await DataModel(
+    const M2 = DataModel(
       {
         username: String,
         password: String,
@@ -224,6 +230,32 @@ test.describe('Models', async () => {
   })
 })
 
-test('Open not owned object', async () => {
+test(`Can't modify somebody else's object`, async () => {
+  const Test = DataModel(
+    {
+      username: String,
+      password: String,
+    },
+    { _debug: { app_version: '0.1.0' } },
+    {}
+  )
+  const id1 = createGlobalUser()
+  const dat = { username: 'jensen', password: 'decentralizationftw' }
+  const d1 = await Test(dat)
 
+  // let d1 = await M1(dat)
+  expect(d1).toBeTruthy()
+  expect(d1._meta.unsigned).toBeUndefined()
+
+  const id2 = createGlobalUser()
+
+  let d2 = await Test(d1)
+
+  // expect(d2._meta.unsigned).toBeTruthy()
+  try {
+    d2.username = 'foo'
+    expect(d2.username).toEqual('decentralized') // we should never reach this
+  } catch (error) {
+    expect(error).toBeTruthy()
+  }
 })

@@ -10,7 +10,7 @@ const config_kv: CoreConfig = {
   address: 'protocol-kv',
   encryption_key: default_config.keys.test,
   writers: [],
-  trusted_peers: [],
+  trusted_users: [],
   storage: 'ram',
   storage_prefix: 'test',
 }
@@ -20,7 +20,6 @@ test.afterEach(cleanup)
 
 test('Apps', async () => {
   const core = await Core({ config: config_kv, app: KeyValue })
-
   await core.set({ key: 'key', value: 'value' })
   expect(await core.get('key')).toEqual('value')
 

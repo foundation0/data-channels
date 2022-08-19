@@ -3,12 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sleep = exports.registerMethods = exports.fetchPeers = exports.createCache = exports.hash = exports.getHomedir = exports.unique = exports.shuffle = exports.getRandomInt = exports.flatten = exports.JSONparse = exports.decodeCoreData = exports.encodeCoreData = exports.subscribeToEvent = exports.subscribeToChannel = exports.emit = exports.buf2hex = exports.error = exports.log = void 0;
+exports.sleep = exports.registerMethods = exports.createCache = exports.hash = exports.getHomedir = exports.unique = exports.shuffle = exports.getRandomInt = exports.flatten = exports.JSONparse = exports.decodeCoreData = exports.encodeCoreData = exports.subscribeToEvent = exports.subscribeToChannel = exports.emit = exports.buf2hex = exports.error = exports.log = void 0;
 const crypto_1 = require("crypto");
 const os_1 = require("os");
 const bbconfig_1 = require("../bbconfig");
 const ttl_1 = __importDefault(require("ttl"));
-const crypto_2 = require("./crypto");
 const eventemitter2_1 = require("eventemitter2");
 const platform_detect_1 = __importDefault(require("platform-detect"));
 const b4a_1 = __importDefault(require("b4a"));
@@ -21,8 +20,9 @@ function log(message, ...data) {
 exports.log = log;
 function error(message, ...data) {
     if (process.env['LOG'] || (platform_detect_1.default.browser && window?.localStorage.getItem('LOG')))
-        console.log(`ERROR: ${message}`, ...data);
-    throw new Error(message);
+        console.error(new Error(message), ...data);
+    EE.emit('err', `${message} - ${JSON.stringify(data)}`);
+    return;
 }
 exports.error = error;
 function buf2hex(buffer) {
@@ -48,10 +48,14 @@ function subscribeToEvent(params) {
 }
 exports.subscribeToEvent = subscribeToEvent;
 function encodeCoreData(data) {
+    if (!data)
+        return error('empty data');
     return msgpackr_1.pack(data);
 }
 exports.encodeCoreData = encodeCoreData;
 function decodeCoreData(data) {
+    if (!data)
+        return error('empty data');
     return msgpackr_1.unpack(data);
 }
 exports.decodeCoreData = decodeCoreData;
@@ -92,10 +96,10 @@ function unique(array) {
 }
 exports.unique = unique;
 function getHomedir() {
-    if (bbconfig_1.user.home_dir === '~')
+    if (bbconfig_1.user?.home_dir === '~')
         return process.env.TEST ? `${os_1.homedir()}/.backbone-test` : `${os_1.homedir()}/.backbone`;
     else
-        return bbconfig_1.user.home_dir;
+        return bbconfig_1.user?.home_dir;
 }
 exports.getHomedir = getHomedir;
 function hash(params) {
@@ -112,12 +116,6 @@ function createCache(params) {
     });
 }
 exports.createCache = createCache;
-async function fetchPeers(type) {
-    if (process.env.TEST)
-        return [];
-    return [];
-}
-exports.fetchPeers = fetchPeers;
 function registerMethods(params) {
     const API = {};
     for (let m in params.methods) {
@@ -126,14 +124,6 @@ function registerMethods(params) {
     return API;
 }
 exports.registerMethods = registerMethods;
-async function verifySign(payload) {
-    const data = JSON.stringify(payload.meta) + JSON.stringify(payload.object);
-    return await crypto_2.verifySignature({
-        public_key: payload.owner,
-        data,
-        signature: payload.signature,
-    });
-}
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }

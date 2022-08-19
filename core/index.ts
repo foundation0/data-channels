@@ -28,12 +28,26 @@ import {
 import { connect } from '../network'
 import { get, set, createStore } from 'idb-keyval'
 import { pack, unpack } from 'msgpackr'
+import fs from 'fs'
 
 let appsCache
 let bypassCache = false
 if (typeof window === 'object') {
   appsCache = createStore('apps-cache', 'backbone')
   if (localStorage.getItem('DEV')) bypassCache = true
+} else {
+  appsCache = {
+    get: async (key, store?) => {
+      fs.mkdirSync(`${__dirname}/.cache/`)
+      const raw_data = fs.readFileSync(`${__dirname}/.cache/${key}`)
+      return unpack(raw_data)
+    },
+    set: async (key, value, store?) => {
+      fs.mkdirSync(`${__dirname}/.cache/`)
+      fs.writeFileSync(`${__dirname}/.cache/${key}`, pack(value))
+      return true
+    }
+  }
 }
 
 const CORES = {}

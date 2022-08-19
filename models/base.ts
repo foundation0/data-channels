@@ -60,8 +60,8 @@ export default async function (
   }
 
   // if _getMeta is a function, get manifest and fill in the version
-  if (typeof app_meta.backbone()?.app?._getMeta === 'function') {
-    const manifest = await app_meta.backbone().app._getMeta('manifest')
+  if (typeof app_meta.backbone()?.app?.meta?._getMeta === 'function') {
+    const manifest = await app_meta.backbone().app.meta?._getMeta('manifest')
     if (!manifest) return error('no manifest found')
     app_meta.version = manifest.version
   }

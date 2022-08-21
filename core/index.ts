@@ -780,7 +780,7 @@ async function Core(params: {
         if (cached_code?.app) {
           emit({ ch: 'core', msg: `App found from cache` })
           if (logUI) logUI('App found from cache')
-          
+
           // Code was found locally, so let's try to eval it
           const app = Function(cached_code.app + ';return app')()
           if (!app.Protocol) {

@@ -14,8 +14,8 @@
   "browserify": {},
   "engineStrict": true,
   "scripts": {
+    "build": "npm run build:node",
     "build:node": "rimraf dist && tsc",
-    "build:node2": "browserify index.ts --node -p [ tsify ] > dist/core.node.js",
     "build:browser:dev": "mkdir -p dist && browserify --debug index.ts -p [ tsify ] > dist/core.dev.js",
     "build:browser:watch": "mkdir -p dist && budo test/www/index.ts --dir test/www --live -- -p [ tsify ] -o dist/core.js",
     "build:browser": "browserify index.ts --standalone bb -p [ tsify ] > dist/core.js",

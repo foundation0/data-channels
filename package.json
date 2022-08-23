@@ -1,9 +1,9 @@
 {
-  "name": "@backbonedao/core-alpha",
+  "name": "@backbonedao/core",
   "description": "Unstoppable, infinitely scalable dapp container for self-sovereign metaverse",
   "author": "backbone://dao",
   "license": "AGPL-3.0-or-later",
-  "version": "0.1.0",
+  "version": "0.9.0",
   "main": "dist/node/index.js",
   "engines": {
     "node": "<17.0.0"
@@ -47,6 +47,7 @@
     "isomorphic-ws": "^4.0.1",
     "lexicographic-integer": "^1.1.0",
     "lodash": "^4.17.21",
+    "mkdirp": "^1.0.4",
     "msgpackr": "^1.5.6",
     "node": "^16.14.2",
     "objectmodel": "^4.3.0",

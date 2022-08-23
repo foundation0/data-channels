@@ -1,4 +1,4 @@
-# backbone://core
+# Backbone Core Alpha
 
 Backbone Core is an unstoppable, infinitely scalable dapp platform for the self-sovereign internet.
 
@@ -12,34 +12,20 @@ Backbone Core is an unstoppable, infinitely scalable dapp platform for the self-
 
 ## Installation
 
-**Install dependencies**
 ```bash
-$ npx pnpm i
+# clone the repo (NPM package not yet available)
+git clone https://github.com/backbonedao/core.git
+
+# install dependencies
+npx pnpm i
+
+# build the Core
+npm run build
 ```
+## Running tests
 
-## Major features roadmap
-- [x] End-to-end encryption
-- [x] Uses Backbone Id to authenticate and sign data objects
-- [x] Works on browsers and NodeJs
-- [x] Fetches application from other users
-- [x] Executes application and renders optional frontend
-- [x] Single user apps
+> Note: there is a weird bug causing some of the tests fail when run in one go, but if ran individually, they pass. Probably something to do with Cores' storages getting mixed up.
 
-- [ ] Multi-user apps
-  - Waits for Id to have syncing ability between instances
-- [ ] Notifies about updates on applications
-
-## Development
-
-**Start live-reload server (development):**
 ```bash
-npm run build:browser:watch
-```
-
-## Building
-
-**Build browser package (production):**
-```bash
-npm run build:browser
-# builds /dist/core.min.js
+npm test
 ```

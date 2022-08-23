@@ -29,21 +29,35 @@ import { connect } from '../network'
 import { get, set, createStore } from 'idb-keyval'
 import { pack, unpack } from 'msgpackr'
 import fs from 'fs'
+import mkdirp from 'mkdirp'
 
 let appsCache
 let bypassCache = false
-if (typeof window === 'object') {
-  appsCache = createStore('apps-cache', 'backbone')
+if (typeof window === 'object' && typeof window['navigation'] !== 'undefined') {
+  const store = createStore('apps-cache', 'backbone')
+  appsCache = {
+    get: async (key) => {
+      const raw_data = await get(key, store)
+      return raw_data ? unpack(raw_data) : false
+    },
+    set: async (key, value) => {
+      return set(key, pack(value), store)
+    },
+  }
   if (localStorage.getItem('DEV')) bypassCache = true
 } else {
   appsCache = {
-    get: async (key, store?) => {
-      fs.mkdirSync(`${__dirname}/.cache/`)
-      const raw_data = fs.readFileSync(`${__dirname}/.cache/${key}`)
-      return unpack(raw_data)
+    get: async (key) => {
+      await mkdirp(`${__dirname}/.cache/`)
+      try {
+        const raw_data = fs.readFileSync(`${__dirname}/.cache/${key}`)
+        return raw_data ? unpack(raw_data) : false
+      } catch (e) {
+        return false
+      }
     },
-    set: async (key, value, store?) => {
-      fs.mkdirSync(`${__dirname}/.cache/`)
+    set: async (key, value) => {
+      await mkdirp(`${__dirname}/.cache/`)
       fs.writeFileSync(`${__dirname}/.cache/${key}`, pack(value))
       return true
     },
@@ -737,14 +751,15 @@ async function Core(params: {
         // Render UI if one is found
         if (typeof window === 'object' && UI) {
           if (logUI) logUI('Rendering user interface...')
-          API.UI = Function(UI + ';return app')()
+          API.UI = Function(UI + ';return app.default || app')()
         }
 
         emit({ ch: 'core', msg: `Container initialized successfully` })
         if (logUI) logUI('Container initialized')
 
         // If we haven't connected to backbone:// yet, do it now
-        if (!(await API.network.getNetwork()))
+        const net = await API.network.getNetwork()
+        if (!net)
           setTimeout(function () {
             C.connect(
               params?.config?.connect?.local_only
@@ -770,11 +785,10 @@ async function Core(params: {
 
         // Check if we have already downloaded the code (only works on browsers for now)
         let cached_code
+        let cached_manifest
         if (appsCache && !bypassCache) {
-          cached_code = await get(`${config.address}/code`, appsCache)
-          if (cached_code) cached_code = await unpack(cached_code)
-          let cached_manifest = await get(`${config.address}/manifest`, appsCache)
-          if (cached_manifest) cached_manifest = await unpack(cached_manifest)
+          cached_code = await appsCache.get(`${config.address}/code`)
+          cached_manifest = await appsCache.get(`${config.address}/manifest`)
         }
 
         if (cached_code?.app) {
@@ -782,7 +796,7 @@ async function Core(params: {
           if (logUI) logUI('App found from cache')
 
           // Code was found locally, so let's try to eval it
-          const app = Function(cached_code.app + ';return app')()
+          const app = Function(cached_code.app + ';return app.default || app')()
           if (!app.Protocol) {
             let err = 'Error in executing the app code'
             // browser specific
@@ -842,8 +856,8 @@ async function Core(params: {
                     return error(err)
                   }
                   if (appsCache) {
-                    await set(`${config.address}/code`, pack(code), appsCache)
-                    await set(`${config.address}/manifest`, pack(manifest), appsCache)
+                    await appsCache.set(`${config.address}/code`, code)
+                    await appsCache.set(`${config.address}/manifest`, manifest)
                   }
 
                   if (typeof window === 'object') {
@@ -854,10 +868,11 @@ async function Core(params: {
                       app_script.innerHTML = code.app
                       let timeout_timer
                       const app_loader_timer = setInterval(async function () {
-                        if (window['app']?.Protocol && window['app']?.API) {
+                        let loaded_app = window['app']?.default || window['app']
+                        if (loaded_app?.Protocol && loaded_app?.API) {
                           clearInterval(app_loader_timer)
                           clearTimeout(timeout_timer)
-                          await startCore(window['app'].Protocol, window['app'].API, code?.ui)
+                          await startCore(loaded_app.Protocol, loaded_app.API, code?.ui)
                         }
                       }, 5)
 
@@ -877,7 +892,7 @@ async function Core(params: {
                     }
                   } else {
                     emit({ ch: 'core', msg: `Executing in NodeJS environment...` })
-                    const app = Function(code.app + ';return app')()
+                    const app = Function(code.app + ';return app.default || app')()
                     if (!app.Protocol) return reject('app loading failed')
                     // All good, so start container with the eval'ed app
                     await startCore(app.Protocol, app.API, code?.ui)

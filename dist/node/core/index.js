@@ -17,22 +17,37 @@ const network_1 = require("../network");
 const idb_keyval_1 = require("idb-keyval");
 const msgpackr_1 = require("msgpackr");
 const fs_1 = __importDefault(require("fs"));
+const mkdirp_1 = __importDefault(require("mkdirp"));
 let appsCache;
 let bypassCache = false;
-if (typeof window === 'object') {
-    appsCache = idb_keyval_1.createStore('apps-cache', 'backbone');
+if (typeof window === 'object' && typeof window['navigation'] !== 'undefined') {
+    const store = idb_keyval_1.createStore('apps-cache', 'backbone');
+    appsCache = {
+        get: async (key) => {
+            const raw_data = await idb_keyval_1.get(key, store);
+            return raw_data ? msgpackr_1.unpack(raw_data) : false;
+        },
+        set: async (key, value) => {
+            return idb_keyval_1.set(key, msgpackr_1.pack(value), store);
+        },
+    };
     if (localStorage.getItem('DEV'))
         bypassCache = true;
 }
 else {
     appsCache = {
-        get: async (key, store) => {
-            fs_1.default.mkdirSync(`${__dirname}/.cache/`);
-            const raw_data = fs_1.default.readFileSync(`${__dirname}/.cache/${key}`);
-            return msgpackr_1.unpack(raw_data);
+        get: async (key) => {
+            await mkdirp_1.default(`${__dirname}/.cache/`);
+            try {
+                const raw_data = fs_1.default.readFileSync(`${__dirname}/.cache/${key}`);
+                return raw_data ? msgpackr_1.unpack(raw_data) : false;
+            }
+            catch (e) {
+                return false;
+            }
         },
-        set: async (key, value, store) => {
-            fs_1.default.mkdirSync(`${__dirname}/.cache/`);
+        set: async (key, value) => {
+            await mkdirp_1.default(`${__dirname}/.cache/`);
             fs_1.default.writeFileSync(`${__dirname}/.cache/${key}`, msgpackr_1.pack(value));
             return true;
         },
@@ -573,12 +588,13 @@ async function Core(params) {
                 if (typeof window === 'object' && UI) {
                     if (logUI)
                         logUI('Rendering user interface...');
-                    API.UI = Function(UI + ';return app')();
+                    API.UI = Function(UI + ';return app.default || app')();
                 }
                 common_1.emit({ ch: 'core', msg: `Container initialized successfully` });
                 if (logUI)
                     logUI('Container initialized');
-                if (!(await API.network.getNetwork()))
+                const net = await API.network.getNetwork();
+                if (!net)
                     setTimeout(function () {
                         C.connect(params?.config?.connect?.local_only
                             ? { local_only: params?.config?.connect?.local_only }
@@ -597,19 +613,16 @@ async function Core(params) {
                 if (logUI)
                     logUI('Loading app...');
                 let cached_code;
+                let cached_manifest;
                 if (appsCache && !bypassCache) {
-                    cached_code = await idb_keyval_1.get(`${config.address}/code`, appsCache);
-                    if (cached_code)
-                        cached_code = await msgpackr_1.unpack(cached_code);
-                    let cached_manifest = await idb_keyval_1.get(`${config.address}/manifest`, appsCache);
-                    if (cached_manifest)
-                        cached_manifest = await msgpackr_1.unpack(cached_manifest);
+                    cached_code = await appsCache.get(`${config.address}/code`);
+                    cached_manifest = await appsCache.get(`${config.address}/manifest`);
                 }
                 if (cached_code?.app) {
                     common_1.emit({ ch: 'core', msg: `App found from cache` });
                     if (logUI)
                         logUI('App found from cache');
-                    const app = Function(cached_code.app + ';return app')();
+                    const app = Function(cached_code.app + ';return app.default || app')();
                     if (!app.Protocol) {
                         let err = 'Error in executing the app code';
                         if (logUI)
@@ -657,8 +670,8 @@ async function Core(params) {
                                         return common_1.error(err);
                                     }
                                     if (appsCache) {
-                                        await idb_keyval_1.set(`${config.address}/code`, msgpackr_1.pack(code), appsCache);
-                                        await idb_keyval_1.set(`${config.address}/manifest`, msgpackr_1.pack(manifest), appsCache);
+                                        await appsCache.set(`${config.address}/code`, code);
+                                        await appsCache.set(`${config.address}/manifest`, manifest);
                                     }
                                     if (typeof window === 'object') {
                                         common_1.emit({ ch: 'core', msg: `Executing in browser environment...` });
@@ -667,10 +680,11 @@ async function Core(params) {
                                             app_script.innerHTML = code.app;
                                             let timeout_timer;
                                             const app_loader_timer = setInterval(async function () {
-                                                if (window['app']?.Protocol && window['app']?.API) {
+                                                let loaded_app = window['app']?.default || window['app'];
+                                                if (loaded_app?.Protocol && loaded_app?.API) {
                                                     clearInterval(app_loader_timer);
                                                     clearTimeout(timeout_timer);
-                                                    await startCore(window['app'].Protocol, window['app'].API, code?.ui);
+                                                    await startCore(loaded_app.Protocol, loaded_app.API, code?.ui);
                                                 }
                                             }, 5);
                                             timeout_timer = setTimeout(function () {
@@ -694,7 +708,7 @@ async function Core(params) {
                                     }
                                     else {
                                         common_1.emit({ ch: 'core', msg: `Executing in NodeJS environment...` });
-                                        const app = Function(code.app + ';return app')();
+                                        const app = Function(code.app + ';return app.default || app')();
                                         if (!app.Protocol)
                                             return reject('app loading failed');
                                         await startCore(app.Protocol, app.API, code?.ui);

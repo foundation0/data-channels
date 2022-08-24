@@ -577,6 +577,32 @@ async function Core(params) {
     if (typeof window === 'object' && typeof window['appendMsgToUI'] === 'function') {
         logUI = window['appendMsgToUI'];
     }
+    async function startAppInBrowser(code) {
+        return new Promise((resolve, reject) => {
+            if (typeof window !== 'object' && !document.body)
+                return common_1.error('is this a browser?');
+            const app_container = document.createElement('script');
+            app_container.setAttribute('id', 'app-container');
+            document.body.appendChild(app_container);
+            app_container.onload = function () {
+                resolve(window['app']?.default || window['app']);
+            };
+            app_container.setAttribute('src', `data:text/javascript;base64,${common_1.base64.encode(code)}`);
+        });
+    }
+    async function startUIInBrowser(code) {
+        return new Promise((resolve, reject) => {
+            if (typeof window !== 'object' && !document.body)
+                return common_1.error('is this a browser?');
+            const ui_container = document.createElement('script');
+            ui_container.setAttribute('id', 'ui-container');
+            document.body.appendChild(ui_container);
+            ui_container.onload = function () {
+                resolve(window['ui']?.default || window['ui']);
+            };
+            ui_container.setAttribute('src', `data:text/javascript;base64,${common_1.base64.encode(code)}`);
+        });
+    }
     return new Promise(async (resolve, reject) => {
         try {
             async function startCore(Protocol, appAPI, UI) {
@@ -588,7 +614,7 @@ async function Core(params) {
                 if (typeof window === 'object' && UI) {
                     if (logUI)
                         logUI('Rendering user interface...');
-                    API.UI = Function(UI + ';return ui.default || ui')();
+                    API.UI = await startUIInBrowser(UI);
                 }
                 common_1.emit({ ch: 'core', msg: `Container initialized successfully` });
                 if (logUI)
@@ -622,7 +648,7 @@ async function Core(params) {
                     common_1.emit({ ch: 'core', msg: `App found from cache` });
                     if (logUI)
                         logUI('App found from cache');
-                    const app = Function(cached_code.app + ';return app.default || app')();
+                    const app = await startAppInBrowser(cached_code.app);
                     if (!app.Protocol) {
                         let err = 'Error in executing the app code';
                         if (logUI)
@@ -675,36 +701,24 @@ async function Core(params) {
                                     }
                                     if (typeof window === 'object') {
                                         common_1.emit({ ch: 'core', msg: `Executing in browser environment...` });
-                                        const app_script = document.getElementById('app');
-                                        if (app_script) {
-                                            app_script.innerHTML = code.app;
-                                            let timeout_timer;
-                                            const app_loader_timer = setInterval(async function () {
-                                                let loaded_app = window['app']?.default || window['app'];
-                                                if (loaded_app?.Protocol && loaded_app?.API) {
-                                                    clearInterval(app_loader_timer);
-                                                    clearTimeout(timeout_timer);
-                                                    await startCore(loaded_app.Protocol, loaded_app.API, code?.ui);
-                                                }
-                                            }, 5);
-                                            timeout_timer = setTimeout(function () {
+                                        const loaded_app = await startAppInBrowser(code.app);
+                                        let timeout_timer;
+                                        const app_loader_timer = setInterval(async function () {
+                                            if (loaded_app?.Protocol && loaded_app?.API) {
                                                 clearInterval(app_loader_timer);
-                                                let err = 'Unknown error in executing the app';
-                                                if (logUI)
-                                                    logUI(err);
-                                                if (typeof window['reset'])
-                                                    window['reset']();
-                                                return common_1.error(err);
-                                            }, 10000);
-                                        }
-                                        else {
-                                            let err = 'Executing in browser but no app script element found';
+                                                clearTimeout(timeout_timer);
+                                                await startCore(loaded_app.Protocol, loaded_app.API, code?.ui);
+                                            }
+                                        }, 5);
+                                        timeout_timer = setTimeout(function () {
+                                            clearInterval(app_loader_timer);
+                                            let err = 'Unknown error in executing the app';
                                             if (logUI)
                                                 logUI(err);
                                             if (typeof window['reset'])
                                                 window['reset']();
                                             return common_1.error(err);
-                                        }
+                                        }, 10000);
                                     }
                                     else {
                                         common_1.emit({ ch: 'core', msg: `Executing in NodeJS environment...` });

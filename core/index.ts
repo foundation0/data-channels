@@ -11,6 +11,7 @@ import {
   log,
   subscribeToEvent,
   subscribeToChannel,
+  base64
 } from '../common'
 import default_config from '../bbconfig'
 import _ from 'lodash'
@@ -732,6 +733,32 @@ async function Core(params: {
     logUI = window['appendMsgToUI']
   }
 
+  async function startAppInBrowser(code): Promise<{ Protocol: any, API: any }> {
+    return new Promise((resolve, reject) => {
+      if (typeof window !== 'object' && !document.body)
+        return error('is this a browser?')
+      const app_container = document.createElement('script')
+      app_container.setAttribute('id', 'app-container')
+      document.body.appendChild(app_container)
+      app_container.onload = function(){
+        resolve(window['app']?.default || window['app'])
+      }
+      app_container.setAttribute('src', `data:text/javascript;base64,${base64.encode(code)}`)
+    });
+  }
+  async function startUIInBrowser(code): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      if (typeof window !== 'object' && !document.body)
+        return error('is this a browser?')
+      const ui_container = document.createElement('script')
+      ui_container.setAttribute('id', 'ui-container')
+      document.body.appendChild(ui_container)
+      ui_container.onload = function(){
+        resolve(window['ui']?.default || window['ui'])
+      }
+      ui_container.setAttribute('src', `data:text/javascript;base64,${base64.encode(code)}`)
+    });
+  }
   // Return a promise while we try to get the container code
   return new Promise(async (resolve, reject) => {
     try {
@@ -751,7 +778,7 @@ async function Core(params: {
         // Render UI if one is found
         if (typeof window === 'object' && UI) {
           if (logUI) logUI('Rendering user interface...')
-          API.UI = Function(UI + ';return ui.default || ui')()
+          API.UI = await startUIInBrowser(UI)
         }
 
         emit({ ch: 'core', msg: `Container initialized successfully` })
@@ -795,8 +822,8 @@ async function Core(params: {
           emit({ ch: 'core', msg: `App found from cache` })
           if (logUI) logUI('App found from cache')
 
-          // Code was found locally, so let's try to eval it
-          const app = Function(cached_code.app + ';return app.default || app')()
+          // Code was found locally
+          const app = await startAppInBrowser(cached_code.app)
           if (!app.Protocol) {
             let err = 'Error in executing the app code'
             // browser specific
@@ -863,33 +890,25 @@ async function Core(params: {
                   if (typeof window === 'object') {
                     emit({ ch: 'core', msg: `Executing in browser environment...` })
 
-                    const app_script = document.getElementById('app')
-                    if (app_script) {
-                      app_script.innerHTML = code.app
-                      let timeout_timer
-                      const app_loader_timer = setInterval(async function () {
-                        let loaded_app = window['app']?.default || window['app']
-                        if (loaded_app?.Protocol && loaded_app?.API) {
-                          clearInterval(app_loader_timer)
-                          clearTimeout(timeout_timer)
-                          await startCore(loaded_app.Protocol, loaded_app.API, code?.ui)
-                        }
-                      }, 5)
-
-                      // just in case
-                      timeout_timer = setTimeout(function () {
+                    const loaded_app = await startAppInBrowser(code.app)
+                    let timeout_timer
+                    const app_loader_timer = setInterval(async function () {
+                      // let loaded_app = window['backbone']?.app?.default || window['backbone'].app
+                      if (loaded_app?.Protocol && loaded_app?.API) {
                         clearInterval(app_loader_timer)
-                        let err = 'Unknown error in executing the app'
-                        if (logUI) logUI(err)
-                        if (typeof window['reset']) window['reset']()
-                        return error(err)
-                      }, 10000)
-                    } else {
-                      let err = 'Executing in browser but no app script element found'
+                        clearTimeout(timeout_timer)
+                        await startCore(loaded_app.Protocol, loaded_app.API, code?.ui)
+                      }
+                    }, 5)
+
+                    // just in case
+                    timeout_timer = setTimeout(function () {
+                      clearInterval(app_loader_timer)
+                      let err = 'Unknown error in executing the app'
                       if (logUI) logUI(err)
                       if (typeof window['reset']) window['reset']()
                       return error(err)
-                    }
+                    }, 10000)
                   } else {
                     emit({ ch: 'core', msg: `Executing in NodeJS environment...` })
                     const app = Function(code.app + ';return app.default || app')()

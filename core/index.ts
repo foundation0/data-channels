@@ -751,7 +751,7 @@ async function Core(params: {
         // Render UI if one is found
         if (typeof window === 'object' && UI) {
           if (logUI) logUI('Rendering user interface...')
-          API.UI = Function(UI + ';return app.default || app')()
+          API.UI = Function(UI + ';return ui.default || ui')()
         }
 
         emit({ ch: 'core', msg: `Container initialized successfully` })

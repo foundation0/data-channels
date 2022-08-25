@@ -1,5 +1,5 @@
 import { Array } from './base'
-const { Any } = require('./objectmodel')
+import { Any } from 'objectmodel'
 import { createHash } from '@backbonedao/crypto'
 import b4a from 'b4a'
 

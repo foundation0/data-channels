@@ -1,9 +1,9 @@
 import { error } from '../common'
 
-import { Model, ObjectModel, ArrayModel, MapModel, SetModel } from 'objectmodel'
-import semverSort from 'semver/functions/sort'
-import semverGtr from 'semver/ranges/gtr'
-import { ethers } from 'ethers'
+const { Model, ObjectModel, ArrayModel, MapModel, SetModel } = require('./objectmodel')
+const semverSort = require('semver/functions/sort')
+const semverGtr = require('semver/ranges/gtr')
+const { ethers } = require('ethers')
 // import Binary from './binary'
 import {
   buf2hex,
@@ -53,7 +53,7 @@ export default async function (
   // gather meta data about the app that's using the datamodel
   const app_meta = {
     version: opts?._debug?.app_version || '0',
-    backbone: () =>
+    backbone: () => 
       // @ts-ignore
       (typeof window === 'object' && window.backbone) ||
       (typeof global === 'object' && global.backbone),
@@ -98,23 +98,23 @@ export default async function (
     const hash = createHash(pack(signable_data))
 
     // how do I signal if this is the creation point and we should sign it instead of waiting for manual?
-    if (data._initial) {
+    if(data._initial) {
       return true
     } else if (!verify(hash, signature, public_key)) {
       // if it's the same author, mark this unsigned
       const og_id = getIdFromPublicKey(hex2buf(public_key))
-      if (b4a.equals(og_id, current_id)) {
+      if(b4a.equals(og_id, current_id)) {
         data['_meta']['unsigned'] = true
         return true
-      } else return false
+      } 
+      else return false
     } else {
       return true
     }
   }, 'signature must verify against data') {
     _meta
-    _initial
+
     constructor(data) {
-      
       // if data is a string, it's probably stringified JSON
       try {
         if (typeof data === 'string') data = JSON.parse(data)
@@ -124,11 +124,7 @@ export default async function (
       }
 
       // Check if data needs migrating
-      if (
-        Object.keys(migrations || {}).length > 0 &&
-        data?._meta?.version &&
-        data?._meta?.version !== app_meta.version
-      ) {
+      if (Object.keys(migrations || {}).length > 0 && data?._meta?.version && data?._meta?.version !== app_meta.version) {
         // are we going up or down?
         const direction = semverGtr(data._meta.version, app_meta.version) ? 'down' : 'up'
 
@@ -206,7 +202,7 @@ export default async function (
 
       await checkUser()
       if (!current_id) return error('tried to sign without being authenticated')
-
+      
       // check signer matches the author
       let { public_key } = getMetaDetails(this['_meta'])
       let pid = getIdFromPublicKey(hex2buf(public_key))
@@ -226,7 +222,7 @@ export default async function (
   }
 
   async function signObject(data) {
-    if (!current_id) {
+    if(!current_id) {
       return checkUser()
     }
     let signable_data
@@ -261,9 +257,9 @@ export default async function (
       }
     } else {
       const is_authenticated = await app_meta.backbone().id.isAuthenticated()
-      if (is_authenticated) {
+      if(is_authenticated) {
         current_id = await app_meta.backbone().id.getId()
-        if (!current_id) return error('error in getting user id')
+        if(!current_id) return error('error in getting user id')
       } else {
         await app_meta.backbone().user()
         await checkUser()

@@ -1,6 +1,6 @@
 import { emit, error } from '../common'
 import Swarm from '@backbonedao/network-node'
-import Buffer from 'b4a'
+import b4a from 'b4a'
 import { keyPair, buf2hex, hex2buf } from '@backbonedao/crypto'
 import Network from '@backbonedao/network-node'
 import { Split, Merge } from './chunker'
@@ -25,7 +25,7 @@ export async function connect(
     bootstrap?: string[]
     simplePeer?: { config: { iceServers: [{ urls: string[] }] } }
     firewall?: Function
-    keyPair?: { publicKey: Buffer; secretKey: Buffer }
+    keyPair?: { publicKey: b4a; secretKey: b4a }
     dht?: Function
   } = this.config.network
 
@@ -90,7 +90,7 @@ export async function connect(
   }
   if (!opts?.local_only) {
     this.network = await connectToNetwork()
-    this.connection_id = this.network?.webrtc?.id ? buf2hex(this.network.webrtc.id) : 'n/a'
+    this.connection_id = buf2hex(this.network.webrtc.id)
     emit({
       ch: 'network',
       event: 'network.connected',

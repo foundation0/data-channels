@@ -1,5 +1,5 @@
 import { Object } from './base'
-import { Any } from 'objectmodel'
+const { Any } = require('./objectmodel')
 import { verify, hex2buf } from '@backbonedao/crypto'
 
 const OwnerOnly = Object({

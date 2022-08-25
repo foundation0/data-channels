@@ -1,5 +1,5 @@
 import { Object } from './base'
-import { Any } from 'objectmodel'
+const { Any } = require('./objectmodel')
 
 export default Object({
   type: String,

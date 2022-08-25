@@ -1,12 +1,11 @@
-import { createHash } from '@backbonedao/crypto'
-import os from 'os'
-import Config from '../bbconfig'
+import { createHash } from 'crypto'
+import { homedir } from 'os'
+import { user } from '../bbconfig'
 import ttl from 'ttl'
 import { EventEmitter2 } from 'eventemitter2'
 import platform from 'platform-detect'
 import Buffer from 'b4a'
 import { unpack, pack } from 'msgpackr'
-import process from 'process'
 
 const EE = new EventEmitter2()
 
@@ -97,9 +96,9 @@ export function unique(array: string[]) {
 }
 
 export function getHomedir() {
-  if (Config?.user?.home_dir === '~')
-    return process.env.TEST ? `${os.homedir()}/.backbone-test` : `${os.homedir()}/.backbone`
-  else return Config?.user?.home_dir
+  if (user?.home_dir === '~')
+    return process.env.TEST ? `${homedir()}/.backbone-test` : `${homedir()}/.backbone`
+  else return user?.home_dir
 }
 
 export function hash(params: { type: string; data: any }) {

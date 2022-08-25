@@ -1,9 +1,8 @@
 // process.setMaxListeners(1000)
 
-import { getRandomInt } from "./common"
-import process from 'process'
+const { getRandomInt } = require("./common")
 
-export default {
+module.exports = {
   user: {
     home_dir: '~',
     id_url:

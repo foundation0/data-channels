@@ -194,18 +194,14 @@ class CoreClass {
         const DataAPI = await self.getDataAPI(dat)
         for (const { value } of operations) {
           const o = decodeCoreData(value)
-          const op: any = new Operation(o)
+          const op = new Operation(o)
           try {
-            if(op?.type) {
-              switch (op.type) {
-                // Bootloader Protocol APIs
-                case 'set':
-                  await DataAPI.put({ key: o.key, value: o.value })
-                  break
-                // Add any protocols here that needs to be built-in
-              }
-            } else {
-              return error('invalid operation')
+            switch (op.type) {
+              // Bootloader Protocol APIs
+              case 'set':
+                await DataAPI.put({ key: o.key, value: o.value })
+                break
+              // Add any protocols here that needs to be built-in
             }
           } catch (error) {
             throw error

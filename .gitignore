@@ -4,4 +4,5 @@ tmp
 scripts
 archive
 _*
-dist
+dist/node
+dist/core.*

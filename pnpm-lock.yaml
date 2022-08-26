@@ -29,6 +29,7 @@ specifiers:
   bufferutil: ^4.0.6
   chai: ^4.3.6
   comlink: ^4.3.1
+  cpr: ^3.0.1
   cross-env: ^7.0.3
   crypto-browserify: ^3.12.0
   dht: github:backbonedao/dht
@@ -77,7 +78,7 @@ specifiers:
 dependencies:
   '@backbonedao/crypto': github.com/backbonedao/crypto/96da6514fe5ba8e1afadfc02f8db14d0c1a2b793_22kvxa7zeyivx4jp72v2w3pkvy
   '@backbonedao/data-db': github.com/backbonedao/data-db/f9183393adde39e84d166d8ac900844b295dc689
-  '@backbonedao/data-manager': github.com/backbonedao/data-manager/f8328b738089bcf9e9f1565a83fcb5189665e501_22kvxa7zeyivx4jp72v2w3pkvy
+  '@backbonedao/data-manager': github.com/backbonedao/data-manager/df4f1159995da6f80b280678e449247f391b7922_22kvxa7zeyivx4jp72v2w3pkvy
   '@backbonedao/data-viewer': github.com/backbonedao/data-viewer/ffec23b193114ab57435447e7fbf3400a4b33292
   '@backbonedao/network-node': github.com/backbonedao/network-node/86d972e93c4825e9f260f6ae23eca9344cd41e74_22kvxa7zeyivx4jp72v2w3pkvy
   '@jest/globals': 27.5.1
@@ -94,7 +95,6 @@ dependencies:
   isomorphic-ws: 4.0.1_ws@8.8.1
   lexicographic-integer: 1.1.0
   lodash: 4.17.21
-  mkdirp: 1.0.4
   msgpackr: 1.6.2
   node: 16.17.0
   objectmodel: 4.3.0
@@ -126,10 +126,12 @@ devDependencies:
   browserify: 17.0.0
   budo: 11.7.0_22kvxa7zeyivx4jp72v2w3pkvy
   chai: 4.3.6
+  cpr: 3.0.1
   crypto-browserify: 3.12.0
   dht: github.com/backbonedao/dht/f2d3e9d8d356f0df647efc99fc586ade7e4c2f81_22kvxa7zeyivx4jp72v2w3pkvy
   eslint: 8.22.0
   jest: 27.5.1_ltge2sip2a7dmn4ouhtnl63bme
+  mkdirp: 1.0.4
   mocha: 9.2.2
   mocha-steps: 1.3.0
   os-browserify: 0.3.0
@@ -1187,7 +1189,6 @@ packages:
       shlex: 2.1.2
       slash: 2.0.0
       tmp: 0.2.1
-    dev: false
 
   /@msgpackr-extract/msgpackr-extract-darwin-arm64/2.1.2:
     resolution: {integrity: sha512-TyVLn3S/+ikMDsh0gbKv2YydKClN8HaJDDpONlaZR+LVJmsxLFUgA+O7zu59h9+f9gX1aj/ahw9wqa6rosmrYQ==}
@@ -1433,7 +1434,6 @@ packages:
 
   /@types/dashdash/1.14.1:
     resolution: {integrity: sha512-3UAiw52g6LARDS9I5lpYwUzj/nBuMvor/0BWiza7ibuOIEaNIo+m3whnVBLLj/ue0DzlcX+96c24YdZCuDwOiQ==}
-    dev: false
 
   /@types/graceful-fs/4.1.5:
     resolution: {integrity: sha512-anKkLmZZ+xm4p8JWBf4hElkM4XR+EZeA2M9BAkkTldmcyDY4mbdIJnRghDJH3Ov5ooY7/UAoENtmdMSkaAd7Cw==}
@@ -1639,7 +1639,6 @@ packages:
 
   /@yarnpkg/lockfile/1.1.0:
     resolution: {integrity: sha512-GpSwvyXOcOOlV70vbnzjj4fW5xW/FdUF6nQEt1ENy7m4ZCczi1+/buVUPAqmGfqznsORNFzUMjctTIp8a9tuCQ==}
-    dev: false
 
   /JSONStream/1.3.5:
     resolution: {integrity: sha512-E+iruNOY8VV9s4JEbe1aNEm6MiszPRr/UfcHMz0TQh1BXSxHK+ASV1R6W4HpjBhSeS+54PIsAMCBmwD06LLsqQ==}
@@ -1882,7 +1881,6 @@ packages:
   /assert-plus/1.0.0:
     resolution: {integrity: sha512-NfJ4UzBCcQGLDlQq7nHxH+tv3kyZ0hHQqF5BO6J7tNJeP5do1llPr8dZ8zHonfhAu0PHAdMkSo+8o0wxg9lZWw==}
     engines: {node: '>=0.8'}
-    dev: false
 
   /assert/1.5.0:
     resolution: {integrity: sha512-EDsgawzwoun2CZkCgtxJbv392v4nbk9XDD06zI+kQYoBM/3RBWLlEyJARDOmhAAosBjWACEkKL6S+lIZtcAubA==}
@@ -2838,6 +2836,16 @@ packages:
   /core-util-is/1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
 
+  /cpr/3.0.1:
+    resolution: {integrity: sha512-Xch4PXQ/KC8lJ+KfJ9JI6eG/nmppLrPPWg5Q+vh65Qr9EjuJEubxh/H/Le1TmCZ7+Xv7iJuNRqapyOFZB+wsxA==}
+    hasBin: true
+    dependencies:
+      graceful-fs: 4.2.10
+      minimist: 1.2.6
+      mkdirp: 0.5.6
+      rimraf: 2.7.1
+    dev: true
+
   /crc/3.8.0:
     resolution: {integrity: sha512-iX3mfgcTMIq3ZKLIsVFAbv7+Mc10kxabAGQb8HvjA1o3T1PIYprbakQ65d3I+2HGHt6nSKkM9PYjgoJO2KcFBQ==}
     dependencies:
@@ -2970,7 +2978,6 @@ packages:
     engines: {node: '>=10.x'}
     dependencies:
       assert-plus: 1.0.0
-    dev: false
 
   /data-urls/2.0.0:
     resolution: {integrity: sha512-X5eWTSXO/BJmpdIKCRuKUgSCgAN0OwliVK3yPKbwIWU1Tdw5BRajxlzMidvh+gwko9AfQ9zIj52pzF91Q3YAvQ==}
@@ -3137,7 +3144,6 @@ packages:
   /define-lazy-prop/2.0.0:
     resolution: {integrity: sha512-Ds09qNh8yw3khSjiJjiUInaGX9xlqZDY7JVryGxdxV7NPeuqQfplOpQ66yJFZut3jLa5zOwkXw1g9EI2uKh4Og==}
     engines: {node: '>=8'}
-    dev: false
 
   /define-properties/1.1.4:
     resolution: {integrity: sha512-uckOqKcfaVvtBdsVkdPv3XjveQJsNQqmhXgRi8uhvWWuPYZCNlzT8qAyblUgNoXdHdjMTzAqeGjAoli8f+bzPA==}
@@ -3994,7 +4000,6 @@ packages:
     resolution: {integrity: sha512-1IMnbjt4KzsQfnhnzNd8wUEgXZ44IzZaZmnLYx7D5FZlaHt2gW20Cri8Q+E/t5tIj4+epTBub+2Zxu/vNILzqQ==}
     dependencies:
       micromatch: 4.0.5
-    dev: false
 
   /flat-cache/3.0.4:
     resolution: {integrity: sha512-dm9s5Pw7Jc0GvMYbshN6zchCA9RgQlzzEZX3vylR9IqFfS8XciblUXOKfW6SiuJ0e13eDYZoZV5wdrev7P3Nwg==}
@@ -4071,7 +4076,6 @@ packages:
       graceful-fs: 4.2.10
       jsonfile: 6.1.0
       universalify: 2.0.0
-    dev: false
 
   /fs-extra/7.0.1:
     resolution: {integrity: sha512-YJDaCJZEnBmcbw13fvdAM9AwNOJwOzrE4pqMqBq5nFiEqXUqHwlK4B+3pUw6JNvfSPtX05xFHtYy/1ni01eGCw==}
@@ -4907,7 +4911,6 @@ packages:
     hasBin: true
     dependencies:
       ci-info: 3.3.2
-    dev: false
 
   /is-core-module/2.10.0:
     resolution: {integrity: sha512-Erxj2n/LDAZ7H8WNJXd9tw38GYM3dv8rk8Zcs+jJuxYTW7sozH+SS8NtrSjVL1/vpLvWi1hxy96IzjJ3EHTJJg==}
@@ -4956,7 +4959,6 @@ packages:
     resolution: {integrity: sha512-F+i2BKsFrH66iaUFc0woD8sLy8getkwTwtOBjvs56Cx4CgJDeKQeqfz8wAYiSb8JOprWhHH5p77PbmYCvvUuXQ==}
     engines: {node: '>=8'}
     hasBin: true
-    dev: false
 
   /is-extendable/0.1.1:
     resolution: {integrity: sha512-5BMULNob1vgFX6EjQw5izWDxrecWK9AM72rugNr0TFldMOi0fj6Jk+zeKIt0xGj4cEfQIJth4w3OKWOJ4f+AFw==}
@@ -5157,7 +5159,6 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       is-docker: 2.2.1
-    dev: false
 
   /isarray/0.0.1:
     resolution: {integrity: sha512-D2S+3GLxWH+uhrNEcoh/fnmYeP8E8/zHl644d/jdA0g2uyXvy3sb0qxotE+ne0LtccHknQzWwZEzhak7oJ0COQ==}
@@ -5812,7 +5813,6 @@ packages:
       universalify: 2.0.0
     optionalDependencies:
       graceful-fs: 4.2.10
-    dev: false
 
   /jsonify/0.0.0:
     resolution: {integrity: sha512-trvBk1ki43VZptdBI5rIlG4YOzyeH/WefQt5rj1grasPn4iiZWKet8nkgc4GlsAylaztn0qZfUYOiTsASJFdNA==}
@@ -5866,7 +5866,6 @@ packages:
     resolution: {integrity: sha512-nIeuVSzdCCs6TDPTqI8w1Yre34sSq7AkZ4B3sfOBbI2CgVSB4Du4aLQijFU2+lhAFCwt9+42Hel6lQNIv6AntQ==}
     dependencies:
       graceful-fs: 4.2.10
-    dev: false
 
   /kleur/3.0.3:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
@@ -6253,7 +6252,6 @@ packages:
     resolution: {integrity: sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==}
     engines: {node: '>=10'}
     hasBin: true
-    dev: false
 
   /mocha-steps/1.3.0:
     resolution: {integrity: sha512-KZvpMJTqzLZw3mOb+EEuYi4YZS41C9iTnb7skVFRxHjUd1OYbl64tCMSmpdIRM9LnwIrSOaRfPtNpF5msgv6Eg==}
@@ -6760,7 +6758,6 @@ packages:
       define-lazy-prop: 2.0.0
       is-docker: 2.2.1
       is-wsl: 2.2.0
-    dev: false
 
   /opn/3.0.3:
     resolution: {integrity: sha512-YKyQo/aDk+kLY/ChqYx3DMWW8cbxvZDh+7op1oU60TmLHGWFrn2gPaRWihzDhSwCarAESa9G8dNXzjTGfLx8FQ==}
@@ -7904,7 +7901,6 @@ packages:
 
   /shlex/2.1.2:
     resolution: {integrity: sha512-Nz6gtibMVgYeMEhUjp2KuwAgqaJA1K155dU/HuDaEJUGgnmYfVtVZah+uerVWdH8UGnyahhDCgABbYTbs254+w==}
-    dev: false
 
   /side-channel/1.0.4:
     resolution: {integrity: sha512-q5XPytqFEIKHkGdiMIrY10mvLRvnQh42/+GoBlFW3b2LXLE2xxJpZFdm94we0BaoV3RwJyGqg5wS7epxTv0Zvw==}
@@ -7972,7 +7968,6 @@ packages:
   /slash/2.0.0:
     resolution: {integrity: sha512-ZYKh3Wh2z1PpEXWr0MpSBZ0V6mZHAQfYevttO11c51CaWjGTaadiKZ+wVt1PbMlDV5qhMFslpZCemhwOK7C89A==}
     engines: {node: '>=6'}
-    dev: false
 
   /slash/3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
@@ -8724,7 +8719,6 @@ packages:
     engines: {node: '>=8.17.0'}
     dependencies:
       rimraf: 3.0.2
-    dev: false
 
   /tmpl/1.0.5:
     resolution: {integrity: sha512-3f0uOEAQwIqGuWW2MVzYg8fV/QNnc/IpuJNG837rLuczAaLVHslWHZQj4IGiEl5Hs3kkbhwL9Ab7Hrsmuj+Smw==}
@@ -9043,7 +9037,6 @@ packages:
   /universalify/2.0.0:
     resolution: {integrity: sha512-hAZsKq7Yy11Zu1DE0OzWjw7nnLZmJZYTDZZyEFHZdUhV8FkH5MCfoU1XMaxXovpyW5nq5scPqq0ZDP9Zyl04oQ==}
     engines: {node: '>= 10.0.0'}
-    dev: false
 
   /unordered-set/2.0.1:
     resolution: {integrity: sha512-eUmNTPzdx+q/WvOHW0bgGYLWvWHNT3PTKEQLg0MAQhc0AHASHVHoP/9YytYd4RBVariqno/mEUhVZN98CmD7bg==}
@@ -9596,11 +9589,11 @@ packages:
       streamx: 2.12.5
     dev: false
 
-  github.com/backbonedao/data-manager/f8328b738089bcf9e9f1565a83fcb5189665e501_22kvxa7zeyivx4jp72v2w3pkvy:
-    resolution: {tarball: https://codeload.github.com/backbonedao/data-manager/tar.gz/f8328b738089bcf9e9f1565a83fcb5189665e501}
-    id: github.com/backbonedao/data-manager/f8328b738089bcf9e9f1565a83fcb5189665e501
+  github.com/backbonedao/data-manager/df4f1159995da6f80b280678e449247f391b7922_22kvxa7zeyivx4jp72v2w3pkvy:
+    resolution: {tarball: https://codeload.github.com/backbonedao/data-manager/tar.gz/df4f1159995da6f80b280678e449247f391b7922}
+    id: github.com/backbonedao/data-manager/df4f1159995da6f80b280678e449247f391b7922
     name: '@backbonedao/data-manager'
-    version: 1.0.0
+    version: 1.0.1
     dependencies:
       b4a: 1.6.0
       blake2b-universal: 1.0.1
@@ -9608,6 +9601,7 @@ packages:
       hypercore: github.com/backbonedao/data/bebbe70ecaaddac72a087020e556a248d06c9a8b_22kvxa7zeyivx4jp72v2w3pkvy
       hypercore-crypto: github.com/backbonedao/crypto/96da6514fe5ba8e1afadfc02f8db14d0c1a2b793_22kvxa7zeyivx4jp72v2w3pkvy
       safety-catch: 1.0.2
+      sodium-javascript: 0.8.0
       sodium-universal: 3.1.0
       xache: 1.1.0
     transitivePeerDependencies:
@@ -9642,7 +9636,7 @@ packages:
     name: '@backbonedao/data'
     version: 1.0.1
     dependencies:
-      '@backbonedao/secret-stream': github.com/backbonedao/secret-stream/319f94acca4ba61f1c8d73db41aa96beeef58fab_22kvxa7zeyivx4jp72v2w3pkvy
+      '@backbonedao/secret-stream': github.com/backbonedao/secret-stream/a593d0bf916bbfe5e1874aa28b41672e82efc31a_22kvxa7zeyivx4jp72v2w3pkvy
       b4a: 1.6.0
       big-sparse-array: 1.0.2
       bits-to-bytes: 1.3.0
@@ -9681,7 +9675,7 @@ packages:
     dependencies:
       '@backbonedao/crypto': github.com/backbonedao/crypto/96da6514fe5ba8e1afadfc02f8db14d0c1a2b793_22kvxa7zeyivx4jp72v2w3pkvy
       '@backbonedao/noise-handshake': github.com/backbonedao/noise-handshake/4f27d3ea1b7e4fd7601163d38847f9067d98b6d2_22kvxa7zeyivx4jp72v2w3pkvy
-      '@backbonedao/secret-stream': github.com/backbonedao/secret-stream/319f94acca4ba61f1c8d73db41aa96beeef58fab_22kvxa7zeyivx4jp72v2w3pkvy
+      '@backbonedao/secret-stream': github.com/backbonedao/secret-stream/a593d0bf916bbfe5e1874aa28b41672e82efc31a_22kvxa7zeyivx4jp72v2w3pkvy
       '@hyperswarm/secret-stream': 5.2.0
       b4a: 1.6.0
       bind-easy: 1.1.2
@@ -9778,15 +9772,17 @@ packages:
       varint: 5.0.0
     dev: false
 
-  github.com/backbonedao/secret-stream/319f94acca4ba61f1c8d73db41aa96beeef58fab_22kvxa7zeyivx4jp72v2w3pkvy:
-    resolution: {tarball: https://codeload.github.com/backbonedao/secret-stream/tar.gz/319f94acca4ba61f1c8d73db41aa96beeef58fab}
-    id: github.com/backbonedao/secret-stream/319f94acca4ba61f1c8d73db41aa96beeef58fab
+  github.com/backbonedao/secret-stream/a593d0bf916bbfe5e1874aa28b41672e82efc31a_22kvxa7zeyivx4jp72v2w3pkvy:
+    resolution: {tarball: https://codeload.github.com/backbonedao/secret-stream/tar.gz/a593d0bf916bbfe5e1874aa28b41672e82efc31a}
+    id: github.com/backbonedao/secret-stream/a593d0bf916bbfe5e1874aa28b41672e82efc31a
     name: '@backbonedao/secret-stream'
     version: 1.0.0
+    requiresBuild: true
     dependencies:
       '@backbonedao/crypto': github.com/backbonedao/crypto/96da6514fe5ba8e1afadfc02f8db14d0c1a2b793_22kvxa7zeyivx4jp72v2w3pkvy
       '@backbonedao/noise-curve-secp256k1': github.com/backbonedao/noise-curve-secp256k1/a6b059710825967f95677c5bd9223fb58caa3671_22kvxa7zeyivx4jp72v2w3pkvy
       '@backbonedao/noise-handshake': github.com/backbonedao/noise-handshake/4f27d3ea1b7e4fd7601163d38847f9067d98b6d2_22kvxa7zeyivx4jp72v2w3pkvy
+      '@milahu/patch-package': 6.4.14
       b4a: 1.6.0
       noise-handshake: 2.2.0
       sodium-javascript: 0.8.0

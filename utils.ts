@@ -2,7 +2,7 @@ import { randomBytes, buf2hex, hex2buf, getPublicKeyFromSig } from '@backbonedao
 import { base64 } from 'ethers/lib/utils';
 import { error } from './common'
 
-export async function UUID(len) {
+export async function UUID(len?) {
   return buf2hex(randomBytes(len || 32))
 }
 

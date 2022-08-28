@@ -1,5 +1,6 @@
 import { Array } from './base'
-const { Any } = require('./objectmodel')
+import om from 'objectmodel'
+const { Any } = om
 import { createHash } from '@backbonedao/crypto'
 import b4a from 'b4a'
 
@@ -8,7 +9,7 @@ const AppendOnly = function (model) {
   let hash
   return Array(model)
     .assert((data) => {
-      if (!data ) return true
+      if (!data) return true
       const new_size = data.length
       if (new_size >= size) {
         size = new_size
@@ -17,7 +18,7 @@ const AppendOnly = function (model) {
     }, 'array smaller than previously')
     .assert((data) => {
       if (!data) return true
-      if(!hash) {
+      if (!hash) {
         // if hash doesn't exist, this should be "initialization"
         hash = createHash(data)
         return true

@@ -1,7 +1,6 @@
 import platform from 'platform-detect'
 import RAM from 'random-access-memory'
 import RAI from 'random-access-idb'
-import { homedir } from 'os'
 import { CoreConfig } from '../common/interfaces'
 import { getHomedir, log } from '../common'
 
@@ -18,9 +17,7 @@ export default function getStorage(config: CoreConfig) {
     if(prefix) log(`Using storage prefix: ${prefix}`)
     // split the path in chunks of two letters to avoid creating file explorer killing directories
     const pathname = config.address.match(/.{1,2}/g)?.join('/')
-    storage = process.env.TEST
-      ? `${homedir()}/.backbone-test/${prefix}${pathname}`
-      : `${getHomedir()}/${prefix}${pathname}`
+    storage = `${getHomedir()}/${prefix}${pathname}`
   } else {
     log('Browser runtime detected, using RAI for storage')
     storage = RAI(config.address)

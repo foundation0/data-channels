@@ -17,7 +17,7 @@ export async function connect(
   this,
   opts?: { use_unique_swarm?: boolean; local_only?: { initiator: boolean } }
 ) {
-  if (this.network) return error('NETWORK EXISTS')
+  if (this.network) return
   if (!this.config?.network) return error('CONNECT NEEDS NETWORK CONFIG')
   if (this.config.private) return error('ACCESS DENIED - PRIVATE CORE')
 

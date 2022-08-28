@@ -19,7 +19,7 @@ async function getSwarm(network_config) {
 exports.getSwarm = getSwarm;
 async function connect(opts) {
     if (this.network)
-        return common_1.error('NETWORK EXISTS');
+        return;
     if (!this.config?.network)
         return common_1.error('CONNECT NEEDS NETWORK CONFIG');
     if (this.config.private)

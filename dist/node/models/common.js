@@ -1,7 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PromiseOf = exports.ArrayDense = exports.ArrayUnique = exports.ArrayNotEmpty = exports.FutureDate = exports.PastDate = exports.TrimmedString = exports.NormalizedString = exports.StringNotBlank = exports.NegativeInteger = exports.PositiveInteger = exports.NegativeNumber = exports.PositiveNumber = exports.FiniteNumber = exports.SafeInteger = exports.Integer = exports.Truthy = exports.Falsy = exports.Primitive = void 0;
-const { BasicModel } = require("./objectmodel");
+const objectmodel_1 = __importDefault(require("objectmodel"));
+const { BasicModel } = objectmodel_1.default;
 exports.Primitive = BasicModel([Boolean, Number, String, Symbol]).as("Primitive");
 exports.Falsy = BasicModel([exports.Primitive, null, undefined]).assert(function isFalsy(x) { return !x; }).as("Falsy");
 exports.Truthy = BasicModel([exports.Primitive, Object]).assert(function isTruthy(x) { return !!x; }).as("Truthy");

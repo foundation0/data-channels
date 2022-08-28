@@ -1,5 +1,5 @@
-import { createHash } from 'crypto'
-import { homedir } from 'os'
+import { createHash } from '@backbonedao/crypto'
+import os from 'os'
 import Config from '../bbconfig'
 import ttl from 'ttl'
 import { EventEmitter2 } from 'eventemitter2'
@@ -97,7 +97,7 @@ export function unique(array: string[]) {
 
 export function getHomedir() {
   if (Config?.user?.home_dir === '~')
-    return process.env.TEST ? `${homedir()}/.backbone-test` : `${homedir()}/.backbone`
+    return process.env.TEST ? `${os.homedir()}/.backbone-test` : `${os.homedir()}/.backbone`
   else return Config?.user?.home_dir
 }
 

@@ -322,6 +322,8 @@ class CoreClass {
         if (typeof params === 'string' || !params?.key || !params?.value)
           return error('INVALID PARAMS')
 
+        if(typeof params?.key !== 'string') return error('key must be a string or a number')
+
         let unsigned = false
         Object.keys(params).forEach((k) => {
           // if item has _meta, we need to flatten it

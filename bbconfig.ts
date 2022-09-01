@@ -2,7 +2,7 @@
 
 const { getRandomInt } = require("./common")
 
-module.exports = {
+export default {
   user: {
     home_dir: '~',
     id_url:

@@ -40,6 +40,30 @@ test.describe('Core', () => {
     expect(foo).toEqual('bar')
   })
 
+  test('non-string keys should fail', async () => {
+    const core = await Core({
+      config: {
+        address: 'init-test',
+        encryption_key: 'foobar',
+        private: false,
+        storage_prefix: 'test',
+        storage: 'ram',
+      },
+      app: KeyValue,
+    })
+    
+    await core.set({ key: 'foo', value: 'bar' })
+    const r = await core.get('foo')
+    expect(r).toEqual('bar')
+
+    try {
+      const res = await core.set({ key: 0, value: 'bar' })
+      expect(res).toEqual('we should not get to this line because the above should throw')
+    } catch (error) {
+      expect(error).toBeTruthy()
+    }
+  })
+
   test('should initialize core with keys', async () => {
     const keypair = keyPair()
     const core = await Core({

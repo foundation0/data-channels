@@ -1,9 +1,10 @@
 import { error } from '../common'
 
-const { Model, ObjectModel, ArrayModel, MapModel, SetModel } = require('./objectmodel')
+import om from 'objectmodel'
+const { Model, ObjectModel, ArrayModel, MapModel, SetModel } = om
 const semverSort = require('semver/functions/sort')
 const semverGtr = require('semver/ranges/gtr')
-const { ethers } = require('ethers')
+import { ethers } from 'ethers'
 // import Binary from './binary'
 import {
   buf2hex,
@@ -113,6 +114,7 @@ export default async function (
     }
   }, 'signature must verify against data') {
     _meta
+    _initial
 
     constructor(data) {
       // if data is a string, it's probably stringified JSON

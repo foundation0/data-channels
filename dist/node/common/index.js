@@ -4,8 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.base64 = exports.sleep = exports.registerMethods = exports.createCache = exports.hash = exports.getHomedir = exports.unique = exports.shuffle = exports.getRandomInt = exports.flatten = exports.JSONparse = exports.decodeCoreData = exports.encodeCoreData = exports.subscribeToEvent = exports.subscribeToChannel = exports.emit = exports.buf2hex = exports.error = exports.log = void 0;
-const crypto_1 = require("crypto");
-const os_1 = require("os");
+const crypto_1 = require("@backbonedao/crypto");
+const os_1 = __importDefault(require("os"));
 const bbconfig_1 = __importDefault(require("../bbconfig"));
 const ttl_1 = __importDefault(require("ttl"));
 const eventemitter2_1 = require("eventemitter2");
@@ -97,7 +97,7 @@ function unique(array) {
 exports.unique = unique;
 function getHomedir() {
     if (bbconfig_1.default?.user?.home_dir === '~')
-        return process.env.TEST ? `${os_1.homedir()}/.backbone-test` : `${os_1.homedir()}/.backbone`;
+        return process.env.TEST ? `${os_1.default.homedir()}/.backbone-test` : `${os_1.default.homedir()}/.backbone`;
     else
         return bbconfig_1.default?.user?.home_dir;
 }

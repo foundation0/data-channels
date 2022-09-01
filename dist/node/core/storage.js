@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const platform_detect_1 = __importDefault(require("platform-detect"));
 const random_access_memory_1 = __importDefault(require("random-access-memory"));
 const random_access_idb_1 = __importDefault(require("random-access-idb"));
-const os_1 = require("os");
 const common_1 = require("../common");
 function getStorage(config) {
     if (!config)
@@ -22,9 +21,7 @@ function getStorage(config) {
         if (prefix)
             common_1.log(`Using storage prefix: ${prefix}`);
         const pathname = config.address.match(/.{1,2}/g)?.join('/');
-        storage = process.env.TEST
-            ? `${os_1.homedir()}/.backbone-test/${prefix}${pathname}`
-            : `${common_1.getHomedir()}/${prefix}${pathname}`;
+        storage = `${common_1.getHomedir()}/${prefix}${pathname}`;
     }
     else {
         common_1.log('Browser runtime detected, using RAI for storage');

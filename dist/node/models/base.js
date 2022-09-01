@@ -5,7 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Set = exports.Map = exports.Array = exports.Object = exports.Model = void 0;
 const common_1 = require("../common");
-const { Model, ObjectModel, ArrayModel, MapModel, SetModel } = require('./objectmodel');
+const objectmodel_1 = __importDefault(require("objectmodel"));
+const { Model, ObjectModel, ArrayModel, MapModel, SetModel } = objectmodel_1.default;
 exports.Model = Model;
 exports.Object = ObjectModel;
 exports.Array = ArrayModel;
@@ -13,7 +14,7 @@ exports.Map = MapModel;
 exports.Set = SetModel;
 const semverSort = require('semver/functions/sort');
 const semverGtr = require('semver/ranges/gtr');
-const { ethers } = require('ethers');
+const ethers_1 = require("ethers");
 const crypto_1 = require("@backbonedao/crypto");
 const b4a_1 = __importDefault(require("b4a"));
 const msgpackr_1 = require("msgpackr");
@@ -32,7 +33,7 @@ const Meta = Model({
 }, 'signature should have lenght of 130')
     .assert((data) => {
     if (data?.id)
-        return ethers.utils.isAddress(data.id);
+        return ethers_1.ethers.utils.isAddress(data.id);
     else
         return true;
 }, 'Id should be valid 0x address');

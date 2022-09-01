@@ -1,4 +1,5 @@
-const { BasicModel } = require("./objectmodel")
+import om from "objectmodel"
+const { BasicModel } = om
 
 export const Primitive = BasicModel([Boolean, Number, String, Symbol]).as("Primitive");
 

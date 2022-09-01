@@ -11,7 +11,7 @@ import {
   log,
   subscribeToEvent,
   subscribeToChannel,
-  base64
+  base64,
 } from '../common'
 import default_config from '../bbconfig'
 import _ from 'lodash'
@@ -194,7 +194,7 @@ class CoreClass {
         const DataAPI = await self.getDataAPI(dat)
         for (const { value } of operations) {
           const o = decodeCoreData(value)
-          const op = new Operation(o)
+          const op: any = new Operation(o)
           try {
             switch (op.type) {
               // Bootloader Protocol APIs
@@ -735,31 +735,29 @@ async function Core(params: {
     logUI = window['appendMsgToUI']
   }
 
-  async function startAppInBrowser(code): Promise<{ Protocol: any, API: any }> {
+  async function startAppInBrowser(code): Promise<{ Protocol: any; API: any }> {
     return new Promise((resolve, reject) => {
-      if (typeof window !== 'object' && !document.body)
-        return error('is this a browser?')
+      if (typeof window !== 'object' && !document.body) return error('is this a browser?')
       const app_container = document.createElement('script')
       app_container.setAttribute('id', 'app-container')
       document.body.appendChild(app_container)
-      app_container.onload = function(){
+      app_container.onload = function () {
         resolve(window['app']?.default || window['app'])
       }
       app_container.setAttribute('src', `data:text/javascript;base64,${base64.encode(code)}`)
-    });
+    })
   }
   async function startUIInBrowser(code): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      if (typeof window !== 'object' && !document.body)
-        return error('is this a browser?')
+      if (typeof window !== 'object' && !document.body) return error('is this a browser?')
       const ui_container = document.createElement('script')
       ui_container.setAttribute('id', 'ui-container')
       document.body.appendChild(ui_container)
-      ui_container.onload = function(){
+      ui_container.onload = function () {
         resolve(window['ui']?.default || window['ui'])
       }
       ui_container.setAttribute('src', `data:text/javascript;base64,${base64.encode(code)}`)
-    });
+    })
   }
   // Return a promise while we try to get the container code
   return new Promise(async (resolve, reject) => {

@@ -3,7 +3,7 @@
   "description": "Unstoppable, infinitely scalable dapp container for self-sovereign metaverse",
   "author": "backbone://dao",
   "license": "AGPL-3.0-or-later",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "main": "dist/node/index.js",
   "engines": {
     "node": "<17.0.0"

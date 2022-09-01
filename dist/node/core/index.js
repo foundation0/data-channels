@@ -241,6 +241,8 @@ class CoreClass {
             put: async (params) => {
                 if (typeof params === 'string' || !params?.key || !params?.value)
                     return common_1.error('INVALID PARAMS');
+                if (typeof params?.key !== 'string')
+                    return common_1.error('key must be a string or a number');
                 let unsigned = false;
                 Object.keys(params).forEach((k) => {
                     if (params[k]._meta) {

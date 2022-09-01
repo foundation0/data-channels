@@ -67,6 +67,12 @@ async function connect(opts) {
         }
         catch (err) {
             common_1.error(err);
+            common_1.emit({
+                ch: 'network',
+                event: 'network.restarting',
+                msg: `Restarting network...`,
+            });
+            this.network = await connectToNetwork();
         }
     }
     if (!opts?.local_only) {

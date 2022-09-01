@@ -86,6 +86,12 @@ export async function connect(
       return network
     } catch (err) {
       error(err)
+      emit({
+        ch: 'network',
+        event: 'network.restarting',
+        msg: `Restarting network...`,
+      })
+      this.network = await connectToNetwork()
     }
   }
   if (!opts?.local_only) {

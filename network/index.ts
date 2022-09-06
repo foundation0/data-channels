@@ -68,6 +68,29 @@ export async function connect(
         r.on('error', (err) => {
           error(err.message)
         })
+
+        r.on('data', (...args) => {
+          emit({
+            ch: `_:core:data`,
+            msg: { id: 'datamanager', ...args },
+          })
+        })
+        r.on('drain', (...args) => {
+          emit({
+            ch: `_:core:drain`,
+            msg: { id: 'datamanager', ...args },
+          })
+        })
+        r.on('close', (...args) => {
+          emit({ ch: `_:core:close`, msg: { id: 'datamanager', ...args } })
+        })
+        r.on('finish', (...args) => {
+          emit({ ch: `_:core:finish`, msg: { id: 'datamanager', ...args } })
+        })
+        r.on('end', (...args) => {
+          emit({ ch: `_:core:end`, msg: { id: 'datamanager', ...args } })
+        })
+
         self.connected_peers++
       })
       emit({

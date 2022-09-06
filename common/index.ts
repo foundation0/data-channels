@@ -29,6 +29,11 @@ export function buf2hex(buffer) {
   return Buffer.toString(buffer, 'hex')
 }
 
+export function getEnvVar(key) {
+  if(typeof window === 'object') return localStorage.getItem(key)
+  if(typeof global === 'object') return process.env[key]
+}
+
 export function emit(params: {
   ch: string
   msg: string | object | number
@@ -36,10 +41,11 @@ export function emit(params: {
   verbose?: boolean
   no_log?: boolean
 }) {
-  if (params.verbose && !process.env.VERBOSE) return
+  if (params.verbose && !getEnvVar('VERBOSE')) return
   EE.emit(params.ch, params.msg)
   if (params.event) EE.emit(params.event)
-  if (!params?.no_log) log(`${params.ch} > ${JSON.stringify(params.msg)}`)
+  if (!params?.no_log && params.ch.charAt(0) !== '_') return log(`${params.ch} > ${JSON.stringify(params.msg)}`)
+  if (getEnvVar('SYSLOG') && params.ch.charAt(0) === '_') return log(`${params.ch} > ${JSON.stringify(params.msg)}`)
 }
 
 export function subscribeToChannel(params: { ch: string; cb: any }) {

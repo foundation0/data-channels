@@ -162,6 +162,12 @@ class CoreClass {
     this.index = this.datamanager.get(index_conf)
     this.meta = this.datamanager.get(meta_conf)
     this.meta_index = this.datamanager.get(meta_index_conf)
+    
+    await this._applyEventLogging({ core: this.writer, id: 'writer' })
+    await this._applyEventLogging({ core: this.index, id: 'index' })
+    await this._applyEventLogging({ core: this.meta, id: 'meta' })
+    await this._applyEventLogging({ core: this.meta_index, id: 'meta_index' })
+    
     await this.writer.ready()
     await this.index.ready()
     await this.meta.ready()
@@ -316,13 +322,30 @@ class CoreClass {
       verbose: true,
     })
   }
+  async _applyEventLogging(params: { id: string, core: any }) {
+    params.core.on('download', (index, data) => {
+      emit({ ch: `_:core:download`, msg: { id: params.id, index, data, length: data.length }})
+    })
+    params.core.on('upload', (index, data) => {
+      emit({ ch: `_:core:upload`, msg: { id: params.id, index, data, length: data.length }})
+    })
+    params.core.on('append', () => {
+      emit({ ch: `_:core:append`, msg: { id: params.id }})
+    })
+    params.core.on('sync', () => {
+      emit({ ch: `_:core:sync`, msg: { id: params.id }})
+    })
+    params.core.on('close', () => {
+      emit({ ch: `_:core:close`, msg: { id: params.id }})
+    })
+  }
   async getDataAPI(this: CoreClass, data) {
     const API = {
       put: async (params: { key: string; value: any }) => {
         if (typeof params === 'string' || !params?.key || !params?.value)
           return error('INVALID PARAMS')
 
-        if(typeof params?.key !== 'string') return error('key must be a string or a number')
+        if (typeof params?.key !== 'string') return error('key must be a string or a number')
 
         let unsigned = false
         Object.keys(params).forEach((k) => {

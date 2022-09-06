@@ -8,6 +8,9 @@ import Buffer from 'b4a'
 import { unpack, pack } from 'msgpackr'
 
 const EE = new EventEmitter2()
+if(typeof window === 'object'){
+  window['backbone'] = { ...window['backbone'] || {}, events: EE }
+}
 
 export function log(message: string, ...data: any) {
   if (process.env['LOG'] || (platform.browser && window?.localStorage.getItem('LOG')))
@@ -28,7 +31,7 @@ export function buf2hex(buffer) {
 
 export function emit(params: {
   ch: string
-  msg: string
+  msg: string | object | number
   event?: string
   verbose?: boolean
   no_log?: boolean
@@ -36,7 +39,7 @@ export function emit(params: {
   if (params.verbose && !process.env.VERBOSE) return
   EE.emit(params.ch, params.msg)
   if (params.event) EE.emit(params.event)
-  if (!params?.no_log) log(`${params.ch} > ${params.msg}`)
+  if (!params?.no_log) log(`${params.ch} > ${JSON.stringify(params.msg)}`)
 }
 
 export function subscribeToChannel(params: { ch: string; cb: any }) {

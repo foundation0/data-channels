@@ -1,6 +1,6 @@
 import * as Comlink from 'comlink'
 import Config from '../bbconfig'
-import { error } from '../common'
+import { error, emit } from '../common'
 
 class IdManagerClass {
   IdApp: any
@@ -105,7 +105,7 @@ class IdManagerClass {
           clearInterval(is_authenticated_check)
 
           if (is_authenticated) {
-            console.log('authenticated')
+            emit({ ch: 'id', msg: 'authentication successful', event: 'id:authenticated'} )
             msgAuthOverlay({
               msg: 'Authentication successful!',
               next: () => {

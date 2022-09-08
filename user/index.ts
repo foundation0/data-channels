@@ -1,6 +1,7 @@
 import * as Comlink from 'comlink'
 import Config from '../bbconfig'
 import { error, emit } from '../common'
+import { buf2hex } from '@backbonedao/crypto'
 
 class IdManagerClass {
   IdApp: any
@@ -170,7 +171,11 @@ class IdManagerClass {
 
   async getId(this: IdManagerClass) {
     if(await this.isAuthenticated({ address: window['backbone'].app_profile?.address })) {
-      if (this.IdApp) return this.IdApp.getId()   
+      if (this.IdApp) {
+        let id = await this.IdApp.getId()
+        if(typeof id !== 'string') id = buf2hex(id, true)
+        return id
+      }
     } else return error(`no Id available`)
   }
 }

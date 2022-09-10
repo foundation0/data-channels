@@ -1,7 +1,9 @@
 import { test, expect } from '@playwright/test'
 import DataModel, { OwnerOnly, AppendOnly } from '../../models'
 import { sign, keyPair, buf2hex, getIdFromPublicKey, createHash } from '@backbonedao/crypto'
-import { pack } from 'msgpackr'
+import Core from '../../core'
+import { CoreConfig } from '../../common/interfaces'
+
 // user.authenticate is available and adds id with mockup bridge methods
 
 function createGlobalUser() {
@@ -25,6 +27,15 @@ function createGlobalUser() {
   return id
 }
 
+const config_kv: CoreConfig = {
+  address: 'protocol-kv',
+  encryption_key: '0',
+  writers: [],
+  trusted_users: [],
+  storage: 'ram',
+  storage_prefix: 'models-test',
+}
+
 test.describe('Models', async () => {
   test('Create new model from new and serialized data', async () => {
     const M = DataModel(
@@ -39,6 +50,49 @@ test.describe('Models', async () => {
     const d = m.toJSON()
     const m2 = await M(d)
     expect(m2.toJSON()).toEqual(m.toJSON())
+  })
+
+  test('DataModels are passed correctly between API and Protocol', async () => {
+    createGlobalUser()
+    const M = DataModel(
+      {
+        username: String,
+      },
+      { _debug: { app_version: '0.1.0' } },
+    )
+
+    await new Promise(async (resolve, reject) => {
+      const app = {
+        API: async function (Data, Protocol) {
+          return {
+            set: async (username) => {
+              const m = await M({ username })
+              expect(m._meta.signature).toBeTruthy()
+              expect(m._meta.hash).toBeTruthy()
+              await Protocol({ type: 'set', data: m})
+            }
+          }
+        },
+        Protocol: async function (op, Data) {
+          switch (op.type) {
+            case 'set':
+              try {
+                expect(op.data.username).toEqual('jensen')
+                expect(op.data._meta.signature).toBeTruthy()
+                expect(op.data._meta.hash).toBeTruthy()
+                resolve(true)
+              } catch (error) {
+                reject(error)
+              }
+              break;
+          
+          }
+        }
+      }
+      const core = await Core({ config: config_kv, app })
+      await core.set('jensen')
+    });
+
   })
 
   test('OwnerOnly', async () => {
@@ -223,10 +277,14 @@ test.describe('Models', async () => {
     )
     const m2 = await M2(dat)
     expect(m2._meta.unsigned).toBeUndefined()
+    expect(m2._meta.hash).toBeTruthy()
+    expect(m2._meta.signature).toBeTruthy()
     m2.username = 'foo'
     expect(m2._meta.unsigned).toBeTruthy()
     await m2.sign()
     expect(m2._meta.unsigned).toBeUndefined()
+    expect(m2._meta.hash).toBeTruthy()
+    expect(m2._meta.signature).toBeTruthy()
   })
 })
 

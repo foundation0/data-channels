@@ -25,6 +25,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Comlink = __importStar(require("comlink"));
 const bbconfig_1 = __importDefault(require("../bbconfig"));
 const common_1 = require("../common");
+const crypto_1 = require("@backbonedao/crypto");
 class IdManagerClass {
     constructor() { }
     async init() {
@@ -104,7 +105,7 @@ class IdManagerClass {
                 function authenticated(is_authenticated) {
                     clearInterval(is_authenticated_check);
                     if (is_authenticated) {
-                        console.log('authenticated');
+                        common_1.emit({ ch: 'id', msg: 'authentication successful', event: 'id:authenticated' });
                         msgAuthOverlay({
                             msg: 'Authentication successful!',
                             next: () => {
@@ -172,8 +173,12 @@ class IdManagerClass {
     }
     async getId() {
         if (await this.isAuthenticated({ address: window['backbone'].app_profile?.address })) {
-            if (this.IdApp)
-                return this.IdApp.getId();
+            if (this.IdApp) {
+                let id = await this.IdApp.getId();
+                if (typeof id !== 'string')
+                    id = crypto_1.buf2hex(id, true);
+                return id;
+            }
         }
         else
             return common_1.error(`no Id available`);

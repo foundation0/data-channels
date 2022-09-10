@@ -52,6 +52,27 @@ async function connect(opts) {
                 r.on('error', (err) => {
                     common_1.error(err.message);
                 });
+                r.on('data', (...args) => {
+                    common_1.emit({
+                        ch: `_:core:data`,
+                        msg: { id: 'datamanager', ...args },
+                    });
+                });
+                r.on('drain', (...args) => {
+                    common_1.emit({
+                        ch: `_:core:drain`,
+                        msg: { id: 'datamanager', ...args },
+                    });
+                });
+                r.on('close', (...args) => {
+                    common_1.emit({ ch: `_:core:close`, msg: { id: 'datamanager', ...args } });
+                });
+                r.on('finish', (...args) => {
+                    common_1.emit({ ch: `_:core:finish`, msg: { id: 'datamanager', ...args } });
+                });
+                r.on('end', (...args) => {
+                    common_1.emit({ ch: `_:core:end`, msg: { id: 'datamanager', ...args } });
+                });
                 self.connected_peers++;
             });
             common_1.emit({

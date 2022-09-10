@@ -16,6 +16,7 @@ import {
 } from '@backbonedao/crypto'
 import b4a from 'b4a'
 import { pack } from 'msgpackr'
+import { stringify } from 'querystring'
 
 // Model for meta data
 const Meta = Model({
@@ -269,14 +270,15 @@ export default async function (
     }
   }
 
-  return async (data) => {
-    if (typeof data === 'string') {
+  return async (input) => {
+    if (typeof input === 'string') {
       try {
-        data = JSON.parse(data)
+        input = JSON.parse(input)
       } catch (error) {
         return error('DataModel accepts only objects or stringified objects')
       }
     }
+    const data = JSON.parse(JSON.stringify(input))
     // if _meta is included, it's already established object
     if (data?._meta) {
       // unless owner_only is disabled, fail if no sig is present

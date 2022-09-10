@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.base64 = exports.sleep = exports.registerMethods = exports.createCache = exports.hash = exports.getHomedir = exports.unique = exports.shuffle = exports.getRandomInt = exports.flatten = exports.JSONparse = exports.decodeCoreData = exports.encodeCoreData = exports.subscribeToEvent = exports.subscribeToChannel = exports.emit = exports.buf2hex = exports.error = exports.log = void 0;
+exports.base64 = exports.sleep = exports.registerMethods = exports.createCache = exports.hash = exports.getHomedir = exports.unique = exports.shuffle = exports.getRandomInt = exports.flatten = exports.JSONparse = exports.decodeCoreData = exports.encodeCoreData = exports.subscribeToEvent = exports.subscribeToChannel = exports.emit = exports.getEnvVar = exports.buf2hex = exports.error = exports.log = void 0;
 const crypto_1 = require("@backbonedao/crypto");
 const os_1 = __importDefault(require("os"));
 const bbconfig_1 = __importDefault(require("../bbconfig"));
@@ -13,6 +13,9 @@ const platform_detect_1 = __importDefault(require("platform-detect"));
 const b4a_1 = __importDefault(require("b4a"));
 const msgpackr_1 = require("msgpackr");
 const EE = new eventemitter2_1.EventEmitter2();
+if (typeof window === 'object') {
+    window['backbone'] = { ...window['backbone'] || {}, events: EE };
+}
 function log(message, ...data) {
     if (process.env['LOG'] || (platform_detect_1.default.browser && window?.localStorage.getItem('LOG')))
         console.log(message, ...data);
@@ -29,14 +32,23 @@ function buf2hex(buffer) {
     return b4a_1.default.toString(buffer, 'hex');
 }
 exports.buf2hex = buf2hex;
+function getEnvVar(key) {
+    if (typeof window === 'object')
+        return localStorage.getItem(key);
+    if (typeof global === 'object')
+        return process.env[key];
+}
+exports.getEnvVar = getEnvVar;
 function emit(params) {
-    if (params.verbose && !process.env.VERBOSE)
+    if (params.verbose && !getEnvVar('VERBOSE'))
         return;
     EE.emit(params.ch, params.msg);
     if (params.event)
         EE.emit(params.event);
-    if (!params?.no_log)
-        log(`${params.ch} > ${params.msg}`);
+    if (!params?.no_log && params.ch.charAt(0) !== '_')
+        return log(`${params.ch} > ${JSON.stringify(params.msg)}`);
+    if (getEnvVar('SYSLOG') && params.ch.charAt(0) === '_')
+        return log(`${params.ch} > ${JSON.stringify(params.msg)}`);
 }
 exports.emit = emit;
 function subscribeToChannel(params) {

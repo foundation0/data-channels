@@ -118,6 +118,10 @@ class CoreClass {
         this.index = this.datamanager.get(index_conf);
         this.meta = this.datamanager.get(meta_conf);
         this.meta_index = this.datamanager.get(meta_index_conf);
+        await this._applyEventLogging({ core: this.writer, id: 'writer' });
+        await this._applyEventLogging({ core: this.index, id: 'index' });
+        await this._applyEventLogging({ core: this.meta, id: 'meta' });
+        await this._applyEventLogging({ core: this.meta_index, id: 'meta_index' });
         await this.writer.ready();
         await this.index.ready();
         await this.meta.ready();
@@ -234,6 +238,23 @@ class CoreClass {
             ch: 'init',
             msg: `public keys:\nwriter: ${common_1.buf2hex(this.writer.key)}\nindex: ${common_1.buf2hex(this.index.key)}\nroot: ${common_1.buf2hex(root.key)} \nmeta: ${common_1.buf2hex(this.meta.key)}`,
             verbose: true,
+        });
+    }
+    async _applyEventLogging(params) {
+        params.core.on('download', (index, data) => {
+            common_1.emit({ ch: `_:core:download`, msg: { id: params.id, index, data, length: data.length } });
+        });
+        params.core.on('upload', (index, data) => {
+            common_1.emit({ ch: `_:core:upload`, msg: { id: params.id, index, data, length: data.length } });
+        });
+        params.core.on('append', () => {
+            common_1.emit({ ch: `_:core:append`, msg: { id: params.id } });
+        });
+        params.core.on('sync', () => {
+            common_1.emit({ ch: `_:core:sync`, msg: { id: params.id } });
+        });
+        params.core.on('close', () => {
+            common_1.emit({ ch: `_:core:close`, msg: { id: params.id } });
         });
     }
     async getDataAPI(data) {

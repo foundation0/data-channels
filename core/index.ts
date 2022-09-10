@@ -34,7 +34,7 @@ import mkdirp from 'mkdirp'
 
 let appsCache
 let bypassCache = false
-if (typeof window === 'object' && typeof window['navigation'] !== 'undefined') {
+if (typeof window === 'object') {
   const store = createStore('apps-cache', 'backbone')
   appsCache = {
     get: async (key) => {

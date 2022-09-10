@@ -44,6 +44,7 @@
     "eventemitter2": "^6.4.5",
     "idb-keyval": "^6.2.0",
     "isomorphic-ws": "^4.0.1",
+    "js-base64": "^3.7.2",
     "lexicographic-integer": "^1.1.0",
     "lodash": "^4.17.21",
     "msgpackr": "^1.5.6",

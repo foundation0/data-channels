@@ -6,6 +6,7 @@ import { EventEmitter2 } from 'eventemitter2'
 import platform from 'platform-detect'
 import Buffer from 'b4a'
 import { unpack, pack } from 'msgpackr'
+import {Base64} from 'js-base64';
 
 const EE = new EventEmitter2()
 if(typeof window === 'object'){
@@ -135,7 +136,7 @@ export function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export const base64 = {
+/* export const base64_old = {
   // private property
   _keyStr: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
 
@@ -258,4 +259,9 @@ export const base64 = {
 
     return string
   }, // End Function _utf8_decode
+} */
+
+export const base64 = {
+  encode: Base64.encode,
+  decode: Base64.decode,
 }

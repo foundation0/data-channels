@@ -42,6 +42,7 @@ specifiers:
   idb-keyval: ^6.2.0
   isomorphic-ws: ^4.0.1
   jest: ^27.5.1
+  js-base64: ^3.7.2
   lexicographic-integer: ^1.1.0
   lodash: ^4.17.21
   mkdirp: ^1.0.4
@@ -83,7 +84,7 @@ dependencies:
   '@backbonedao/data-db': github.com/backbonedao/data-db/f9183393adde39e84d166d8ac900844b295dc689
   '@backbonedao/data-manager': github.com/backbonedao/data-manager/df4f1159995da6f80b280678e449247f391b7922_22kvxa7zeyivx4jp72v2w3pkvy
   '@backbonedao/data-viewer': github.com/backbonedao/data-viewer/ffec23b193114ab57435447e7fbf3400a4b33292
-  '@backbonedao/network-node': github.com/backbonedao/network-node/86d972e93c4825e9f260f6ae23eca9344cd41e74_22kvxa7zeyivx4jp72v2w3pkvy
+  '@backbonedao/network-node': github.com/backbonedao/network-node/a3a5a06e3f51f4fa6bf9a77aeecf6d57aa78c61e_22kvxa7zeyivx4jp72v2w3pkvy
   '@jest/globals': 27.5.1
   '@milahu/patch-package': 6.4.14
   '@noble/secp256k1': 1.6.3
@@ -96,6 +97,7 @@ dependencies:
   eventemitter2: 6.4.7
   idb-keyval: 6.2.0
   isomorphic-ws: 4.0.1_ws@8.8.1
+  js-base64: 3.7.2
   lexicographic-integer: 1.1.0
   lodash: 4.17.21
   msgpackr: 1.6.2
@@ -7072,6 +7074,10 @@ packages:
       - utf-8-validate
     dev: true
 
+  /js-base64/3.7.2:
+    resolution: {integrity: sha512-NnRs6dsyqUXejqk/yv2aiXlAvOs56sLkX6nUdeaNezI5LFFLlsZjOThmwnrcwh5ZZRwZlCMnVAY3CvhIhoVEKQ==}
+    dev: false
+
   /js-sha3/0.8.0:
     resolution: {integrity: sha512-gF1cRrHhIzNfToc802P800N8PpXS+evLLXfsVpowqmAFR9uwbi89WvXg2QspOmXL8QL86J4T1EpFu+yUkwJY3Q==}
 
@@ -11209,9 +11215,9 @@ packages:
       - react-native
       - utf-8-validate
 
-  github.com/backbonedao/network-node/86d972e93c4825e9f260f6ae23eca9344cd41e74_22kvxa7zeyivx4jp72v2w3pkvy:
-    resolution: {tarball: https://codeload.github.com/backbonedao/network-node/tar.gz/86d972e93c4825e9f260f6ae23eca9344cd41e74}
-    id: github.com/backbonedao/network-node/86d972e93c4825e9f260f6ae23eca9344cd41e74
+  github.com/backbonedao/network-node/a3a5a06e3f51f4fa6bf9a77aeecf6d57aa78c61e_22kvxa7zeyivx4jp72v2w3pkvy:
+    resolution: {tarball: https://codeload.github.com/backbonedao/network-node/tar.gz/a3a5a06e3f51f4fa6bf9a77aeecf6d57aa78c61e}
+    id: github.com/backbonedao/network-node/a3a5a06e3f51f4fa6bf9a77aeecf6d57aa78c61e
     name: '@backbonedao/network-node'
     version: 2.2.0
     hasBin: true

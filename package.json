@@ -16,6 +16,10 @@
     "dist"
   ],
   "engineStrict": true,
+  "funding": {
+    "type" : "individual",
+    "url" : "https://backbonedao.com"
+  },
   "scripts": {
     "build": "rimraf dist && npm run build:browser && npm run build:node",
     "build:node": "mkdirp dist && tsc",
@@ -26,6 +30,7 @@
     "test:browser": "playwright test -c test/browser",
     "test": "npm run test:browser",
     "clean-data": "rimraf ~/.backbone",
+    "install": "npx pnpm install",
     "postinstall": "patch-package"
   },
   "dependencies": {

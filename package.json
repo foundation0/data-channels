@@ -31,7 +31,8 @@
     "test": "npm run test:browser",
     "clean-data": "rimraf ~/.backbone",
     "install": "npx pnpm install",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "npm-publish": "npm run build:production && npm publish --access public"
   },
   "dependencies": {
     "@backbonedao/crypto": "^1.1.2",

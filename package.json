@@ -22,7 +22,7 @@
     "build:browser:dev": "mkdirp dist && browserify --debug index.ts -p [ tsify ] > dist/core.dev.js",
     "build:browser": "mkdirp dist && browserify index.ts --standalone bb --global -p [ tsify ]  -t [ babelify --presets [ @babel/preset-env ] > dist/core.js && cpr dist/core.js dist/core.min.js -o",
     "build:browser:minify": "mkdirp dist/www && uglifyjs dist/core.js --compress --mangle > dist/www/core.min.js",
-    "build:production": "npm run build:browser && npm run build:browser:minify",
+    "build:production": "npm run build && npm run build:browser:minify",
     "test:browser": "rimraf test/_compiled && npm run pretest && playwright test -c test/_compiled",
     "test": "npm run test:browser",
     "clean-data": "rimraf ~/.backbone",

@@ -1,1 +1,0 @@
-{"version":3,"file":"blacklist.js","sourceRoot":"","sources":["../../../../network/firewall/blacklist.ts"],"names":[],"mappings":";;AAAA,MAAM,qBAAqB,GAAa,EAAE,CAAA;AAC1C,mBAAwB,GAAG,EAAE,aAAa,EAAE,IAAY;IACtD,OAAO,qBAAqB,CAAC,OAAO,CAAC,IAAI,CAAC,KAAK,CAAC,CAAC,CAAA;AACnD,CAAC;AAFD,4BAEC"}

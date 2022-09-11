@@ -3,7 +3,7 @@
   "description": "Unstoppable, infinitely scalable app platform for the self-sovereign internet.",
   "author": "backbone://dao",
   "license": "AGPL-3.0-or-later",
-  "version": "0.10.3",
+  "version": "0.10.4",
   "main": "dist/node/index.js",
   "engines": {
     "node": "<17.0.0"

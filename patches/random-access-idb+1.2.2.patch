@@ -4,7 +4,7 @@
 #   npx patch-package random-access-idb
 #
 # declared package:
-#   random-access-idb: ^1.2.2
+#   random-access-idb: 1.2.2
 #
 diff --git a/node_modules/random-access-idb/index.js b/node_modules/random-access-idb/index.js
 index 53e1aed..af9b5e9 100644

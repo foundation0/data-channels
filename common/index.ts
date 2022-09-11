@@ -9,10 +9,9 @@ import { unpack, pack } from 'msgpackr'
 import {Base64} from 'js-base64';
 
 const EE = new EventEmitter2()
-let events = EE
 if(typeof window === 'object'){
-  window['backbone'] = { ...window['backbone'] || {}, events: EE }
-  events = window['backbone'].events || EE
+  if(!window['backbone']) window['backbone'] = {}
+  window['backbone'].events = EE
 }
 
 export function log(message: string, ...data: any) {
@@ -22,8 +21,8 @@ export function log(message: string, ...data: any) {
 export function error(message: string, ...data: any) {
   if (process.env['LOG'] || (platform.browser && window?.localStorage.getItem('LOG')))
     console.error(new Error(message), ...data)
-  events.emit('err', `${message} - ${JSON.stringify(data)}`)
-  return
+  EE.emit('err', `${message} - ${JSON.stringify(data)}`)
+  return false
   // console.error(message)
 }
 
@@ -45,18 +44,18 @@ export function emit(params: {
   no_log?: boolean
 }) {
   if (params.verbose && !getEnvVar('VERBOSE')) return false
-  events.emit(params.ch, params.msg)
-  if (params.event) events.emit(params.event)
+  EE.emit(params.ch, params.msg)
+  if (params.event) EE.emit(params.event)
   if (!params?.no_log && params.ch.charAt(0) !== '_') return log(`${params.ch} > ${JSON.stringify(params.msg)}`)
   if (getEnvVar('SYSLOG') && params.ch.charAt(0) === '_') return log(`${params.ch} > ${JSON.stringify(params.msg)}`)
 }
 
 export function subscribeToChannel(params: { ch: string; cb: any }) {
-  return events.on(params.ch, params.cb, { objectify: true })
+  return EE.on(params.ch, params.cb, { objectify: true })
 }
 
 export function subscribeToEvent(params: { id: string; cb: any }) {
-  return events.on(params.id, params.cb, { objectify: true })
+  return EE.on(params.id, params.cb, { objectify: true })
 }
 
 export function encodeCoreData(data: string | Buffer | object | number) {

@@ -21,7 +21,7 @@ export function randomStr(len: number = 32) {
 
 export function encrypt(params: { key: string, data: string | Buffer | object }) {
   let d = encodeCoreData(params.data)
-  if(!d) return error('encrypt needs data')
+  if(typeof d !== 'object') return error('encrypt needs data')
 
   const secret = Buffer.from(sha256(params.key), 'hex').slice(0, 32)
   const nonce = Buffer.alloc(sodium.crypto_secretbox_NONCEBYTES)

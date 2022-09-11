@@ -5,12 +5,44 @@ import { keyPair, buf2hex, hex2buf } from '@backbonedao/crypto'
 import Network from '@backbonedao/network-node'
 import { Split, Merge } from './chunker'
 import { pipeline } from 'streamx'
+import _ from 'lodash'
+import ws from 'websocket-stream'
 
 let network
 
 export async function getSwarm(network_config) {
   if (!network) network = Swarm(network_config)
   return network
+}
+
+export async function findBootstrapNode(nodes: string[]): Promise<string> {
+  return new Promise((resolve, reject) => {
+    nodes = _.shuffle(nodes)
+    function testBatch() {
+      // pick random two
+      const node_batch: string[] = nodes.slice(0, 2)
+      if(node_batch.length === 0) return reject('no bootstrap nodes available')
+      // try to make connection
+      let streams: any = []
+      node_batch.forEach((address, i) => {
+        const timer = setTimeout(() => {
+          streams.forEach((s) => s.destroy())
+          delete nodes[nodes.indexOf(address)]
+          testBatch()
+        }, 5000)
+        streams[i] = ws(`${address}/signal`)
+        streams[i].once('connect', () => {
+          streams.forEach((s) => s.destroy())
+          clearTimeout(timer)
+          resolve(address)
+        })
+      })
+      // with any connection, resolve immediately
+
+      // if no connection in 5 secs, try another batch
+    }
+    testBatch()
+  })
 }
 
 export async function connect(
@@ -28,6 +60,17 @@ export async function connect(
     keyPair?: { publicKey: b4a; secretKey: b4a }
     dht?: Function
   } = this.config.network
+
+  // shuffle the order of bootstraps to spread the load
+  if (network_config?.bootstrap && network_config.bootstrap.length > 0) {
+    // network_config.bootstrap = _.shuffle(network_config.bootstrap)
+    try {
+      const alive_server: string = await findBootstrapNode(network_config.bootstrap)
+      network_config.bootstrap = [alive_server]
+    } catch (error) {
+      return error(error)
+    }
+  }
 
   emit({
     ch: 'network',

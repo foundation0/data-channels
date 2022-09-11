@@ -30,7 +30,6 @@
     "test:browser": "playwright test -c test/browser",
     "test": "npm run test:browser",
     "clean-data": "rimraf ~/.backbone",
-    "install": "npx pnpm install",
     "postinstall": "patch-package",
     "npm-publish": "npm run build:production && npm publish --access public"
   },

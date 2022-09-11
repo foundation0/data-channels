@@ -1,5 +1,5 @@
 import { error } from '../common'
-
+import _ from 'lodash'
 import om from 'objectmodel'
 const { Model, ObjectModel, ArrayModel, MapModel, SetModel } = om
 const semverSort = require('semver/functions/sort')
@@ -278,7 +278,7 @@ export default async function (
         return error('DataModel accepts only objects or stringified objects')
       }
     }
-    const data = JSON.parse(JSON.stringify(input))
+    const data = _.cloneDeep(input)
     // if _meta is included, it's already established object
     if (data?._meta) {
       // unless owner_only is disabled, fail if no sig is present

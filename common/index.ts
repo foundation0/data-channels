@@ -6,12 +6,11 @@ import { EventEmitter2 } from 'eventemitter2'
 import platform from 'platform-detect'
 import Buffer from 'b4a'
 import { unpack, pack } from 'msgpackr'
-import {Base64} from 'js-base64';
+import { Base64 } from 'js-base64'
 
-const EE = new EventEmitter2()
-if(typeof window === 'object'){
-  if(!window['backbone']) window['backbone'] = {}
-  window['backbone'].events = EE
+if (typeof window === 'object') {
+  if (!window['backbone']) window['backbone'] = {}
+  window['backbone'].events = new EventEmitter2()
 }
 
 export function log(message: string, ...data: any) {
@@ -21,7 +20,8 @@ export function log(message: string, ...data: any) {
 export function error(message: string, ...data: any) {
   if (process.env['LOG'] || (platform.browser && window?.localStorage.getItem('LOG')))
     console.error(new Error(message), ...data)
-  EE.emit('err', `${message} - ${JSON.stringify(data)}`)
+  if (typeof window['backbone']?.events === 'object')
+    window['backbone'].events.emit('err', `${message} - ${JSON.stringify(data)}`)
   return false
   // console.error(message)
 }
@@ -32,8 +32,8 @@ export function buf2hex(buffer) {
 }
 
 export function getEnvVar(key) {
-  if(typeof window === 'object') return localStorage.getItem(key)
-  if(typeof global === 'object') return process.env[key]
+  if (typeof window === 'object') return localStorage.getItem(key)
+  if (typeof global === 'object') return process.env[key]
 }
 
 export function emit(params: {
@@ -44,18 +44,24 @@ export function emit(params: {
   no_log?: boolean
 }) {
   if (params.verbose && !getEnvVar('VERBOSE')) return false
-  EE.emit(params.ch, params.msg)
-  if (params.event) EE.emit(params.event)
-  if (!params?.no_log && params.ch.charAt(0) !== '_') return log(`${params.ch} > ${JSON.stringify(params.msg)}`)
-  if (getEnvVar('SYSLOG') && params.ch.charAt(0) === '_') return log(`${params.ch} > ${JSON.stringify(params.msg)}`)
+  if (typeof window['backbone']?.events === 'object')
+    window['backbone'].events.emit(params.ch, params.msg)
+  if (params.event && typeof window['backbone']?.events === 'object')
+    window['backbone'].events.emit(params.event)
+  if (!params?.no_log && params.ch.charAt(0) !== '_')
+    return log(`${params.ch} > ${JSON.stringify(params.msg)}`)
+  if (getEnvVar('SYSLOG') && params.ch.charAt(0) === '_')
+    return log(`${params.ch} > ${JSON.stringify(params.msg)}`)
 }
 
 export function subscribeToChannel(params: { ch: string; cb: any }) {
-  return EE.on(params.ch, params.cb, { objectify: true })
+  if (typeof window['backbone']?.events === 'object')
+    return window['backbone'].events.on(params.ch, params.cb, { objectify: true })
 }
 
 export function subscribeToEvent(params: { id: string; cb: any }) {
-  return EE.on(params.id, params.cb, { objectify: true })
+  if (typeof window['backbone']?.events === 'object')
+    return window['backbone'].events.on(params.id, params.cb, { objectify: true })
 }
 
 export function encodeCoreData(data: string | Buffer | object | number) {

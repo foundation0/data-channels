@@ -16,7 +16,6 @@ import {
 } from '@backbonedao/crypto'
 import b4a from 'b4a'
 import { pack } from 'msgpackr'
-import { stringify } from 'querystring'
 
 // Model for meta data
 const Meta = Model({

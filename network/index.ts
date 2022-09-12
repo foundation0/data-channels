@@ -30,12 +30,17 @@ export async function findBootstrapNode(nodes: string[]): Promise<string> {
           delete nodes[nodes.indexOf(address)]
           testBatch()
         }, 5000)
-        streams[i] = ws(`${address}/signal`)
-        streams[i].once('connect', () => {
-          streams.forEach((s) => s.destroy())
-          clearTimeout(timer)
-          resolve(address)
-        })
+        try {
+          streams[i] = ws(`${address}/signal`)
+          streams[i].once('connect', () => {
+            streams.forEach((s) => s.destroy())
+            clearTimeout(timer)
+            resolve(address)
+          })
+          streams[i].on('error', () => {})
+        } catch (error) {
+          
+        }
       })
       // with any connection, resolve immediately
 
@@ -60,6 +65,9 @@ export async function connect(
     keyPair?: { publicKey: b4a; secretKey: b4a }
     dht?: Function
   } = this.config.network
+
+  // override default bootstrap nodes with user-specified ones
+  if(typeof window === 'object' && typeof window.localStorage.getItem('bb.network_config.bootstrap') === 'string') network_config.bootstrap = JSON.parse(window.localStorage.getItem('bb.network_config.bootstrap') || '')
 
   // shuffle the order of bootstraps to spread the load
   if (network_config?.bootstrap && network_config.bootstrap.length > 0) {

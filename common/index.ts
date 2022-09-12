@@ -7,6 +7,7 @@ import platform from 'platform-detect'
 import Buffer from 'b4a'
 import { unpack, pack } from 'msgpackr'
 import { Base64 } from 'js-base64'
+import _ from 'lodash'
 
 if (typeof window === 'object') {
   if (!window['backbone']) window['backbone'] = {}
@@ -20,7 +21,7 @@ export function log(message: string, ...data: any) {
 export function error(message: string, ...data: any) {
   if (process.env['LOG'] || (platform.browser && window?.localStorage.getItem('LOG')))
     console.error(new Error(message), ...data)
-  if (typeof window['backbone']?.events === 'object')
+  if (_.get(window, 'backbone.events'))
     window['backbone'].events.emit('err', `${message} - ${JSON.stringify(data)}`)
   return false
   // console.error(message)
@@ -44,10 +45,12 @@ export function emit(params: {
   no_log?: boolean
 }) {
   if (params.verbose && !getEnvVar('VERBOSE')) return false
-  if (typeof window['backbone']?.events === 'object')
-    window['backbone'].events.emit(params.ch, params.msg)
-  if (params.event && typeof window['backbone']?.events === 'object')
-    window['backbone'].events.emit(params.event)
+  if (typeof window === 'object') {
+    if (_.get(window, 'backbone.events') === 'object')
+      window['backbone'].events.emit(params.ch, params.msg)
+    if (params.event && _.get(window, 'backbone.events'))
+      window['backbone'].events.emit(params.event)
+  }
   if (!params?.no_log && params.ch.charAt(0) !== '_')
     return log(`${params.ch} > ${JSON.stringify(params.msg)}`)
   if (getEnvVar('SYSLOG') && params.ch.charAt(0) === '_')
@@ -55,12 +58,12 @@ export function emit(params: {
 }
 
 export function subscribeToChannel(params: { ch: string; cb: any }) {
-  if (typeof window['backbone']?.events === 'object')
+  if (typeof window === 'object' && _.get(window, 'backbone.events'))
     return window['backbone'].events.on(params.ch, params.cb, { objectify: true })
 }
 
 export function subscribeToEvent(params: { id: string; cb: any }) {
-  if (typeof window['backbone']?.events === 'object')
+  if (typeof window === 'object' && _.get(window, 'backbone.events'))
     return window['backbone'].events.on(params.id, params.cb, { objectify: true })
 }
 

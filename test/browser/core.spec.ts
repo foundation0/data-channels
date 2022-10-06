@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test"
+import { test, expect } from '@playwright/test'
 import Core from '../../core'
 import { CoreConfig } from '../../common/interfaces'
 import { cleanup } from '../helper'
@@ -32,7 +32,7 @@ test.describe('Core', () => {
     expect(Object.keys(keys)).toEqual(['writers', 'indexes'])
     expect(keys.writers[0]).toHaveLength(66)
     expect(keys.indexes[0]).toHaveLength(66)
-    await core.set({ key: 'foo', value: 'bar'})
+    await core.set({ key: 'foo', value: 'bar' })
     const foo = await core.get('foo')
     expect(foo).toEqual('bar')
   })
@@ -46,7 +46,7 @@ test.describe('Core', () => {
         private: false,
         storage_prefix: 'test',
         storage: 'ram',
-        key: createHash(buf2hex(keypair.secretKey))
+        key: createHash(buf2hex(keypair.secretKey)),
       },
       app: Apps['keyvalue'],
     })
@@ -54,7 +54,7 @@ test.describe('Core', () => {
     expect(Object.keys(keys)).toEqual(['writers', 'indexes'])
     expect(keys.writers[0]).toHaveLength(66)
     expect(keys.indexes[0]).toHaveLength(66)
-    await core.set({ key: 'foo', value: 'bar'})
+    await core.set({ key: 'foo', value: 'bar' })
     const foo = await core.get('foo')
     expect(foo).toEqual('bar')
   })
@@ -67,14 +67,13 @@ test.describe('Core', () => {
         encryption_key: 'foobar',
         private: false,
         storage_prefix: 'test',
-        storage: 'rai',
+        storage: 'ram',
       },
       app: Apps['keyvalue'],
     })
 
-    await cores['core1'].connect(true)
-    await cores['core1'].set({ key: 'hello', value: 'foobar' })
-    await sleep(5000)
+    await cores['core1'].set({ key: 'hello', value: 'first' })
+    
     // create second core
     let config2: CoreConfig = {
       address: 'replica-test2',
@@ -83,42 +82,53 @@ test.describe('Core', () => {
       private: false,
       storage: 'ram',
     }
-    // const keys1 = await cores['core1'].getKeys()
-    //config2.writers = keys1.writers
-    //config2.indexes = keys1.indexes
-    cores['core2'] = await Core({ config: config2, app: Apps['chat'] })
+    const keys1 = await cores['core1'].getKeys()
+    cores['core2'] = await Core({ config: config2, app: Apps['keyvalue'] })
+    await cores['core2'].addPeer({ key: keys1.writers[0] })
+    const keys2 = await cores['core2'].getKeys()
+    await cores['core1'].addPeer({ key: keys2.writers[0] })
 
     // connect and verify replication
-    await cores['core2'].connect(true)
-    await sleep(5000)
+    const n1 = await cores['core1'].connect({ local_only: { initiator: true } })
+    const n2 = await cores['core2'].connect({ local_only: { initiator: false } })
+    const s = n1.pipe(n2).pipe(n1)
+    
+    // this needs to be here or otherwise replication doesn't work properly
+    // let posts1 = await cores['core1'].all()
+
     let posts = await cores['core2'].all()
-
+    
     expect(posts).toHaveLength(1)
-    expect(posts[0].data).toEqual('hello')
-
+    expect(posts[0]).toEqual('first')
+    
     // make a post on second one and verify
-    await cores['core2'].post({ text: 'world', user: 'foobar' })
-    await sleep(100)
+    await cores['core2'].set({ key: 'world', value: 'second' })
+    // await cores['core1'].all()
     const posts2 = await cores['core2'].all()
     expect(posts2).toHaveLength(2)
-    expect(posts2[0].data).toEqual('world')
+    expect(posts2[1]).toEqual('second')
 
     const posts3 = await cores['core1'].all()
     expect(posts3).toHaveLength(2)
-    expect(posts3[0].data).toEqual('world')
+    expect(posts3[1]).toEqual('second')
 
-    // remove second core as a writer, make a post on second
-    const core2_writer_key = await cores['core2'].getWriterKey()
-    await cores['core1'].removeWriter({ key: core2_writer_key })
-    await cores['core2'].post({ text: '!!', user: 'foobar' })
-    await sleep(100)
+    // freeze second core, make a post on second
+    await cores['core1'].removePeer({ key: keys2.writers[0] })
+    await cores['core2'].set({ key: '!!', value: 'third' })
+    
     const posts4 = await cores['core2'].all()
     expect(posts4).toHaveLength(3)
-    expect(posts4[0].data).toEqual('!!')
+    expect(posts4[0]).toEqual('third')
 
-    // verify it doesn't replicate
+    // verify it doesn't replicate but still has history
     const posts5 = await cores['core1'].all()
-    expect(posts5).toHaveLength(1)
+    expect(posts5).toHaveLength(2)
+    expect(posts5[1]).toEqual('second')
+    
+    // remove second core and destroy everything
+    await cores['core1'].removePeer({ key: keys2.writers[0], destroy: true })
+    const posts6 = await cores['core1'].all()
+    expect(posts6).toHaveLength(1)
   })
 
   test('should create an encrypted core', async () => {
@@ -132,7 +142,7 @@ test.describe('Core', () => {
       app: Apps['chat'],
     })
     const keys1 = await cores['core_encrypted'].getKeys()
-    await cores['core_encrypted'].connect(true)
+    await cores['core_encrypted'].connect({ local_only: true })
     await cores['core_encrypted'].post({ text: 'world', user: 'foobar' })
 
     // create second core
@@ -155,7 +165,7 @@ test.describe('Core', () => {
       app: Apps['chat'],
     })
 
-    await cores['core_wrong_pass'].connect(true)
+    await cores['core_wrong_pass'].connect({ local_only: true })
     let posts = await cores['core_wrong_pass'].all()
     expect(posts.length).toEqual(0)
     // expect(posts[0].data).to.not.eql('hello')
@@ -172,7 +182,7 @@ test.describe('Core', () => {
       app: Apps['chat'],
     })
     try {
-      await cores['core_private'].connect(true)
+      await cores['core_private'].connect({ local_only: true })
     } catch (e) {
       expect(e.message).toEqual('ACCESS DENIED - PRIVATE CORE')
     }

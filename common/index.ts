@@ -1,6 +1,6 @@
 import { createHash } from '@foundation0/crypto'
 import os from 'os'
-import Config from '../bbconfig'
+import Config from '../config'
 import ttl from 'ttl'
 import { EventEmitter2 } from 'eventemitter2'
 import platform from 'platform-detect'

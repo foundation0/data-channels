@@ -13,7 +13,7 @@ import {
   subscribeToChannel,
   base64,
 } from '../common'
-import default_config from '../bbconfig'
+import default_config from '../config'
 import _ from 'lodash'
 import b4a from 'b4a'
 import { createHash, keyPair } from '@foundation0/crypto'

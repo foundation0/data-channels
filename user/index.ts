@@ -1,5 +1,5 @@
 import * as Comlink from 'comlink'
-import Config from '../bbconfig'
+import Config from '../config'
 import { error, emit } from '../common'
 import { buf2hex } from '@foundation0/crypto'
 

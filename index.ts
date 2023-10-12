@@ -1,8 +1,8 @@
 import User from './user'
 import Core from './core'
-import * as Crypto from '@backbonedao/crypto'
+import * as Crypto from '@foundation0/crypto'
 import Models from './models'
-const Backbone = {
+const DataChannels = {
   User,
   Core,
   Crypto,
@@ -10,4 +10,4 @@ const Backbone = {
 }
 
 module.exports = { User, Core, Crypto, Models }
-export default Backbone
+export default DataChannels

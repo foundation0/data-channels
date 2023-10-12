@@ -11,8 +11,8 @@ export default {
     home_dir: '~',
     id_url:
       typeof window !== 'undefined'
-        ? window.localStorage.getItem('bb.id_url') || 'https://id.backbonedao.com'
-        : 'https://id.backbonedao.com',
+        ? window.localStorage.getItem('dc.id_url') || 'https://id.foundation0.net'
+        : 'https://id.foundation0.net',
   },
   addresses: {},
   keys: {
@@ -21,11 +21,11 @@ export default {
   network: {
     bootstrap_servers: process.env.BOOTSTRAP
       ? ['127.0.0.1:60000', '127.0.0.1:60001', '127.0.0.1:60002']
-      : ['wss://node1.network.backbonedao.com:1337', 'wss://node2.network.backbonedao.com:1337'],
+      : ['wss://node1.network.foundation0.net:1337', 'wss://node2.network.foundation0.net:1337'],
     stunturn_servers: function () {
       const stuns = [
-        'stun:node1.network.backbonedao.com:19302',
-        'stun:node2.network.backbonedao.com:19302',
+        'stun:node1.network.foundation0.net:19302',
+        'stun:node2.network.foundation0.net:19302',
         'stun:openrelay.metered.ca:80',
         'stun:global.stun.twilio.com:3478',
       ]

@@ -3,7 +3,7 @@ import Core from '../../core'
 import Apps from '../../apps'
 import User from '../../user'
 
-const Backbone = { Core, User, Apps }
-window['Backbone'] = Backbone
-console.log('Backbone initiated')
-export default Backbone
+const DataChannels = { Core, User, Apps }
+window['DataChannels'] = DataChannels
+console.log('DataChannels initiated')
+export default DataChannels

@@ -13,7 +13,7 @@ import {
   createHash,
   getPublicKeyFromSig,
   getIdFromPublicKey,
-} from '@backbonedao/crypto'
+} from '@foundation0/crypto'
 import b4a from 'b4a'
 import { pack } from 'msgpackr'
 
@@ -54,15 +54,15 @@ export default async function (
   // gather meta data about the app that's using the datamodel
   const app_meta = {
     version: opts?._debug?.app_version || '0',
-    backbone: () => 
+    dc: () => 
       // @ts-ignore
-      (typeof window === 'object' && window.backbone) ||
-      (typeof global === 'object' && global.backbone),
+      (typeof window === 'object' && window.dc) ||
+      (typeof global === 'object' && global.dc),
   }
 
   // if _getMeta is a function, get manifest and fill in the version
-  if (typeof app_meta.backbone()?.app?.meta?._getMeta === 'function') {
-    const manifest = await app_meta.backbone().app.meta?._getMeta('manifest')
+  if (typeof app_meta.dc()?.app?.meta?._getMeta === 'function') {
+    const manifest = await app_meta.dc().app.meta?._getMeta('manifest')
     if (!manifest) return error('no manifest found')
     app_meta.version = manifest.version
   }
@@ -236,7 +236,7 @@ export default async function (
       signable_data = data
     }
     let hash = createHash(pack(signable_data))
-    let signature = await app_meta.backbone().id.signObject({ hash })
+    let signature = await app_meta.dc().id.signObject({ hash })
     if (b4a.isBuffer(hash)) hash = buf2hex(hash)
     if (b4a.isBuffer(signature)) signature = buf2hex(signature)
 
@@ -249,21 +249,21 @@ export default async function (
 
   async function checkUser() {
     // check if id is present
-    if (!app_meta.backbone()?.id) {
+    if (!app_meta.dc()?.id) {
       // id is not present, so let's see if we can trigger authentication
-      if (typeof app_meta.backbone()?.user === 'function') {
-        await app_meta.backbone().user()
+      if (typeof app_meta.dc()?.user === 'function') {
+        await app_meta.dc().user()
         await checkUser()
       } else {
         return error('authentication required but no authentication method found')
       }
     } else {
-      const is_authenticated = await app_meta.backbone().id.isAuthenticated()
+      const is_authenticated = await app_meta.dc().id.isAuthenticated()
       if(is_authenticated) {
-        current_id = await app_meta.backbone().id.getId()
+        current_id = await app_meta.dc().id.getId()
         if(!current_id) return error('error in getting user id')
       } else {
-        await app_meta.backbone().user()
+        await app_meta.dc().user()
         await checkUser()
       }
     }

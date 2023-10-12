@@ -1,6 +1,6 @@
-import DataManager from '@backbonedao/data-manager'
-import DataViewer from '@backbonedao/data-viewer'
-import DataDB from '@backbonedao/data-db'
+import DataManager from '@foundation0/data-manager'
+import DataViewer from '@foundation0/data-viewer'
+import DataDB from '@foundation0/data-db'
 import { CoreConfig } from '../common/interfaces'
 import {
   buf2hex,
@@ -16,7 +16,7 @@ import {
 import default_config from '../bbconfig'
 import _ from 'lodash'
 import b4a from 'b4a'
-import { createHash, keyPair } from '@backbonedao/crypto'
+import { createHash, keyPair } from '@foundation0/crypto'
 import { Operation } from '../models'
 import Storage from './storage'
 import {
@@ -35,7 +35,7 @@ import mkdirp from 'mkdirp'
 let appsCache
 let bypassCache = false
 if (typeof window === 'object') {
-  const store = createStore('apps-cache', 'backbone')
+  const store = createStore('apps-cache', 'dc')
   appsCache = {
     get: async (key) => {
       const raw_data = await get(key, store)
@@ -124,10 +124,10 @@ class CoreClass {
   async init(this: CoreClass) {
     const self = this
 
-    // Setup backbone:// address
+    // Setup dc:// address
     this.address = this.config.address
-    if (!this.address.match('backbone://'))
-      this.address_hash = createHash(`backbone://${this.config.address}`)
+    if (!this.address.match('dc://'))
+      this.address_hash = createHash(`dc://${this.config.address}`)
     else this.address_hash = createHash(this.config.address)
 
     // Setup encryption
@@ -807,7 +807,7 @@ async function Core(params: {
         emit({ ch: 'core', msg: `Container initialized successfully` })
         if (logUI) logUI('Container initialized')
 
-        // If we haven't connected to backbone:// yet, do it now
+        // If we haven't connected to dc:// yet, do it now
         const net = await API.network.getNetwork()
         if (!net)
           setTimeout(function () {
@@ -916,7 +916,7 @@ async function Core(params: {
                     const loaded_app = await startAppInBrowser(code.app)
                     let timeout_timer
                     const app_loader_timer = setInterval(async function () {
-                      // let loaded_app = window['backbone']?.app?.default || window['backbone'].app
+                      // let loaded_app = window['dc']?.app?.default || window['dc'].app
                       if (loaded_app?.Protocol && loaded_app?.API) {
                         clearInterval(app_loader_timer)
                         clearTimeout(timeout_timer)

@@ -1,8 +1,8 @@
 import { emit, error } from '../common'
-import Swarm from '@backbonedao/network-node'
+import Swarm from '@foundation0/network-node'
 import b4a from 'b4a'
-import { keyPair, buf2hex, hex2buf } from '@backbonedao/crypto'
-import Network from '@backbonedao/network-node'
+import { keyPair, buf2hex, hex2buf } from '@foundation0/crypto'
+import Network from '@foundation0/network-node'
 import { Split, Merge } from './chunker'
 import { pipeline } from 'streamx'
 import _ from 'lodash'
@@ -67,7 +67,7 @@ export async function connect(
   } = this.config.network
 
   // override default bootstrap nodes with user-specified ones
-  if(typeof window === 'object' && typeof window.localStorage.getItem('bb.network_config.bootstrap') === 'string') network_config.bootstrap = JSON.parse(window.localStorage.getItem('bb.network_config.bootstrap') || '')
+  if(typeof window === 'object' && typeof window.localStorage.getItem('dc.network_config.bootstrap') === 'string') network_config.bootstrap = JSON.parse(window.localStorage.getItem('dc.network_config.bootstrap') || '')
 
   // shuffle the order of bootstraps to spread the load
   if (network_config?.bootstrap && network_config.bootstrap.length > 0) {
@@ -147,7 +147,7 @@ export async function connect(
       emit({
         ch: 'network',
         event: 'network.connecting',
-        msg: `Connecting to backbone://${self.address}...`,
+        msg: `Connecting to dc://${self.address}...`,
       })
       // @ts-ignore
       network.join(
@@ -174,7 +174,7 @@ export async function connect(
     emit({
       ch: 'network',
       event: 'network.connected',
-      msg: `Connected to backbone://${self.address} with id ${this.connection_id.slice(0, 8)}`,
+      msg: `Connected to dc://${self.address} with id ${this.connection_id.slice(0, 8)}`,
     })
   } else {
     emit({

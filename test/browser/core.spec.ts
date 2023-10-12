@@ -5,7 +5,7 @@ import { cleanup } from '../helper'
 import { error, sleep } from '../../common'
 import KeyValue from './keyvalue'
 import Chat from './chat'
-import { keyPair, buf2hex, createHash } from '@backbonedao/crypto'
+import { keyPair, buf2hex, createHash } from '@foundation0/crypto'
 
 const cores = {}
 

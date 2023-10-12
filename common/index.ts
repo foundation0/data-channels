@@ -1,4 +1,4 @@
-import { createHash } from '@backbonedao/crypto'
+import { createHash } from '@foundation0/crypto'
 import os from 'os'
 import Config from '../bbconfig'
 import ttl from 'ttl'
@@ -10,8 +10,8 @@ import { Base64 } from 'js-base64'
 import _ from 'lodash'
 
 if (typeof window === 'object') {
-  if (!window['backbone']) window['backbone'] = {}
-  window['backbone'].events = new EventEmitter2()
+  if (!window['dc']) window['dc'] = {}
+  window['dc'].events = new EventEmitter2()
 }
 
 export function log(message: string, ...data: any) {
@@ -21,8 +21,8 @@ export function log(message: string, ...data: any) {
 export function error(message: string, ...data: any) {
   if (process.env['LOG'] || (platform.browser && window?.localStorage.getItem('LOG')))
     console.error(new Error(message), ...data)
-  if (_.get(window, 'backbone.events'))
-    window['backbone'].events.emit('err', `${message} - ${JSON.stringify(data)}`)
+  if (_.get(window, 'dc.events'))
+    window['dc'].events.emit('err', `${message} - ${JSON.stringify(data)}`)
   return false
   // console.error(message)
 }
@@ -46,10 +46,10 @@ export function emit(params: {
 }) {
   if (params.verbose && !getEnvVar('VERBOSE')) return false
   if (typeof window === 'object') {
-    if (_.get(window, 'backbone.events') === 'object')
-      window['backbone'].events.emit(params.ch, params.msg)
-    if (params.event && _.get(window, 'backbone.events'))
-      window['backbone'].events.emit(params.event)
+    if (_.get(window, 'dc.events') === 'object')
+      window['dc'].events.emit(params.ch, params.msg)
+    if (params.event && _.get(window, 'dc.events'))
+      window['dc'].events.emit(params.event)
   }
   if (!params?.no_log && params.ch.charAt(0) !== '_')
     return log(`${params.ch} > ${JSON.stringify(params.msg)}`)
@@ -58,13 +58,13 @@ export function emit(params: {
 }
 
 export function subscribeToChannel(params: { ch: string; cb: any }) {
-  if (typeof window === 'object' && _.get(window, 'backbone.events'))
-    return window['backbone'].events.on(params.ch, params.cb, { objectify: true })
+  if (typeof window === 'object' && _.get(window, 'dc.events'))
+    return window['dc'].events.on(params.ch, params.cb, { objectify: true })
 }
 
 export function subscribeToEvent(params: { id: string; cb: any }) {
-  if (typeof window === 'object' && _.get(window, 'backbone.events'))
-    return window['backbone'].events.on(params.id, params.cb, { objectify: true })
+  if (typeof window === 'object' && _.get(window, 'dc.events'))
+    return window['dc'].events.on(params.id, params.cb, { objectify: true })
 }
 
 export function encodeCoreData(data: string | Buffer | object | number) {
@@ -117,7 +117,7 @@ export function unique(array: string[]) {
 
 export function getHomedir() {
   if (Config?.user?.home_dir === '~')
-    return process.env.TEST ? `${os.homedir()}/.backbone-test` : `${os.homedir()}/.backbone`
+    return process.env.TEST ? `${os.homedir()}/.dc-test` : `${os.homedir()}/.dc`
   else return Config?.user?.home_dir
 }
 

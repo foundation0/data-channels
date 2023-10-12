@@ -24,12 +24,12 @@
             private: false,
             storage: 'rai',
           },
-          app: Backbone.Apps['keyvalue'],
+          app: DataChannels.Apps['keyvalue'],
         }
-        window.core = await Backbone.Core(core_cfg)
+        window.core = await DataChannels.Core(core_cfg)
         console.log(window.core)
 
-        // const user = await Backbone.User()
+        // const user = await DataChannels.User()
         // window.user = await user()
       })()
     </script>

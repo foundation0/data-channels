@@ -1,7 +1,7 @@
 import { Array } from './base'
 import om from 'objectmodel'
 const { Any } = om
-import { createHash } from '@backbonedao/crypto'
+import { createHash } from '@foundation0/crypto'
 import b4a from 'b4a'
 
 const AppendOnly = function (model) {

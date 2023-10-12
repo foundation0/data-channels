@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import DataModel, { OwnerOnly, AppendOnly } from '../../models'
-import { sign, keyPair, buf2hex, getIdFromPublicKey, createHash } from '@backbonedao/crypto'
+import { sign, keyPair, buf2hex, getIdFromPublicKey, createHash } from '@foundation0/crypto'
 import Core from '../../core'
 import { CoreConfig } from '../../common/interfaces'
 
@@ -8,9 +8,9 @@ import { CoreConfig } from '../../common/interfaces'
 
 function createGlobalUser() {
   const id = keyPair()
-  global.backbone = {
+  global.dc = {
     user: async () => {
-      global.backbone.id = {
+      global.dc.id = {
         signObject: async ({ hash }) => {
           const signature = sign(hash, id.secretKey)
           return signature

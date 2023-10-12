@@ -4,7 +4,7 @@ import {  decodeCoreData, encodeCoreData, error, getRandomInt } from '.'
 import { Id } from './interfaces'
 import b4a from 'b4a'
 const Buffer = b4a
-import crypto from '@backbonedao/crypto'
+import crypto from '@foundation0/crypto'
 
 export const randomBytes = crypto.randomBytes 
 

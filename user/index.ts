@@ -1,7 +1,7 @@
 import * as Comlink from 'comlink'
 import Config from '../bbconfig'
 import { error, emit } from '../common'
-import { buf2hex } from '@backbonedao/crypto'
+import { buf2hex } from '@foundation0/crypto'
 
 class IdManagerClass {
   IdApp: any
@@ -10,20 +10,20 @@ class IdManagerClass {
 
   async init(this: IdManagerClass) {
     const self = this
-    let auth_app_e = document.getElementById('bb-auth-app')
+    let auth_app_e = document.getElementById('dc-auth-app')
 
     // if Id hasn't been initialized, init it
     if (!auth_app_e) {
       auth_app_e = document.createElement('iframe')
       auth_app_e.style.display = 'none'
-      auth_app_e.setAttribute('id', 'bb-auth-app')
+      auth_app_e.setAttribute('id', 'dc-auth-app')
       auth_app_e.setAttribute('src', Config.user.id_url)
       // auth_app_e.setAttribute('sandbox', 'allow-popups allow-scripts')
       document.body.appendChild(auth_app_e)
 
       const auth_app_overlay = document.createElement('div')
       auth_app_overlay.style.display = 'none'
-      auth_app_overlay.setAttribute('id', 'bb-auth-overlay')
+      auth_app_overlay.setAttribute('id', 'dc-auth-overlay')
       auth_app_overlay.setAttribute(
         'style',
         `
@@ -42,19 +42,19 @@ class IdManagerClass {
         `
       )
       auth_app_overlay.innerHTML = `<div style=''>
-        <div id="bb-auth-overlay-default-msg">Application requires you to authenticate.<br>Stand by, opening Backbone Id...</div>
-        <div id="bb-auth-overlay-msg"></div>
-        <div id="bb-auth-overlay-notice"><br><br>
+        <div id="dc-auth-overlay-default-msg">Application requires you to authenticate.<br>Stand by, opening DataChannels Id...</div>
+        <div id="dc-auth-overlay-msg"></div>
+        <div id="dc-auth-overlay-notice"><br><br>
           Your browser may block the popup. In that case, you'll need to manually allow it.
         </div>
-        <div id="bb-auth-overlay-close" style="display: none">Close</div> 
+        <div id="dc-auth-overlay-close" style="display: none">Close</div> 
       </div>`
       document.body.appendChild(auth_app_overlay)
       openAuthOverlay()
     }
 
     // establish connection to Id
-    const ifr = document.getElementById('bb-auth-app')
+    const ifr = document.getElementById('dc-auth-app')
     if (ifr) {
       await new Promise((resolve) => (ifr.onload = resolve))
       // @ts-ignore - ts doesn't recognize ifr is iframe
@@ -135,7 +135,7 @@ class IdManagerClass {
       })
     } else {
       msgAuthOverlay({
-        msg: 'Unknown error in opening Backbone Id :/',
+        msg: 'Unknown error in opening DataChannels Id :/',
         next: () => {
           setTimeout(() => {
             closeAuthOverlay()
@@ -149,7 +149,7 @@ class IdManagerClass {
 
   async isAuthenticated(this: IdManagerClass, params?: { address: string }) {
     if (!this.IdApp) await this.init()
-    const opts = { address: window['backbone'].app_profile?.address, ...params }
+    const opts = { address: window['dc'].app_profile?.address, ...params }
     if (this.IdApp) return this.IdApp.isAuthenticated(opts)
     else return error(`no Id available`)
   }
@@ -164,13 +164,13 @@ class IdManagerClass {
     if (this.IdApp)
       return this.IdApp.signObject({
           hash: params.hash,
-        address: window['backbone'].app_profile?.address,
+        address: window['dc'].app_profile?.address,
       })
     else return error(`no Id available`)
   }
 
   async getId(this: IdManagerClass) {
-    if(await this.isAuthenticated({ address: window['backbone'].app_profile?.address })) {
+    if(await this.isAuthenticated({ address: window['dc'].app_profile?.address })) {
       if (this.IdApp) {
         let id = await this.IdApp.getId()
         if(typeof id !== 'string') id = buf2hex(id, true)
@@ -188,28 +188,28 @@ async function IdManager() {
 
 export default IdManager
 
-// Helper methods for browser's overlay when Backbone Id is being open
+// Helper methods for browser's overlay when DataChannels Id is being open
 
 function openAuthOverlay() {
-  const notice = document.getElementById('bb-auth-overlay-notice')
+  const notice = document.getElementById('dc-auth-overlay-notice')
   if (notice) notice.style.display = 'block'
   
-  const defaultmsg = document.getElementById('bb-auth-overlay-default-msg')
+  const defaultmsg = document.getElementById('dc-auth-overlay-default-msg')
   if (defaultmsg) defaultmsg.style.display = 'block'
   
-  const msg = document.getElementById('bb-auth-overlay-msg')
+  const msg = document.getElementById('dc-auth-overlay-msg')
   if (msg) {
     msg.style.display = 'none'
     msg.innerHTML = ''
   }
 
-  const close = document.getElementById('bb-auth-overlay-close')
+  const close = document.getElementById('dc-auth-overlay-close')
   if (close) {
     close.onclick = closeAuthOverlay
     close.style.display = 'none'
   }
 
-  const auth_app_overlay = document.getElementById('bb-auth-overlay')
+  const auth_app_overlay = document.getElementById('dc-auth-overlay')
   if (auth_app_overlay?.style.display === 'none') {
     auth_app_overlay.style.display = 'flex'
     auth_app_overlay.style.opacity = '100%'
@@ -217,7 +217,7 @@ function openAuthOverlay() {
 }
 
 function closeAuthOverlay() {
-  const auth_app_overlay = document.getElementById('bb-auth-overlay')
+  const auth_app_overlay = document.getElementById('dc-auth-overlay')
   if (auth_app_overlay?.style) {
     auth_app_overlay.style.display = 'none'
     auth_app_overlay.style.opacity = '0%'
@@ -225,20 +225,20 @@ function closeAuthOverlay() {
 }
 
 function msgAuthOverlay(params: { msg: string; next?: Function; show_close?: boolean }) {
-  const notice = document.getElementById('bb-auth-overlay-notice')
+  const notice = document.getElementById('dc-auth-overlay-notice')
   if (notice) notice.style.display = 'none'
   
-  const defaultmsg = document.getElementById('bb-auth-overlay-default-msg')
+  const defaultmsg = document.getElementById('dc-auth-overlay-default-msg')
   if (defaultmsg) defaultmsg.style.display = 'none'
 
-  const msg = document.getElementById('bb-auth-overlay-msg')
+  const msg = document.getElementById('dc-auth-overlay-msg')
   if (msg) {
     msg.style.display = 'block'
     msg.innerHTML = params?.msg
   }
 
   if (params?.show_close) {
-    const close = document.getElementById('bb-auth-overlay-close')
+    const close = document.getElementById('dc-auth-overlay-close')
     if (close) close.style.display = 'block'
   }
 

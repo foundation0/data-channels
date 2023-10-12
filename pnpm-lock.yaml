@@ -15,11 +15,11 @@ specifiers:
   '@babel/core': ^7.19.0
   '@babel/preset-env': ^7.19.0
   '@babel/preset-es2015': 7.0.0-beta.53
-  '@backbonedao/crypto': ^1.2.1
-  '@backbonedao/data-db': ^1.0.0
-  '@backbonedao/data-manager': ^1.0.1
-  '@backbonedao/data-viewer': ^1.0.0
-  '@backbonedao/network-node': ^2.2.2
+  '@foundation0/crypto': ^1.2.1
+  '@foundation0/data-db': ^1.0.0
+  '@foundation0/data-manager': ^1.0.1
+  '@foundation0/data-viewer': ^1.0.0
+  '@foundation0/network-node': ^2.2.2
   '@jest/globals': ^27.5.1
   '@milahu/patch-package': ^6.4.14
   '@noble/secp256k1': ^1.7.0
@@ -87,11 +87,11 @@ specifiers:
   ws: ^8.8.1
 
 dependencies:
-  '@backbonedao/crypto': 1.2.1_22kvxa7zeyivx4jp72v2w3pkvy
-  '@backbonedao/data-db': 1.0.0
-  '@backbonedao/data-manager': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
-  '@backbonedao/data-viewer': 1.0.0
-  '@backbonedao/network-node': 2.2.2_22kvxa7zeyivx4jp72v2w3pkvy
+  '@foundation0/crypto': 1.2.1_22kvxa7zeyivx4jp72v2w3pkvy
+  '@foundation0/data-db': 1.0.0
+  '@foundation0/data-manager': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
+  '@foundation0/data-viewer': 1.0.0
+  '@foundation0/network-node': 2.2.2_22kvxa7zeyivx4jp72v2w3pkvy
   '@jest/globals': 27.5.1
   '@milahu/patch-package': 6.4.14
   '@noble/secp256k1': 1.7.0
@@ -1790,7 +1790,7 @@ packages:
       to-fast-properties: 2.0.0
     dev: true
 
-  /@backbonedao/crypto/1.2.1_22kvxa7zeyivx4jp72v2w3pkvy:
+  /@foundation0/crypto/1.2.1_22kvxa7zeyivx4jp72v2w3pkvy:
     resolution: {integrity: sha512-Sp4MRHSEANFkDXvhHsDenM77RdGcUmyWRnW8/Ytqta+cLqG404B483pwmQm+PrBNOrIqj6ErO7BAUW4TUtra2Q==}
     dependencies:
       '@noble/hashes': 1.1.2
@@ -1805,7 +1805,7 @@ packages:
       - bufferutil
       - utf-8-validate
 
-  /@backbonedao/data-db/1.0.0:
+  /@foundation0/data-db/1.0.0:
     resolution: {integrity: sha512-e+3njCP3nZxOCgF6YgE6mMNajIs0jWKwOS/rORI3BgeLZyBTNpbpiIH2YK/HXyE70qOt4AUWmJEq0TGnqi2iYA==}
     requiresBuild: true
     dependencies:
@@ -1819,7 +1819,7 @@ packages:
       streamx: 2.12.5
     dev: false
 
-  /@backbonedao/data-manager/1.0.1_22kvxa7zeyivx4jp72v2w3pkvy:
+  /@foundation0/data-manager/1.0.1_22kvxa7zeyivx4jp72v2w3pkvy:
     resolution: {integrity: sha512-LpyAb6x98lJ9SsM+3r4IsDqug+hObVFlSYdugpLoFRlCWaDSQPJlg4HReeXXLLjQpmKaoLIaANToH70Xu1bZyA==}
     dependencies:
       b4a: 1.6.0
@@ -1836,7 +1836,7 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@backbonedao/data-viewer/1.0.0:
+  /@foundation0/data-viewer/1.0.0:
     resolution: {integrity: sha512-hPf/d02knz7DiVnzxdgjO8hu0+VcPQEUWoY2QjgsLE6kDSFTFpbCnr5c5W5uAcrC99UcH67GVhmCqEZjZKvPGw==}
     requiresBuild: true
     dependencies:
@@ -1853,12 +1853,12 @@ packages:
       - supports-color
     dev: false
 
-  /@backbonedao/dht/1.0.0_22kvxa7zeyivx4jp72v2w3pkvy:
+  /@foundation0/dht/1.0.0_22kvxa7zeyivx4jp72v2w3pkvy:
     resolution: {integrity: sha512-7b4yye2030nyR4jEMu+bElnks+JcOXUX/NQNOTeyveJtDXcbRVIS3BhDqQ5g7Tkry+NjyG/wTYcHIAEdsYnbiw==}
     dependencies:
-      '@backbonedao/crypto': 1.2.1_22kvxa7zeyivx4jp72v2w3pkvy
-      '@backbonedao/noise-handshake': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
-      '@backbonedao/secret-stream': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
+      '@foundation0/crypto': 1.2.1_22kvxa7zeyivx4jp72v2w3pkvy
+      '@foundation0/noise-handshake': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
+      '@foundation0/secret-stream': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
       b4a: 1.6.0
       bind-easy: 1.1.2
       bogon: 1.1.0
@@ -1877,12 +1877,12 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@backbonedao/network-node/2.2.2_22kvxa7zeyivx4jp72v2w3pkvy:
+  /@foundation0/network-node/2.2.2_22kvxa7zeyivx4jp72v2w3pkvy:
     resolution: {integrity: sha512-Ww8xm/6k5MyDrmIpOS+/qrCQswvyXqXPlWTSIlKWsJDKa16bIF8RQhgKrql5gbC88Lgjwz2+34+6ecptr/q9lw==}
     hasBin: true
     requiresBuild: true
     dependencies:
-      '@backbonedao/dht': 1.0.0_22kvxa7zeyivx4jp72v2w3pkvy
+      '@foundation0/dht': 1.0.0_22kvxa7zeyivx4jp72v2w3pkvy
       '@geut/discovery-swarm-webrtc': 4.3.1_22kvxa7zeyivx4jp72v2w3pkvy
       '@greenlock/manager': 3.1.0
       '@mapbox/node-pre-gyp': 1.0.10
@@ -1906,20 +1906,20 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@backbonedao/noise-curve-secp256k1/1.0.1_22kvxa7zeyivx4jp72v2w3pkvy:
+  /@foundation0/noise-curve-secp256k1/1.0.1_22kvxa7zeyivx4jp72v2w3pkvy:
     resolution: {integrity: sha512-PYkGTLDL/QBWtjaGf68BlTPA4v1MZrEz08rc25eEzLx/fcMSe2dQMx0V2RGGGfdv7PjLWC3Nrp2ie44M1wVtJQ==}
     dependencies:
-      '@backbonedao/crypto': 1.2.1_22kvxa7zeyivx4jp72v2w3pkvy
+      '@foundation0/crypto': 1.2.1_22kvxa7zeyivx4jp72v2w3pkvy
       '@noble/secp256k1': 1.7.0
       b4a: 1.6.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  /@backbonedao/noise-handshake/1.0.1_22kvxa7zeyivx4jp72v2w3pkvy:
+  /@foundation0/noise-handshake/1.0.1_22kvxa7zeyivx4jp72v2w3pkvy:
     resolution: {integrity: sha512-v6KNPAP7HvyHeA+WMRNHRKBrq5H1amqoNHfALhZWVwUeJkohx5aaHF/QW7u1BLjptPf6ay8XWBHu8mhCIECulA==}
     dependencies:
-      '@backbonedao/noise-curve-secp256k1': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
+      '@foundation0/noise-curve-secp256k1': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
       b4a: 1.6.0
       hmac-blake2b: 2.0.0
       nanoassert: 2.0.0
@@ -1928,13 +1928,13 @@ packages:
       - bufferutil
       - utf-8-validate
 
-  /@backbonedao/secret-stream/1.0.1_22kvxa7zeyivx4jp72v2w3pkvy:
+  /@foundation0/secret-stream/1.0.1_22kvxa7zeyivx4jp72v2w3pkvy:
     resolution: {integrity: sha512-/C1+ScOd1t8ZC+eO//PgGypMnMasEjBBtwc84VeFqUXAn/ed8ztzgmeR1keT9minD4MIfU5PdLvEsNHFa9oRWQ==}
     requiresBuild: true
     dependencies:
-      '@backbonedao/crypto': 1.2.1_22kvxa7zeyivx4jp72v2w3pkvy
-      '@backbonedao/noise-curve-secp256k1': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
-      '@backbonedao/noise-handshake': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
+      '@foundation0/crypto': 1.2.1_22kvxa7zeyivx4jp72v2w3pkvy
+      '@foundation0/noise-curve-secp256k1': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
+      '@foundation0/noise-handshake': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
       '@milahu/patch-package': 6.4.14
       b4a: 1.6.0
       node-gyp-build: 4.5.0
@@ -10530,7 +10530,7 @@ packages:
   github.com/backbonedao/crypto/fa0b00be35e8e678673a61785098e7a898359161_22kvxa7zeyivx4jp72v2w3pkvy:
     resolution: {tarball: https://codeload.github.com/backbonedao/crypto/tar.gz/fa0b00be35e8e678673a61785098e7a898359161}
     id: github.com/backbonedao/crypto/fa0b00be35e8e678673a61785098e7a898359161
-    name: '@backbonedao/crypto'
+    name: '@foundation0/crypto'
     version: 1.2.1
     dependencies:
       '@noble/hashes': 1.1.2
@@ -10549,10 +10549,10 @@ packages:
   github.com/backbonedao/data/bebbe70ecaaddac72a087020e556a248d06c9a8b_22kvxa7zeyivx4jp72v2w3pkvy:
     resolution: {tarball: https://codeload.github.com/backbonedao/data/tar.gz/bebbe70ecaaddac72a087020e556a248d06c9a8b}
     id: github.com/backbonedao/data/bebbe70ecaaddac72a087020e556a248d06c9a8b
-    name: '@backbonedao/data'
+    name: '@foundation0/data'
     version: 1.0.1
     dependencies:
-      '@backbonedao/secret-stream': github.com/backbonedao/secret-stream/1cf5e16e218142478d1e4651d13ef35527980022_22kvxa7zeyivx4jp72v2w3pkvy
+      '@foundation0/secret-stream': github.com/backbonedao/secret-stream/1cf5e16e218142478d1e4651d13ef35527980022_22kvxa7zeyivx4jp72v2w3pkvy
       b4a: 1.6.0
       big-sparse-array: 1.0.2
       bits-to-bytes: 1.3.0
@@ -10584,12 +10584,12 @@ packages:
   github.com/backbonedao/dht/96d1dc516a5ca410cf979694ee2c8cbca316bdc9_22kvxa7zeyivx4jp72v2w3pkvy:
     resolution: {tarball: https://codeload.github.com/backbonedao/dht/tar.gz/96d1dc516a5ca410cf979694ee2c8cbca316bdc9}
     id: github.com/backbonedao/dht/96d1dc516a5ca410cf979694ee2c8cbca316bdc9
-    name: '@backbonedao/dht'
+    name: '@foundation0/dht'
     version: 1.0.0
     dependencies:
-      '@backbonedao/crypto': 1.2.1_22kvxa7zeyivx4jp72v2w3pkvy
-      '@backbonedao/noise-handshake': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
-      '@backbonedao/secret-stream': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
+      '@foundation0/crypto': 1.2.1_22kvxa7zeyivx4jp72v2w3pkvy
+      '@foundation0/noise-handshake': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
+      '@foundation0/secret-stream': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
       b4a: 1.6.0
       bind-easy: 1.1.2
       bogon: 1.1.0
@@ -10621,13 +10621,13 @@ packages:
   github.com/backbonedao/secret-stream/1cf5e16e218142478d1e4651d13ef35527980022_22kvxa7zeyivx4jp72v2w3pkvy:
     resolution: {tarball: https://codeload.github.com/backbonedao/secret-stream/tar.gz/1cf5e16e218142478d1e4651d13ef35527980022}
     id: github.com/backbonedao/secret-stream/1cf5e16e218142478d1e4651d13ef35527980022
-    name: '@backbonedao/secret-stream'
+    name: '@foundation0/secret-stream'
     version: 1.0.1
     requiresBuild: true
     dependencies:
-      '@backbonedao/crypto': 1.2.1_22kvxa7zeyivx4jp72v2w3pkvy
-      '@backbonedao/noise-curve-secp256k1': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
-      '@backbonedao/noise-handshake': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
+      '@foundation0/crypto': 1.2.1_22kvxa7zeyivx4jp72v2w3pkvy
+      '@foundation0/noise-curve-secp256k1': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
+      '@foundation0/noise-handshake': 1.0.1_22kvxa7zeyivx4jp72v2w3pkvy
       '@milahu/patch-package': 6.4.14
       b4a: 1.6.0
       node-gyp-build: 4.5.0

@@ -1,4 +1,4 @@
-import { randomBytes, buf2hex, hex2buf, getPublicKeyFromSig } from '@backbonedao/crypto'
+import { randomBytes, buf2hex, hex2buf, getPublicKeyFromSig } from '@foundation0/crypto'
 import { base64 } from 'ethers/lib/utils';
 import { error } from './common'
 

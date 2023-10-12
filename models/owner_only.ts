@@ -1,6 +1,6 @@
 import { Object } from './base'
 import om from 'objectmodel'; const { Any } = om
-import { verify, hex2buf } from '@backbonedao/crypto'
+import { verify, hex2buf } from '@foundation0/crypto'
 
 const OwnerOnly = Object({
   owner: String,

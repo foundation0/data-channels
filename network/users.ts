@@ -1,6 +1,6 @@
 import { emit, error, getRandomInt } from "../common"
 import b4a from 'b4a'
-import { buf2hex, hex2buf } from '@backbonedao/crypto'
+import { buf2hex, hex2buf } from '@foundation0/crypto'
 
 export async function addKnownUsers(this, params: { partition: 'data' | 'meta' }) {
   // If known users exists, add them

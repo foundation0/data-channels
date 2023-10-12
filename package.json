@@ -1,8 +1,8 @@
 {
-  "name": "@backbonedao/core",
-  "description": "Unstoppable, infinitely scalable app platform for the self-sovereign internet.",
-  "author": "backbone://dao",
-  "license": "AGPL-3.0-or-later",
+  "name": "@foundation0/data-channels",
+  "description": "The next generation data layer",
+  "author": "Foundation 0",
+  "license": "MIT",
   "version": "0.10.7",
   "main": "dist/node/index.js",
   "engines": {
@@ -18,27 +18,27 @@
   "engineStrict": true,
   "funding": {
     "type": "individual",
-    "url": "https://backbonedao.com"
+    "url": "https://foundation0.net"
   },
   "scripts": {
     "build": "rimraf dist && npm run build:browser && npm run build:node",
     "build:node": "mkdirp dist && tsc",
     "build:browser:dev": "mkdirp dist && browserify --debug index.ts -p [ tsify ] > dist/core.dev.js",
-    "build:browser": "mkdirp dist && browserify index.ts --standalone bb --global -p [ tsify ]  -t [ babelify --presets [ @babel/preset-env ] > dist/core.js && cpr dist/core.js dist/core.min.js -o",
+    "build:browser": "mkdirp dist && browserify index.ts --standalone dc --global -p [ tsify ]  -t [ babelify --presets [ @babel/preset-env ] > dist/core.js && cpr dist/core.js dist/core.min.js -o",
     "build:browser:minify": "mkdirp dist/www && uglifyjs dist/core.js --compress --mangle > dist/www/core.min.js",
     "build:production": "npm run build && npm run build:browser:minify",
     "test:browser": "playwright test -c test/browser",
     "test": "npm run test:browser",
-    "clean-data": "rimraf ~/.backbone",
+    "clean-data": "rimraf ~/.data-channels",
     "postinstall": "patch-package",
     "npm-publish": "npm run build:production && npm publish --access public"
   },
   "dependencies": {
-    "@backbonedao/crypto": "^1.2.1",
-    "@backbonedao/data-db": "^1.0.0",
-    "@backbonedao/data-manager": "^1.0.1",
-    "@backbonedao/data-viewer": "^1.0.0",
-    "@backbonedao/network-node": "^2.2.2",
+    "@foundation0/crypto": "^1.2.1",
+    "@foundation0/data-db": "^1.0.0",
+    "@foundation0/data-manager": "^1.0.1",
+    "@foundation0/data-viewer": "^1.0.0",
+    "@foundation0/network-node": "^2.2.2",
     "@jest/globals": "^27.5.1",
     "@milahu/patch-package": "^6.4.14",
     "@noble/secp256k1": "^1.7.0",
@@ -107,8 +107,7 @@
     "tsify": "^5.0.4",
     "typescript": "^3.9.10",
     "uglify-js": "^3.17.0",
-    "watchify": "^4.0.0",
-    "wrtc": "^0.4.7"
+    "watchify": "^4.0.0"
   },
   "pnpm": {
     "overrides": {
